@@ -1,17 +1,23 @@
 <script language="javascript" runat="server">
 /**
- * Initialize request and call main appliction script.
+ * Dispatch request to appropriate controller script based on
+ *   a set of primitive routing rules.
  *
- * NOTE: Application("AppRoot") is defined in global.asa.
+ * NOTE: Application("AppRoot") must be defined in global.asa.
  *
  */
+var approot = Application("AppRoot")
+	, req_uri = Request.QueryString.Item();
+
 Response.Clear();
 Response.ContentType = "text/plain";
-if (Request.QueryString.Item().match(/^\//)) {
-	//Response.Write(Request.QueryString.Item() + '\n');
-	Server.Execute(Application("AppRoot") + "main.asp");
+if (req_uri.match(/^\/admin\//)) {
+	Server.Execute(approot + "main.asp");
+} else
+if (req_uri.match(/^\//)) {
+	Server.Execute(approot + "main.asp");
 } else {
-	Response.Write(Request.QueryString.Item())
+	Response.Write("Error Parsing: " + req_uri);
 }
 Response.End();
 </script>

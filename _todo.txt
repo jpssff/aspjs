@@ -1,7 +1,7 @@
  Directory Structure
 ---------------------
 Where should module-redirects go?
- It is part of User App Code and not Framework Code
+ part of User App Code and not Framework Code
 
 Split Application module into module with req/res and one without
 
@@ -12,8 +12,8 @@ Replace Event 'complete' with route and no-route
 Document Request Lifecycle
 
 Application config should be split into layers:
- Factory config options
- Override config options (app/config directory)
+ Default / Factory config options
+ Custom / Override config options (app/config directory)
  Database config options
 
 How to handle form post in views?

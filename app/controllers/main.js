@@ -1,7 +1,15 @@
-function main() {
+app.on('ready',function() {
 	
-	//home page
+	//default route (home page)
 	app('/',function(p){
+		
+		var obj = Object.create(global);
+		res.die(typeof obj.app);
+		
+	});
+	
+	//docstore test
+	app('/docstore',function(p){
 		
 		var json = require('json')
 			, docstore = require('docstore')
@@ -20,20 +28,14 @@ function main() {
 	});
 	
 	//dynamic image serving
-	app('/img/*',function(){
+	app('/img/*',function(params){
 		var a = [];
-		a.push('The image you requested does not exist.')
+		a.push('You requested image: ' + params)
 		a.push(req.url)
 		res.die(a.join('\r\n'));
 	});
 	
-	//test
-	app('/null',function(p){
-		var obj = {};
-		res.die(vartype(null));
-	});
-	
-	//require login for admin pages
+	//display login page
 	app('/admin/*?',function(){
 		var templ = require('templ');
 		templ.render('login',{title:'Admin Login'});
@@ -41,14 +43,14 @@ function main() {
 	
 	//error handling test
 	app('/error/:err?',function(p){
-		var err = p('err') || 'Example Error';
-		throw new Error(err);
+		//var err = p('err') || 'Example Error';
+		throw new Error(toArray(arguments));
 	});
 	
 	//test route parsing
-	app('/:one/:two',function(p){
-		res.die('params: {first: ' + p('one') + ', second: ' + p('two') + '}');
+	app('/test/:one/:two?',function(p){
+		res.die('{params: {first: ' + p('one') + ', second: ' + p('two') + '}}');
 	});
 	
 	
-}
+});
