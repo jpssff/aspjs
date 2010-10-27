@@ -9,9 +9,12 @@
  *
  */
 function Application_OnStart() {
-	//SET CORE APPLICATION VARIABLES
+	
+	//SET ROOT APPLICATION PATH
 	Application("AppRoot") = "/app/";
-	//CALL APP INIT SCRIPT
-	Server.Execute(Application("AppRoot") + "app_init.asp");
+	
+	//INITIALIZE APPLICATION
+	Server.Execute(Application("AppRoot") + "init.asp");
+	
 }
 </script>

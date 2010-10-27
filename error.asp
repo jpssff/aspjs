@@ -18,11 +18,11 @@ a.push('File: ' + e.File);
 a.push('Line: ' + e.Line);
 a.push('');
 
-var err_id = Math.random().toString().replace('.','');
-Application("Error_" + err_id) = a.join('||');
+var n = Math.random().toString().replace('.','');
+Application("Error_" + n) = a.join('||');
 
 Response.Clear();
-Response.Status = "500 Internal Error " + err_id;
+Response.Status = "500 Internal Error " + n;
 Response.ContentType = "text/plain";
 Response.Write(a.join('\r\n'));
 Response.End();

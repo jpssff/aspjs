@@ -1,34 +1,19 @@
-<script runat="server" language="javascript" src="config.js"></script>
-<!--#include file="core/_inc.asp" -->
-<!--#include file="lib/_inc.asp" -->
-<script runat="server" language="javascript" src="main.js"></script>
+<script runat="server" language="javascript" src="config/config.js"></script>
+<!--#include file="code/core.asp" -->
+<!--#include file="code/lib.asp" -->
 <script runat="server" language="javascript">
-
 /**
- * Process saved error reports as soon as application is ready.
+ * Stub for application controller.
+ *
+ * NOTES: This script handles the request after dispatch.asp has
+ *        finished. It is a stub file and contains no code. It
+ *        simply references a controller file by the same name that
+ *        must exist inside the app/controllers directory.
+ *
+ *        Ensure the following script tag points to the correct
+ *        controller:
  *
  */
-app.on('ready',function(){
-	if (global.err_report)
-	appvars(/^Error_(\d+)$/i,function(n,val){
-		err_report(val);
-		return null;
-	});
-});
-
-/**
- * Main application handler.
- *
- * NOTES: This script handles all requests to dynamic content. It
- *        loads global functions, request/response objects and all 
- *        application modules. It then passes execution to the main
- *        function in the main.js script.
- *
- */
-res.clear();
-app.trigger('ready');
-if (global.main) main();
-app.trigger('complete');
-res.end();
-
 </script>
+<script runat="server" language="javascript" src="controllers/main.js"></script>
+<script runat="server" language="javascript" src="code/init/req.js"></script>
