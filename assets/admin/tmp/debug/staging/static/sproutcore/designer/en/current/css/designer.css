@@ -1,0 +1,96 @@
+/*
+==========================================================================
+ Project: Designer - Styling
+ Author: Matt Grantham - @MattGrantham
+==========================================================================
+*/
+
+body.sc-theme,
+body.sc-theme > .sc-pane.sc-main.workspace { 
+  overflow: hidden;
+  background: url('/static/sproutcore/designer/en/current/images/main-bg.png?1287123522');
+}
+
+.workspace {
+  background: url('/static/sproutcore/designer/en/current/images/main-bg.png?1287123522');
+  
+}
+
+/* Design Area
+---------------------------------------------- */
+
+.workspace .design {
+  background: #fff;
+  border: 1px solid #1c1c1c;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.75);
+  -moz-box-shadow: 0 3px 6px rgba(0,0,0,0.75);
+  -webkit-box-shadow: 0 3px 6px rgba(0,0,0,0.75);
+}
+
+.workspace .rotated-page {
+  transform: rotate(0.8deg);
+  -moz-transform: rotate(0.8deg);
+  -webkit-transform: rotate(0.8deg);
+  border: 1px solid #111;
+  background: #ccc;
+}
+
+/* Dock
+---------------------------------------------- */
+
+.workspace .dock,
+.workspace .dock .sc-collection-view {
+  /*HACK: Overriding gray border since I can't figure out how to turn it off in all cases */
+  border: none !important;
+  background: url('/static/sproutcore/designer/en/current/images/dock-bg.png?1287123522') repeat-x;
+}
+
+/* Collection Items */
+.workspace .dock .sc-collection-view .sc-collection-item {
+  background: url('/static/sproutcore/designer/en/current/images/dock-item-bg.png?1287123522') repeat-x;
+  color: #fff;
+  text-shadow: 0 1px 0 #000;
+  text-align: center;
+}
+.workspace .dock .sc-collection-view .sc-collection-item .sc-outline {
+  background: url('/static/sproutcore/designer/en/current/images/dock-item-divider.png?1287123522') no-repeat right;
+}
+.sc-theme.focus .workspace .sc-collection-view.focus .sc-collection-item.sel,
+.workspace .dock .sc-collection-view .sc-collection-item.sel {
+  background: url('/static/sproutcore/designer/en/current/images/dock-item-sel-bg.png?1287123522') repeat-x;
+  color: #aebf85;
+}
+.workspace .dock .sc-collection-view .sc-collection-item.sel .sc-outline {
+  background: url('/static/sproutcore/designer/en/current/images/dock-item-sel-divider.png?1287123522') no-repeat right;
+}
+
+.workspace .dock .sc-list-item-view.has-icon label {
+  left: 4px;
+  right: 4px;
+  bottom: 6px;
+  height: 18px;
+  margin-top: 10px;
+}
+.workspace .dock .sc-collection-item .icon {
+  width: 32px;
+  height: 32px;
+  position: absolute;
+  top: 10px;
+  margin-top: 0;
+  left: 50%;
+  margin-left: -16px;
+}
+
+.workspace .dock .sc-collection-item .icon.pane {
+  background: url('/static/sproutcore/designer/en/current/images/pane.png?1287123522') no-repeat;
+}
+.workspace .dock .sc-collection-item .icon.controller {
+  background: url('/static/sproutcore/designer/en/current/images/controller.png?1287123522') no-repeat;
+}
+.workspace .dock .sc-collection-item .icon.view {
+  background: url('/static/sproutcore/designer/en/current/images/view.png?1287123522') no-repeat;
+}
+.workspace .dock .sc-collection-item .icon.page {
+  background: url('/static/sproutcore/designer/en/current/images/page.png?1287123522') no-repeat;
+}
+

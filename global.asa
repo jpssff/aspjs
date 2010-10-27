@@ -1,0 +1,17 @@
+<script language="javascript" runat="server">
+/**
+ * Initialize application startup and call app_init from app root.
+ *
+ * IMPORTANT: If in a production environment *without* URL rewrite,
+ *            be sure to use "/bin/" for application root!!
+ *            This prevents IIS from serving your application data
+ *            and source files to the public.
+ *
+ */
+function Application_OnStart() {
+	//SET CORE APPLICATION VARIABLES
+	Application("AppRoot") = "/app/";
+	//CALL APP INIT SCRIPT
+	Server.Execute(Application("AppRoot") + "app_init.asp");
+}
+</script>
