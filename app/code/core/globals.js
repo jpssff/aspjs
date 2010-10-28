@@ -28,13 +28,12 @@ var vartype = Object.vartype
  */
 var app = require('application');
 
-
 /**
  * Load Request and Response Objects
  *
  */
-var req = app.req = require('request')
-	, res = app.res = require('response');
+var req = app.req = require('request');
+var res = app.res = require('response');
 
 
 /**

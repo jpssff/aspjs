@@ -4,7 +4,7 @@ app.on('ready',function() {
 	app('/',function(p){
 		
 		var obj = Object.create(global);
-		res.die(typeof obj.app);
+		res.die(typeof global.app);
 		
 	});
 	

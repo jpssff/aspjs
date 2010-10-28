@@ -64,7 +64,7 @@ function lib_application() {
 				vars[n] = val;
 			};
 		}
-		Enumerator.each(Application,function(i,key){
+		Enumerator.each(Application.Contents,function(i,key){
 			fn(key,Application(key));
 		});
 		return vars;

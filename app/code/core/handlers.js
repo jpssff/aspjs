@@ -5,7 +5,7 @@
 app.on('ready',function(){
 	
 	//Checks for any saved errors
-	appvars(/^Error_(\d+)$/i,function(n,val){
+	app.vars.match(/^Error_(\d+)$/i,function(n,val){
 		
 		//Calls the function below
 		err_report(val);
