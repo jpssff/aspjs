@@ -24,6 +24,6 @@ Application("Error_" + n) = a.join('||');
 Response.Clear();
 Response.Status = "500 Internal Error " + n;
 Response.ContentType = "text/plain";
-Response.Write(a.join('\r\n'));
+Response.Write(a.join('\r\n').replace('Active Server Pages','Server Side Script'));
 Response.End();
 </script>

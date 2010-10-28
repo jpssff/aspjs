@@ -3,12 +3,14 @@ var global = this
 	, __date = new Date()
 	, __now = __date.valueOf();
 
+
 /**
  * Extend built-in objects via prototyping. See
  * ptototypes.js for details.
  *
  */
 prototypes();
+
 
 /**
  * Quick access to common functions
@@ -19,36 +21,29 @@ var vartype = Object.vartype
 	, isSet = Object.isSet
 	, toArray = Array.toArray;
 
+
 /**
- * Run a function in global context.
+ * Load Application Object
  *
- * @param  {function}   fn
- * @return {mixed}
  */
-function run(fn) {
-	return fn.apply(global,Array.prototype.slice.call(arguments,1));
-}
+var app = require('application');
 
 
 /**
- * Set one or more global variables. Called via
- * global.set();
+ * Load Request and Response Objects
  *
- * @param  {mixed} 
- * @return {mixed}
  */
-function set() {
-	var args = Array.prototype.slice.call(arguments);
-	if (args.length == 2) {
-		var n = String(args[0]);
-		if (n.match(/^[a-z_$][0-9a-z_$]*$/i)) eval(n + " = args[1]");
-		return args[1];
-	} else {
-		var col = args[0] || {};
-		for (var n in col) if (col.hasOwnProperty(n)) set(n,col[n]);
-		return args[0];
-	}
-}
+var req = app.req = require('request')
+	, res = app.res = require('response');
+
+
+/**
+ * Load Request Router
+ *
+ */
+req.router = require('router');
+
+
 
 /**
  * Get a property from an object if it exists. If not, set it.
@@ -62,6 +57,7 @@ function getset(obj,prop,val) {
 	if (!isSet(obj[prop])) obj[prop] = val;
 	return obj[prop];
 }
+
 
 /**
  * Create and return a Getter/Setter Function.
@@ -83,6 +79,7 @@ function fngetset(get,set,del) {
 	}
 }
 
+
 /**
  * Register a Library (Class). Accepts a function which is evaluated to return a library.
  *
@@ -99,6 +96,7 @@ function register(name,func) {
 	list[name] = func();
 }
 
+
 /**
  * Require a Library (Class). If the library is already registered (via register() then it
  * returns a saved copy. If the library exists as a function begining with lib_
@@ -112,6 +110,42 @@ function require(name) {
 	if (lib) return lib;
 	lib = global['lib_' + name];
 	if (lib) return list[name] = lib();
-	throw(new Error('Library ' + name + ' does not exist.'));
 }
 
+
+/**
+ * Run a function in global context.
+ *
+ * (This function might be removed in future to
+ *  reduce global variable polution)
+ *
+ * @param  {function}   fn
+ * @return {mixed}
+ */
+function run(fn) {
+	return fn.apply(global,Array.prototype.slice.call(arguments,1));
+}
+
+
+/**
+ * Set one or more global variables. Called via
+ * global.set()
+ *
+ * (This function might be removed in future to
+ *  reduce global variable polution)
+ *
+ * @param  {mixed} 
+ * @return {mixed}
+ */
+function set() {
+	var args = Array.prototype.slice.call(arguments);
+	if (args.length == 2) {
+		var n = String(args[0]);
+		if (n.match(/^[a-z_$][0-9a-z_$]*$/i)) eval(n + " = args[1]");
+		return args[1];
+	} else {
+		var col = args[0] || {};
+		for (var n in col) if (col.hasOwnProperty(n)) set(n,col[n]);
+		return args[0];
+	}
+}

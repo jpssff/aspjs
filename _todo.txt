@@ -3,9 +3,7 @@
 Where should module-redirects go?
  part of User App Code and not Framework Code
 
-Split Application module into module with req/res and one without
-
-Split Request and Response modules
+Provide app.data(..) or req.data(..) to store data without global variable polution.
 
 Replace Event 'complete' with route and no-route
 

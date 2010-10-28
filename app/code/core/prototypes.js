@@ -1,9 +1,9 @@
 /**
- * Extend built-in data types. This is a special library that gets
- * called explicitly from globals.js before any other code is executed.
+ * Extend built-in objects. This is a special library that gets
+ * called explicitly from globals.js before program code is executed.
  *
- * Many of the following functions are part of newer Javascript
- * standards. See ECMA Script docs for details.
+ * Many of the following functions are part of newer JavaScript (ECMA)
+ * standards and/or part of common JS libraries (jQuery, etc).
  *
  */
 function prototypes() {
