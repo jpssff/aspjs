@@ -1,0 +1,55 @@
+connect-form => use arrays for multiple files/fields with same name
+
+lib_server
+ Use field[0] format for multiple params/form-fields/uploads with same name
+  (util.parseQueryString should understand this format too)
+
+Response Cookies
+Fix lib_filestore
+
+
+ At Startup
+------------
+Write jscript/handler.wsf
+
+Refactor ASP to WSF:
+ Replace '<%@(.*?)%>' -> ''
+ Process Script Tags
+  Fix Paths
+  Replace 'runat="server"' -> ''
+  Replace 'adapters/asp.js' -> 'adapters/wsh.js'
+ Replace '<!--#include file="(.*?)" -->' -> [file contents]
+ Wrap inside <job id="{filename}"></job>
+
+
+
+ ASP ActiveX API
+-----------------
+
+Server
+ HTMLEncode
+ URLEncode
+ MapPath
+ Execute
+
+Request
+ ServerVariables
+ Form
+ QueryString
+ Cookies
+
+Response
+ AddHeader
+ Cookies
+ Charset
+ CacheControl
+ Status
+ Clear
+ Write
+ BinaryWrite
+ End
+ Buffer
+ 
+
+Application
+ Contents

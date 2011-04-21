@@ -1,23 +1,28 @@
+<%@LANGUAGE="JAVASCRIPT" CODEPAGE="65001"%>
+<script runat="server" language="javascript" src="app/system/adapters/asp.js"></script>
+<script runat="server" language="javascript" src="app/system/core.js"></script>
+<script runat="server" language="javascript" src="app/system/core/globals.js"></script>
+<script runat="server" language="javascript" src="app/system/core/collection.js"></script>
 <script language="javascript" runat="server">
 /**
  * Dispatch request to appropriate controller script based on
  *   a set of primitive routing rules.
  *
- * NOTE: Application("AppRoot") must be defined in global.asa.
+ * IMPORTANT:
+ * In a production environment *without* URL Rewrite, be sure to use "/bin/" for application root.
+ * This will prevent IIS from serving sensitive application data and source files to the public.
  *
  */
-var approot = Application("AppRoot")
-	, req_uri = Request.QueryString.Item();
-
-Response.Clear();
-Response.ContentType = "text/plain";
-if (req_uri.match(/^\/admin\//)) {
-	Server.Execute(approot + "main.asp");
-} else
-if (req_uri.match(/^\//)) {
-	Server.Execute(approot + "main.asp");
-} else {
-	Response.Write("Error Parsing: " + req_uri);
-}
-Response.End();
+dispatch(function(server, req, res){
+	var approot = '/app/';
+	var path = req.getURLParts().path;
+	if (path.match(/^\/test(\/|$)/)) {
+		server.exec(approot + 'test.asp');
+	} else
+	if (path.match(/^\//)) {
+		server.exec(approot + 'main.asp');
+	}
+	res.headers('content-type', 'text/plain');
+	res.write('ERROR: No Route for ' + path);
+});
 </script>
