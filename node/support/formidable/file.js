@@ -6,9 +6,9 @@ var util = require('./util'),
     crypto;
 
 try {
-	crypto = require('crypto');
+  crypto = require('crypto');
 } catch (e) {
-	//console.log('crypto support not found');
+  //console.log('crypto support not found');
 }
 
 function File(properties) {
@@ -32,9 +32,9 @@ util.inherits(File, EventEmitter);
 
 File.prototype.open = function() {
   this._writeStream = new WriteStream(this.path);
-	if (crypto) {
-		this.hash = crypto.createHash("md5");
-	}
+  if (crypto) {
+    this.hash = crypto.createHash("md5");
+  }
 };
 
 File.prototype.write = function(buffer, cb) {
@@ -42,7 +42,7 @@ File.prototype.write = function(buffer, cb) {
   this._writeStream.write(buffer, function() {
     self.lastModifiedDate = new Date();
     self.size += buffer.length;
-		if (crypto) {
+    if (crypto) {
       self.hash.update(buffer);
     }
     self.emit('progress', self.size);
@@ -56,17 +56,17 @@ File.prototype.end = function(cb) {
     if (crypto) {
       self.hash = self.hash.digest("hex");
     }
-		self.emit('end');
+    self.emit('end');
     cb();
   });
 };
 
 File.prototype.toJSON = function() {
-	var self = this, obj = {};
-	Object.keys(this).forEach(function(n){
-		if (n.charAt(0) != '_') {
-			obj[n] = self[n];
-		}
-	});
-	return obj;
+  var self = this, obj = {};
+  Object.keys(this).forEach(function(n){
+    if (n.charAt(0) != '_') {
+      obj[n] = self[n];
+    }
+  });
+  return obj;
 };

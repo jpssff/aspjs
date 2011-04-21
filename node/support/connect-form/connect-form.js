@@ -26,11 +26,11 @@ var formidable = require('formidable');
  *      var server = connect.createServer(
  *             form({ keepExtensions: true }),
  *             function(req, res, next){
- *         	    // Form was submitted
+ *               // Form was submitted
  *                 if (req.form) {
- *         	        // Do something when parsing is finished
- *         	        // and respond, or respond immediately
- *         	        // and work with the files.
+ *                   // Do something when parsing is finished
+ *                   // and respond, or respond immediately
+ *                   // and work with the files.
  *                     req.form.complete(function(err, fields, files){
  *                         res.writeHead(200, {});
  *                         if (err) res.write(JSON.stringify(err.message));

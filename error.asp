@@ -21,7 +21,7 @@ a.push("Description: " + e.description);
 a.push("File: " + e.file);
 a.push("Line: " + e.line);
 if (e.aspdescription) {
-	a.push("Details: " + e.aspdescription);
+  a.push("Details: " + e.aspdescription);
 }
 a.push("");
 

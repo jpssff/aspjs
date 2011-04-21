@@ -5,14 +5,14 @@
  *
  */
 register('ready',function(){
-	
-	//Process pre-route redirects
-	var redir = app.cfg('redir') || {}
-		, path = req.url('path');
-	if (Object.exists(redir,path)) {
-		res.redirect(redir[path],'301');
-	}
-	
+  
+  //Process pre-route redirects
+  var redir = app.cfg('redir') || {}
+    , path = req.url('path');
+  if (Object.exists(redir,path)) {
+    res.redirect(redir[path],'301');
+  }
+  
 });
 
 /**
@@ -21,12 +21,12 @@ register('ready',function(){
  *
  */
 register('404',function(){
-	//If response data is present from prior 404 handler, use that
-	//Otherwise use default 404 response from config
-	var data = this.response || app.cfg('res_404');
-	res.clear(data.type);
-	res.status('404');
-	res.write(data.body);
-	res.end();
+  //If response data is present from prior 404 handler, use that
+  //Otherwise use default 404 response from config
+  var data = this.response || app.cfg('res_404');
+  res.clear(data.type);
+  res.status('404');
+  res.write(data.body);
+  res.end();
 });
 

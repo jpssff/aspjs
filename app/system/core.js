@@ -16,24 +16,24 @@ var global, server, app, sys, req, res;
  *
  */
 function app_init() {
-	__approot = '/app/';
-	__date = new Date();
-	__now = __date.valueOf();
+  __approot = '/app/';
+  __date = new Date();
+  __now = __date.valueOf();
 
-	global = require('globals');
-	server = require('server');
-	app = require('application');
-	sys = app.sys = require('system');
-	req = app.req = require('request');
-	res = app.res = require('response');
-	if (req) {
-		req.router = require('router');
-	}
-	app.util = require('util');
-	res.clear();
-	trigger('ready');
-	trigger('route');
-	res.end();
+  global = require('globals');
+  server = require('server');
+  app = require('application');
+  sys = app.sys = require('system');
+  req = app.req = require('request');
+  res = app.res = require('response');
+  if (req) {
+    req.router = require('router');
+  }
+  app.util = require('util');
+  res.clear();
+  trigger('ready');
+  trigger('route');
+  res.end();
 }
 
 
@@ -50,13 +50,13 @@ function app_init() {
  * @param {Function} fn
  */
 function dispatch(fn) {
-	global = require('globals');
-	server = require('server');
-	req = server.req;
-	res = server.res;
-	res.clear();
-	fn(server, req, res);
-	res.end();
+  global = require('globals');
+  server = require('server');
+  req = server.req;
+  res = server.res;
+  res.clear();
+  fn(server, req, res);
+  res.end();
 }
 
 
@@ -69,17 +69,17 @@ function dispatch(fn) {
  * @returns {Object}
  */
 function require(name) {
-	var list = require.list || (require.list = {});
-	var lib = list[name], exports;
-	if (lib) {
-		return lib;
-	}
-	lib = this['lib_' + name];
-	if (lib) {
-		var exports = {};
-		var r = lib.call(exports,exports) || exports;
-		return list[name] = r;
-	}
+  var list = require.list || (require.list = {});
+  var lib = list[name], exports;
+  if (lib) {
+    return lib;
+  }
+  lib = this['lib_' + name];
+  if (lib) {
+    var exports = {};
+    var r = lib.call(exports,exports) || exports;
+    return list[name] = r;
+  }
 }
 
 
@@ -95,21 +95,21 @@ function require(name) {
  * @param {Function} func Function to be executed when Event fires
  */
 function register(name, func) {
-	var events = register.events || (register.events = {});
-	var rex = /^:(\w+)/, top = false;
-	if (name.match(rex)) {
-		name = name.replace(rex,'$1');
-		top = true;
-	}
-	if (events[name]) {
-		if (top) {
-			events[name].unshift(func);
-		} else {
-			events[name].push(func);
-		}
-	} else {
-		events[name] = [func];
-	}
+  var events = register.events || (register.events = {});
+  var rex = /^:(\w+)/, top = false;
+  if (name.match(rex)) {
+    name = name.replace(rex,'$1');
+    top = true;
+  }
+  if (events[name]) {
+    if (top) {
+      events[name].unshift(func);
+    } else {
+      events[name].push(func);
+    }
+  } else {
+    events[name] = [func];
+  }
 }
 
 /**
@@ -122,12 +122,12 @@ function register(name, func) {
  * @param {Array} args Arguments
  */
 function trigger(name, data, args){
-	var events = register.events || {};
-	data = data || {};
-	if (Object.exists(events,name)) {
-		events[name].each(function(i,event){
-			event.apply(data,args || [])
-		});
-	}
-	return data;
+  var events = register.events || {};
+  data = data || {};
+  if (Object.exists(events,name)) {
+    events[name].each(function(i,event){
+      event.apply(data,args || [])
+    });
+  }
+  return data;
 }

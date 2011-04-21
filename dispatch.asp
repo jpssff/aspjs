@@ -14,15 +14,15 @@
  *
  */
 dispatch(function(server, req, res){
-	var approot = '/app/';
-	var path = req.getURLParts().path;
-	if (path.match(/^\/test(\/|$)/)) {
-		server.exec(approot + 'test.asp');
-	} else
-	if (path.match(/^\//)) {
-		server.exec(approot + 'main.asp');
-	}
-	res.headers('content-type', 'text/plain');
-	res.write('ERROR: No Route for ' + path);
+  var approot = '/app/';
+  var path = req.getURLParts().path;
+  if (path.match(/^\/test(\/|$)/)) {
+    server.exec(approot + 'test.asp');
+  } else
+  if (path.match(/^\//)) {
+    server.exec(approot + 'main.asp');
+  }
+  res.headers('content-type', 'text/plain');
+  res.write('ERROR: No Route for ' + path);
 });
 </script>

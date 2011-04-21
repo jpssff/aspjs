@@ -15,22 +15,22 @@ QuerystringParser.prototype.write = function(buffer) {
 
 QuerystringParser.prototype.end = function() {
   var self = this, data = this.buffer;
-	if (data && data.length) {
-		data.split(/[&?]/).forEach(function(str){
-			str.replace(/^([^=]+)(?:=(.*))?$/, function(_,key,val){
-				self.onField(urlDec(key), urlDec(val));
-			});
-		});
-	}
+  if (data && data.length) {
+    data.split(/[&?]/).forEach(function(str){
+      str.replace(/^([^=]+)(?:=(.*))?$/, function(_,key,val){
+        self.onField(urlDec(key), urlDec(val));
+      });
+    });
+  }
   this.buffer = '';
   this.onEnd();
 };
 
 function urlDec(s) {
-	s = (s) ? s.replace(/\+/g, ' ') : '';
-	try {
-		return decodeURIComponent(s);
-	} catch(e) {
-		return unescape(s);
-	}
+  s = (s) ? s.replace(/\+/g, ' ') : '';
+  try {
+    return decodeURIComponent(s);
+  } catch(e) {
+    return unescape(s);
+  }
 }
