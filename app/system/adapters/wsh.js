@@ -187,6 +187,9 @@ function lib_server() {
     var file = new ActiveXObject("Persits.Upload").openFile(mapPath(f.path));
     var fd = Object.create({
       move: function(p) {
+        app.res.debug('Move: ' + file.name + ' -> ' + p);
+        app.res.debug('sys.path: ' + sys.path(p));
+        app.res.debug('sys.mappath: ' + sys.mappath(p));
         file.move(sys.mappath(p));
       },
       discard: function() {
@@ -197,15 +200,16 @@ function lib_server() {
       name: f.name,
       path: f.path,
       mimetype: f.type,
-      creationtime: Date.fromString(f.lastModifiedDate),
-      uploadtime: __date,
-      lastaccesstime: __date,
+      created: __date,
+      modified: __date,
       size: f.size,
-      hash: f.hash,
-      imagetype: file.imageType,
-      imagewidth: file.imageWidth,
-      imageheight: file.imageHeight
+      hash: f.hash
     });
+    if (file.imageType != 'UNKNOWN') {
+      fd.imagetype = String(file.imageType).toLowerCase();
+      fd.imagewidth = file.imageWidth;
+      fd.imageheight = file.imageHeight;
+    }
     return fd;
   }
 

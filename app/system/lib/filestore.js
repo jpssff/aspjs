@@ -1,9 +1,8 @@
 /**
  * File Store
- * This class presents an interface for saving files to the filesystem using a database for indexing
- * and meta-data.
+ * Presents a simple interface for storing, retrieving and serving files / uploads.
  *
- * Requires: lib_docstore.
+ * Requires: lib_docstore
  *
  */
 function lib_filestore() {
@@ -19,57 +18,66 @@ function lib_filestore() {
     return col;
   }
   
-  function newFileDescriptor(fd) {
-    return {
-      'name':fd.name,
-      'mimetype':fd.mimetype,
-      'creationtime':fd.creationtime,
-      'uploadtime':__date,
-      'lastaccesstime':__date,
-      'size':fd.size,
-      'hash':hash,
-      'imagetype':fd.imagetype,
-      'imagewidth':fd.imagewidth,
-      'imageheight':fd.imageheight,
-      'meta':{}
+  function newFileRecord(f) {
+    var rec = {
+      name: f.name,
+      mimetype: f.mimetype,
+      created: f.created,
+      modified: __date,
+      size: f.size,
+      hash: f.hash,
+      imagetype: f.imagetype,
+      imagewidth: f.imagewidth,
+      imageheight: f.imageheight,
+      meta:{}
     };
+    return getCol().save(rec);
   }
 
-  function File(fd) {
-    if (!(this instanceof File)) return new File(fd);
-    this.id = fd.__meta.guid;
-    this._fd = fd;
+  /**
+   * @constructor
+   * @param {Object} rec DocStore Record (document) containing file details
+   */
+  function File(rec) {
+    if (!(this instanceof File)) return new File(rec);
+    this.id = rec.__meta.guid;
+    this._rec = rec;
+    return this;
   }
   File.prototype = {
     attr: fngetset({
       get: function(key){
-        var fd = this._fd, attr = String(key).toLowerCase();
-        if (fd.hasOwnProperty(attr)) {
-          return fd[attr];
+        var rec = this._rec, attr = String(key).toLowerCase();
+        if (rec.hasOwnProperty(attr)) {
+          return rec[attr];
         } else {
           throw new Error('Invalid File Attribute: ' + key);
         }
       },
       set: function(key, val){
-        var fd = this._fd, attr = String(key).toLowerCase()
-          , allowed = ['name', 'mimetype', 'creationtime', 'uploadtime', 'lastaccesstime'];
+        var rec = this._rec, attr = String(key).toLowerCase()
+          , allowed = ['name', 'mimetype', 'created', 'modified'];
         if (allowed.exists(attr)) {
-          fd[attr] = val;
+          rec[attr] = val;
+          if (attr != 'modified') {
+            rec.modified = __date;
+          }
         }
         return this;
       }
     }),
     getFullPath: function() {
-      return sys.path.join(fs_location,this._fd.hash);
+      return sys.path.join(fs_location,this.attr('hash'));
     },
     clone: function() {
-      return new File(getCol().save(newFileDescriptor(this._fd)));
+      var rec = newFileRecord(this._rec);
+      return new File(rec);
     },
     save: function() {
-      getCol().save(this._fd);
+      getCol().save(this._rec);
     },
     send: function(opts) {
-      var self = this, fd = this._fd;
+      var file = this, rec = this._rec;
       //default options
       opts = Object.append({
         cache: true,
@@ -78,64 +86,60 @@ function lib_filestore() {
       if (opts.cache) {
         var ims = Date.fromString(req.headers('if-modified-since'));
         var inm = req.headers('if-none-match');
-        if ((ims && fd.uploadtime <= ims) || (inm && inm == fd.hash)) {
+        if ((ims && file.attr('created') <= ims) || (inm && inm == file.attr('hash'))) {
           res.status('304 Not Modified');
           res.end();
         }
         var i = 365 * 24 * 3600;
         res.headers('Cache-Control', 'public, max-age=' + String(i));
         res.headers('Expires', new Date(__now + i * 1000).toGMTString());
-        res.headers('Last-Modified', fd.uploadtime.toGMTString());
-        res.headers('ETag', '"' + fd.hash + '"');
+        res.headers('Last-Modified', file.attr('created').toGMTString());
+        res.headers('ETag', '"' + file.attr('hash') + '"');
       }
       res.sendFile({
-        file: self.getFullPath(),
-        name: fd.name,
-        ctype: fd.mimetype,
+        file: file.getFullPath(),
+        name: file.attr('name'),
+        ctype: file.attr('mimetype'),
         attachment: opts.attachment
       });
     },
     valueOf: function() {
-      return Object.append({id:this.id},this._fd);
+      var obj = Object.append({id: this.id}, this._rec);
+      Object.remove(obj, '_id');
+      return obj;
     }
   };
   
-  //Private Methods
-  function saveFromUploadedFile(file) {
-    var path = sys.path.join(fs_location,file.hash);
-    app.res.debug('Saving uploaded file "' + file.name + '" to "' + path + '"');
+  function saveUpload(upload) {
+    var path = sys.path.join(fs_location,upload.hash);
     try {
-      file.move(path);
+      upload.move(path);
     } catch(e) {
       if (e.message.match(/file already exists/)) {
         try {
-          file.discard();
+          upload.discard();
         } catch(e) {}
       } else {
-        throw new Error('Error saving file "' + file.name + '" to "' + path + '"; ' + e.message);
+        throw new Error('Error saving file "' + upload.name + '" to "' + path + '"; ' + e.message);
       }
     }
-    return new File(getCol().save(newFileDescriptor(file)));
+    var rec = newFileRecord(upload);
+    return new File(rec);
   }
   
-  //Public Methods
-  var filestore = {
+  return {
     getFile: function(id) {
-      if (!id || !String(id).match(/^[\da-f]{32}$/i)) {
-        throw new Error('Invalid File ID: ' + id);
+      if (id && String(id).match(/^[\da-f]{32}$/i)) {
+        var rec = getCol().get(id);
       }
-      var fd = getCol().get(id);
-      if (fd) {
-        return new File(fd);
+      if (rec) {
+        return new File(rec);
       }
     },
-    putFile: function(file) {
-      return saveFromUploadedFile(file);
+    saveUpload: function(upload) {
+      return saveUpload(upload);
     },
     sendFile: function(id) {
-      if (!id || !String(id).match(/^[\da-f]{32}$/i)) {
-        throw new Error('Invalid File ID: ' + id);
-      }
       var file = this.getFile(id);
       if (file) {
         return file.send();
@@ -145,7 +149,5 @@ function lib_filestore() {
       return file instanceof File;
     }
   };
-  
-  return filestore;
-  
+
 }

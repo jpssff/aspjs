@@ -5,47 +5,52 @@ register('ready',function() {
    * These are for testing and framework development
    */
 
-  app('/test',function(p){
+  app('/test', function(p) {
     res.die([req.method(), req.url('path'), req.params()]);
   });
 
-  app('/test/upload',function(){
+  app('/test/upload', function() {
     var templ = require('templ')
       , html = templ.render('test/upload');
     res.die(html,'text/html');
   });
 
-  app('/test/upload/post',function(){
+  app('/test/upload/post', function() {
     var filestore = require('filestore'), json = require('json');
     //res.die(server.req.getPostData());
-    var out = [], files = req.uploads();
-    files.each(function(n, file){
-      file = filestore.putFile(file);
-      out.push('<p>' + htmlEnc(json.stringify(file)) + '</p>');
-      out.push('<p><a href="/test/dl/' + file._id + '/' + urlEnc(file.name) + '">' +
-        htmlEnc(file.name)  + '</a></p>');
+    var out = [], uploads = req.uploads();
+    uploads.each(function(n, upload) {
+      out.push('<pre>' + htmlEnc(json.stringify(upload)) + '</pre>');
+      try {
+        var file = filestore.saveUpload(upload);
+      } catch(e) {
+        res.die('Error saving file: ' + upload.name);
+      }
+      out.push('<pre>' + htmlEnc(json.stringify(file)) + '</pre>');
+      out.push('<p><a href="/test/dl/' + file.id + '/' + urlEnc(file.attr('name')) + '">' +
+        htmlEnc(file.attr('name'))  + '</a></p>');
     });
     res.die(out.join('\r\n'),'text/html');
   });
   
-  app('/test/dl/:id/:name',function(p){
-    var fs = require('filestore');
-    var file = fs.getFile(p('id'));
+  app('/test/dl/:id/:name', function(p) {
+    var filestore = require('filestore');
+    var file = filestore.getFile(p('id'));
     if (file) {
       file.send();
     } else {
-      res.die('Not Found: ' + p('id'));
+      //Not Found: Request will fall through to default 404 action
     }
   });
 
-  app('/test/md5/:str',function(p){
+  app('/test/md5/:str', function(p) {
     var out = [];
     out.push(p('str'));
     out.push(new Binary(p('str')).md5().toString('hex'));
     res.die(out.join('\r\n'));
   });
 
-  app('/test/tz/:dt',function(p){
+  app('/test/tz/:dt', function(p) {
     var dt = Date.fromUTCString(p('dt'));
     if (dt) {
       dt = app.util.applyTimezone(dt);
@@ -56,7 +61,7 @@ register('ready',function() {
   });
   
   //test database
-  app('/test/db',function(p){
+  app('/test/db', function(p) {
     var docstore = require('docstore')
       , store = docstore.getStore('main')
       , members = store.get('items');
@@ -68,7 +73,7 @@ register('ready',function() {
   });
   
   //test docstore
-  app('/test/docstore',function(p){
+  app('/test/docstore', function(p) {
     var docstore = require('docstore')
       , store = docstore.getStore('main');
     
@@ -84,7 +89,7 @@ register('ready',function() {
   });
   
   //test email sending
-  app('/test/email',function(){
+  app('/test/email', function() {
     var net = require('net');
     net.sendEmail({
       to:        'simon.sturmer@gmail.com',
@@ -98,7 +103,7 @@ register('ready',function() {
   });
   
   //test error handling
-  app('/test/error/:err?',function(p){
+  app('/test/error/:err?', function(p) {
     var err = p('err') || 'Unspecified Error';
     throw new Error(err);
   });

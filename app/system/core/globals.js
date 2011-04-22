@@ -49,7 +49,7 @@ function fngetset(params,context) {
     , del = params.del
     , each = params.each;
   function gettersetter(n,val){
-    var self = context || null
+    var self = context || this
       , type = vartype(n)
       , len = arguments.length;
     if (each && type == 'function') {
@@ -346,7 +346,7 @@ function lib_globals() {
   };
   
   String.urlEnc = function(s) {
-    return s.replace(/[^0-9a-f!$'()*,-.\/:;@[\\\]^_{|}~]+/ig,function(s){
+    return String(s).replace(/[^0-9a-f!$'()*,-.\/:;@[\\\]^_{|}~]+/ig,function(s){
       return encodeURIComponent(s);
     });
   };
@@ -359,9 +359,13 @@ function lib_globals() {
     }
   };
   
-  String.htmlEnc = function(s,attr) {
-    s = String.parse(s).replace(/&/g,'&amp;').replace(/>/g,'&gt;').replace(/</g,'&lt;')
-    return (attr) ? s.replace(/"/g,'&quot;') : s;
+  String.htmlEnc = function(s) {
+    s = String(s)
+      .replace(/&/g,'&amp;')
+      .replace(/>/g,'&gt;')
+      .replace(/</g,'&lt;')
+      .replace(/"/g,'&quot;');
+    return s;
   };
   String.htmlDec = function(s) {
     var repl = {'amp':38,'apos':27,'gt':62,'lt':60,'quot':34};

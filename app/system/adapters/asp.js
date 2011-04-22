@@ -237,11 +237,7 @@ function lib_server() {
   function processUploadedFile(file) {
     var fd = Object.create({
       move: function(p) {
-        app.res.debug('Move: ' + file.name + ' -> ' + p);
-        path = sys.path(p)
-        app.res.debug('sys.path: ' + path);
-        app.res.debug('sys.mappath: ' + sys.mappath(path));
-        file.move(sys.mappath(path));
+        file.move(sys.mappath(p));
       },
       discard: function() {
         file.Delete();
@@ -251,15 +247,16 @@ function lib_server() {
       name: file.originalFilename,
       path: sys.path.join('data/temp/', file.filename),
       mimetype: file.contentType,
-      creationtime: new Date(file.creationTime),
-      uploadtime: __date,
-      lastaccesstime: __date,
+      created: __date,
+      modified: __date,
       size: file.size,
-      hash: file.md5Hash.toLowerCase(),
-      imagetype: file.imageType,
-      imagewidth: file.ImageWidth,
-      imageheight: file.ImageHeight
+      hash: file.md5Hash.toLowerCase()
     });
+    if (file.imageType != 'UNKNOWN') {
+      fd.imagetype = String(file.imageType).toLowerCase();
+      fd.imagewidth = file.imageWidth;
+      fd.imageheight = file.imageHeight;
+    }
     return fd;
   }
 
