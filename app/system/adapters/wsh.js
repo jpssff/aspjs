@@ -125,9 +125,6 @@ function lib_server() {
       end: function() {
         commitResponse();
         wsh.quit();
-      },
-      buffer: function(val) {
-        //TODO: Implement Response Buffering
       }
     },
     mappath: function(s) {
@@ -181,15 +178,13 @@ function lib_server() {
   }
 
   /**
-   * Return a new file-description object containing the properties and methods expected by the
+   * Return a new file description object containing the properties and methods expected by the
    * framework including image type and dimensions if applicable.
    *
    * @param {Object} f File properties as passed from webserver
    */
   function processUploadedFile(f) {
-    try {
-      var file = new ActiveXObject("Persits.Upload").openFile(mapPath(f.path));
-    } catch(e) {}
+    var file = new ActiveXObject("Persits.Upload").openFile(mapPath(f.path));
     var fd = Object.create({
       move: function(p) {
         file.move(sys.mappath(p));
@@ -207,13 +202,10 @@ function lib_server() {
       lastaccesstime: __date,
       size: f.size,
       hash: f.hash,
-      imagetype: 'UNKNOWN'
+      imagetype: file.imageType,
+      imagewidth: file.imageWidth,
+      imageheight: file.imageHeight
     });
-    if (file && file.imageType != 'UNKNOWN') {
-      fd.imagetype = file.imageType;
-      fd.imagewidth = file.ImageWidth;
-      fd.imageheight = file.ImageHeight;
-    }
     return fd;
   }
 

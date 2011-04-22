@@ -11,6 +11,7 @@
 <script runat="server" language="javascript" src="core/system.js"></script>
 <script runat="server" language="javascript" src="core/util.js"></script>
 <script runat="server" language="javascript" src="lib/docstore.js"></script>
+<script runat="server" language="javascript" src="lib/filestore.js"></script>
 <script runat="server" language="javascript" src="lib/json.js"></script>
 <script runat="server" language="javascript" src="lib/msaccess.js"></script>
 <script runat="server" language="javascript" src="lib/net.js"></script>

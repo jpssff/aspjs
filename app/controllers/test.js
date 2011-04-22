@@ -16,12 +16,14 @@ register('ready',function() {
   });
 
   app('/test/upload/post',function(){
-    res.die(server.req.getPostData());
+    var filestore = require('filestore'), json = require('json');
+    //res.die(server.req.getPostData());
     var out = [], files = req.uploads();
-    files.each(function(n,file){
-      filestore.putFile(file);
-      out.push('<p><a href="/test/dl/' + file.hash + '/' + urlEnc(file.name) + '">' + htmlEnc(file
-        .name)  + '</a></p>');
+    files.each(function(n, file){
+      file = filestore.putFile(file);
+      out.push('<p>' + htmlEnc(json.stringify(file)) + '</p>');
+      out.push('<p><a href="/test/dl/' + file._id + '/' + urlEnc(file.name) + '">' +
+        htmlEnc(file.name)  + '</a></p>');
     });
     res.die(out.join('\r\n'),'text/html');
   });

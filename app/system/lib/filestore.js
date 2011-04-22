@@ -1,10 +1,9 @@
 /**
  * File Store
  * This class presents an interface for saving files to the filesystem using a database for indexing
- * and saving meta-data.
+ * and meta-data.
  *
- * This class depends on docstore (which requires an underlying relational database) and also depends
- * on Persits ASPUpload for file operations.
+ * Requires: lib_docstore.
  *
  */
 function lib_filestore() {
@@ -20,6 +19,22 @@ function lib_filestore() {
     return col;
   }
   
+  function newFileDescriptor(fd) {
+    return {
+      'name':fd.name,
+      'mimetype':fd.mimetype,
+      'creationtime':fd.creationtime,
+      'uploadtime':__date,
+      'lastaccesstime':__date,
+      'size':fd.size,
+      'hash':hash,
+      'imagetype':fd.imagetype,
+      'imagewidth':fd.imagewidth,
+      'imageheight':fd.imageheight,
+      'meta':{}
+    };
+  }
+
   function File(fd) {
     if (!(this instanceof File)) return new File(fd);
     this.id = fd.__meta.guid;
@@ -35,9 +50,9 @@ function lib_filestore() {
           throw new Error('Invalid File Attribute: ' + key);
         }
       },
-      set: function(key,val){
+      set: function(key, val){
         var fd = this._fd, attr = String(key).toLowerCase()
-          , allowed = ['name','mimetype','creationtime','uploadtime','lastaccesstime'];
+          , allowed = ['name', 'mimetype', 'creationtime', 'uploadtime', 'lastaccesstime'];
         if (allowed.exists(attr)) {
           fd[attr] = val;
         }
@@ -48,57 +63,37 @@ function lib_filestore() {
       return sys.path.join(fs_location,this._fd.hash);
     },
     clone: function() {
-      var f = this._fd, new_fd;
-      new_fd = {
-        'name':f.name,
-        'mimetype':f.mimetype,
-        'creationtime':f.creationtime,
-        'uploadtime':__date,
-        'lastaccesstime':__date,
-        'size':f.size,
-        'hash':hash,
-        'imagetype':f.imagetype,
-        'imagewidth':f.imagewidth,
-        'imageheight':f.imageheight,
-        'meta':{}
-      }
-      return new File(getCol().save(new_fd));
+      return new File(getCol().save(newFileDescriptor(this._fd)));
     },
     save: function() {
-      var fd = this._fd;
-      getCol().save(fd);
+      getCol().save(this._fd);
     },
-    send: function(args) {
-      args = args || {};
-      var fd = this._fd
-        , fp = this.getFullPath()
-        , h = args.headers || {};
-      if (vartype(args.exp) != 'number') args.exp = 365;
-      var i = args.exp * 24 * 3600;
-      h['Cache-Control'] = 'public, max-age=' + String(i);
-      h['Expires'] = new Date(__now + i * 1000).toGMTString();
-      h['Last-Modified'] = fd.uploadtime.toGMTString();
-      h['ETag'] = '"' + fd.hash + '"';
-      res.headers(h);
-      var ims_date = Date.fromString(req.headers('if-modified-since'));
-      if (ims_date && fd.uploadtime <= ims_date) {
-        res.status('304 Not Modified');
-        res.end();
+    send: function(opts) {
+      var self = this, fd = this._fd;
+      //default options
+      opts = Object.append({
+        cache: true,
+        attachment: true
+      },opts);
+      if (opts.cache) {
+        var ims = Date.fromString(req.headers('if-modified-since'));
+        var inm = req.headers('if-none-match');
+        if ((ims && fd.uploadtime <= ims) || (inm && inm == fd.hash)) {
+          res.status('304 Not Modified');
+          res.end();
+        }
+        var i = 365 * 24 * 3600;
+        res.headers('Cache-Control', 'public, max-age=' + String(i));
+        res.headers('Expires', new Date(__now + i * 1000).toGMTString());
+        res.headers('Last-Modified', fd.uploadtime.toGMTString());
+        res.headers('ETag', '"' + fd.hash + '"');
       }
-      var inm_string = req.headers('if-none-match');
-      if (inm_string && inm_string == fd.hash) {
-        res.status('304 Not Modified');
-        res.end();
-      }
-      var upload = new ActiveXObject("Persits.Upload");
-      try {
-        res.buffer(false);
-        upload.sendbinary(sys.mappath(fp),true,fd.mimetype,!!args.attachment,'"' + fd.name.replaceAll('"',"'") + '"');
-      } catch(e) {
-        res.buffer(true);
-        throw new Error('Error Serving File "' + fp + '"; ' + e.message);
-      }
-      res.end();
+      res.sendFile({
+        file: self.getFullPath(),
+        name: fd.name,
+        ctype: fd.mimetype,
+        attachment: opts.attachment
+      });
     },
     valueOf: function() {
       return Object.append({id:this.id},this._fd);
@@ -106,36 +101,21 @@ function lib_filestore() {
   };
   
   //Private Methods
-  function saveFromUploadedFile(f) {
-    var fd, hash = f.MD5Hash, path = sys.path.join(fs_location,hash);
+  function saveFromUploadedFile(file) {
+    var path = sys.path.join(fs_location,file.hash);
+    app.res.debug('Saving uploaded file "' + file.name + '" to "' + path + '"');
     try {
-      f.move(sys.mappath(path));
+      file.move(path);
     } catch(e) {
-      if (!e.message.match(/file already exists/)) {
-        throw new Error('Error saving file "' + f.filename + '" to "' + path + '"; ' + e.message);
+      if (e.message.match(/file already exists/)) {
+        try {
+          file.discard();
+        } catch(e) {}
+      } else {
+        throw new Error('Error saving file "' + file.name + '" to "' + path + '"; ' + e.message);
       }
     }
-    fd = {
-      'name':f.OriginalFileName,
-      'mimetype':f.ContentType,
-      'creationtime':new Date(f.CreationTime),
-      'uploadtime':__date,
-      'lastaccesstime':__date,
-      'size':f.Size,
-      'hash':hash,
-      'imagetype':f.ImageType,
-      'imagewidth':f.ImageWidth,
-      'imageheight':f.ImageHeight,
-      'meta':{}
-    }
-    return new File(getCol().save(fd));
-  }
-  
-  function saveFromData(name,data) {
-    //TODO:
-    // Save to temp
-    // Open using Persits
-    // Call saveFromUploadedFile
+    return new File(getCol().save(newFileDescriptor(file)));
   }
   
   //Public Methods

@@ -139,12 +139,22 @@ function lib_server() {
         }
         iis.res.binaryWrite(b.readBin());
       },
+      sendFile: function(opts) {
+        commitResponse();
+        var upload = new ActiveXObject("Persits.Upload");
+        try {
+          iis.res.buffer = false;
+          upload.sendBinary(sys.mappath(opts.file), true, opts.ctype, !!opts.attachment,
+            '"' + opts.name.replaceAll('"',"'") + '"');
+        } catch(e) {
+          iis.res.buffer = true;
+          throw new Error('Error Serving File "' + opts.path + '"; ' + e.message);
+        }
+        iis.res.end();
+      },
       end: function() {
         commitResponse();
         iis.res.end();
-      },
-      buffer: function(val) {
-        iis.res.buffer = !!val;
       }
     },
     mappath: function(p) {
@@ -218,23 +228,20 @@ function lib_server() {
   }
 
   /**
-   * Save uploaded file to temporary directory with hex-string filename (file's MD5 hash)
+   * Save uploaded file to temporary directory and return a file descriptor object containing some
+   * key properties of the file.
    * 
    * @param {Object} file
    * @returns {Object} File Descriptor
    */
   function processUploadedFile(file) {
-    var hash = file.md5Hash.toLowerCase();
     var fd = Object.create({
       move: function(p) {
+        app.res.debug('Move: ' + file.name + ' -> ' + p);
         path = sys.path(p)
-        try {
-          file.move(sys.mappath(path));
-        } catch(e) {
-          //if (!e.message.match(/file already exists/)) {
-            throw new Error('Error saving file "' + file.filename + '" to "' + path + '"; ' + e.message);
-          //}
-        }
+        app.res.debug('sys.path: ' + path);
+        app.res.debug('sys.mappath: ' + sys.mappath(path));
+        file.move(sys.mappath(path));
       },
       discard: function() {
         file.Delete();
@@ -248,7 +255,7 @@ function lib_server() {
       uploadtime: __date,
       lastaccesstime: __date,
       size: file.size,
-      hash: hash,
+      hash: file.md5Hash.toLowerCase(),
       imagetype: file.imageType,
       imagewidth: file.ImageWidth,
       imageheight: file.ImageHeight
