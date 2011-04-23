@@ -125,7 +125,7 @@ function lib_system(sys) {
   fs.isFile = function(f) {
     f = path(f);
     if (vars.files[f]) return (vars.files[f] == 'true');
-    var r = fs.getFSO().FileExists(mappath(f));
+    var r = fs.getFSO().fileExists(mappath(f));
     vars.files[f] = String(r);
     return r;
   };
@@ -133,7 +133,7 @@ function lib_system(sys) {
   fs.isDir = function(f) {
     f = path(f);
     if (vars.dirs[f]) return (vars.dirs[f] == 'true');
-    var r = fs.getFSO().FolderExists(mappath(f));
+    var r = fs.getFSO().folderExists(mappath(f));
     vars.dirs[f] = String(r);
     return r;
   };
@@ -147,7 +147,7 @@ function lib_system(sys) {
       return fs.readTextFileStream(f,'UTF-16BE');
     } else {
       var mode = (enc.match(/UTF-16LE/i)) ? -1 : 0;
-      var s = fs.getFSO().OpenTextFile(mappath(f),1,mode);
+      var s = fs.getFSO().openTextFile(mappath(f),1,mode);
       var r = s.ReadAll();
       s.Close();
       return r;
@@ -169,27 +169,27 @@ function lib_system(sys) {
     if (!cfg) cfg = {};
     //TODO: Character Encoding
     var mode = (cfg.overwrite === true) ? 2 : 8;
-    var file = fs.getFSO().OpenTextFile(mappath(f),mode,true);
+    var file = fs.getFSO().openTextFile(mappath(f),mode,true);
     file.Write(String(s));
     file.Close();
   };
   
-  fs.moveFile = function(f,l) {
-    fs.getFSO().MoveFile(mappath(f),mappath(l));
+  fs.moveFile = function(f, d) {
+    fs.getFSO().moveFile(mappath(f), mappath(d));
   };
   
-  fs.copyFile = function(f,l) {
-    fs.getFSO().CopyFile(mappath(f),mappath(l));
+  fs.copyFile = function(f, d) {
+    fs.getFSO().copyFile(mappath(f), mappath(d));
   };
   
   fs.deleteFile = function(f) {
-    fs.getFSO().DeleteFile(mappath(f),true);
+    fs.getFSO().deleteFile(mappath(f), true);
   };
   
-  fs.createDir = function(f,n) {
-    var p = path.join(f,n);
+  fs.createDir = function(f, n) {
+    var p = path.join(f, n);
     try {
-      fs.getFSO().GetFolder(mappath(path.parent(p))).SubFolders.Add(path.member(p));
+      fs.getFSO().getFolder(mappath(path.parent(p))).SubFolders.Add(path.member(p));
     } catch(e) {
       throw new Error('Error Creating Directory: ' + p);
     }
@@ -198,7 +198,7 @@ function lib_system(sys) {
   fs.removeDir = function(f,r) {
     f = path(f);
     try {
-      fs.getFSO().DeleteFolder(f,true);
+      fs.getFSO().deleteFolder(f,true);
     } catch(e) {}
   };
   

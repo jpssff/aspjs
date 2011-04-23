@@ -7,16 +7,16 @@
  * array of integers or various string formats.
  *
  * Example Usage: (new operator is not required)
- * var bin = new Binary('68656c6c6f','hex');
+ * var bin = new Binary('68656c6c6f', 'hex');
  * bin.toString('ascii'); //returns 'hello'
  * bin.length(); //returns 5
- * bin.toArray(); //returns [104,101,108,108,111]
- * var bin = new Binary('\uC548\uB155\uD558\uC138\uC694','unicode');
+ * bin.toArray(); //returns [104, 101, 108, 108, 111]
+ * var bin = new Binary('\uC548\uB155\uD558\uC138\uC694', 'utf16');
  * bin.length(); //returns 10 (10 bytes)
  * bin.toString().length; //returns 5 (5 chars)
  *
  */
-function Binary(data,enc) {
+function Binary(data, enc) {
   
   if (!Binary.prototype.toArray) {
     Binary.prototype = _Binary_proto();
@@ -25,7 +25,7 @@ function Binary(data,enc) {
   if (!(this instanceof Binary)) {
     return new Binary(data,enc);
   }
-  
+
   this._stream = new ActiveXObject("ADODB.Stream");
   this.bomOffset = 0;
   this._stream.open();
@@ -33,14 +33,14 @@ function Binary(data,enc) {
   var util = Binary.prototype.util
     , type = util.vartype(data);
   
-  enc = util.parseEncType(enc);
+  enc = this.defaultEnc = util.parseEncType(enc);
   
   if (type == 'unknown') {
     //assume ado binary
     this.writeBin(data);
   } else
   if (type == 'array') {
-    //array of bytes represented by integers
+    //array of octets as integers
     this.writeBin(util.hex2bin(util.arr2hex(data)));
   } else
   if (type == 'string' && enc == 'hex') {
@@ -52,7 +52,7 @@ function Binary(data,enc) {
     this.writeBin(util.hex2bin(util.bsf2hex(data)));
   } else
   if (type == 'string') {
-    this.writeText(data,enc);
+    this.writeText(data, enc);
   }
   
   return this;
@@ -163,27 +163,24 @@ function _Binary_proto() {
   
   var util = {
     vartype: function(obj) {
-      if (obj === null) return 'null';
-      var type = typeof obj;
+      var type = (obj === null) ? 'null' : typeof obj;
       if (obj instanceof Object) {
-        var arr = Object.prototype.toString.call(obj).match(/(\w+)\]$/);
-        if (arr) type = arr[1].toLowerCase();
-        return type;
+        return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
       }
       return (type == 'object') ? 'unknown' : type;
     },
     parseEncType: function(type) {
-      var t = String(type).toLowerCase();
+      var t = String(type).replace(/-/g, '').toLowerCase();
       if (t == 'hex' || t == 'base64') {
         return t;
       } else
-      if (t == 'utf-16le') {
+      if (t == 'utf16le') {
         return 'unicode'; //unicode little-endian (MS CP-1200)
       } else
-      if (t == 'ascii' || t == 'us-ascii' || 'iso-8859') {
+      if (t == 'ascii' || t == 'us-ascii' || t == 'iso8859') {
         return 'iso-8859-1'; //subset of MS CP-1252
       } else
-      if (t == 'unicode' || t == 'utf-16' || t == 'utf-16be') {
+      if (t == 'unicode' || t == 'ucs2' || t == 'utf16' || t == 'utf16be') {
         return 'utf-16be'; //unicode big-endian / UCS-2 (MS CP-1201)
       } else {
         return 'utf-8'; //MS CP-65001
@@ -264,7 +261,7 @@ function _Binary_proto() {
     length: function(){
       return this._stream.size - this.bomOffset;
     },
-    readBin: function(offset,count) {
+    readBin: function(offset, count) {
       var stream = this._stream;
       stream.position = 0;
       stream.type = adTypeBinary;
@@ -287,12 +284,14 @@ function _Binary_proto() {
       stream.charset = enc;
       return stream.readtext();
     },
-    writeText: function(data,enc) {
+    writeText: function(data, enc) {
       var stream = this._stream;
       this.bomOffset = (enc == 'utf-8') ? 3 : (enc == 'unicode') ? 2 : 0;
       stream.type = adTypeText;
       stream.charset = enc;
+      //res.die([String(data), enc]);
       stream.writetext(String(data));
+      //res.die([this.bomOffset, this._stream.size]);
     },
     md5: function() {
       return new Binary(md5.hash(this.toString('hex')),'hex');
@@ -300,11 +299,11 @@ function _Binary_proto() {
     toArray: function() {
       return util.hex2arr(util.bin2hex(this.readBin()));
     },
-    valueOf: function() {
-      return this.toArray();
+    toJSON: function() {
+      return "[Binary('" + this.toString('hex') + "','hex')]";
     },
     toString: function(enc) {
-      enc = util.parseEncType(enc);
+      enc = (enc) ? util.parseEncType(enc) : this.defaultEnc;
       if (enc == 'hex') {
         return util.bin2hex(this.readBin());
       } else
@@ -314,12 +313,12 @@ function _Binary_proto() {
         return this.readText(enc);
       }
     },
-    slice: function(offset,count) {
-      return new Binary(this.readBin(offset,count));
+    slice: function(offset, count) {
+      return new Binary(this.readBin(offset, count));
     },
-    append: function(data,enc) {
+    append: function(data, enc) {
       if (!(data instanceof Binary)) {
-        data = new Binary(data,enc);
+        data = new Binary(data, enc);
       }
       this.writeBin(data.readBin());
       return this;

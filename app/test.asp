@@ -1,4 +1,4 @@
-<%@LANGUAGE="JAVASCRIPT" CODEPAGE="65001"%>
+﻿<%@LANGUAGE="JAVASCRIPT" CODEPAGE="65001"%>
 <script runat="server" language="javascript" src="config/config.js"></script>
 <script runat="server" language="javascript" src="system/config/config.js"></script>
 <!--#include file="system/_inc.asp" -->

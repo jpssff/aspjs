@@ -46,16 +46,29 @@ function lib_server() {
     });
     res.cookies = cookies;
     res.body = res.body.join('');
-    wsh.stdout.write(json.stringify(res,true));
+    wsh.stdout.write(shellEnc(json.stringify(res,true)));
   }
 
   function applyCharset(ctype, charset) {
     return (/^text\//i.exec(ctype)) ? ctype + '; charset=' + charset : ctype;
   }
 
+  function encodeMessage(msg) {
+    return '<<' + shellEnc(json.stringify(msg, true)) + '>>';
+  }
+
+  function shellEnc(str) {
+    return str.replace(/[^{}[\]]+/g, function(s){
+      return encodeURI(s);
+    })
+    .replace(/\+/g, '%2B')
+    .replace(/%20/g, '+')
+    .replace(/%22/g, '`');
+  }
+
   function mapPath(s) {
     var p = wsh.scriptFullName;
-    p = p.replace(/([^\\]+)\\([^\\]+)\\([^\\]+)$/, '');
+    p = p.replace(/\\node\\.*$/, '\\');
     p = p + String(s).replace(/\//g, '\\');
     p = p.replace(/[\\]+/g, '\\');
     p = p.replace(/\\$/g, '');
@@ -79,7 +92,7 @@ function lib_server() {
         var files = postdata.files && util.newParamCollection(postdata.files);
         if (files) {
           files.each(function(n,fd){
-            files(n,processUploadedFile(fd));
+            files(n, processUploadedFile(fd));
           });
         }
         return {fields: util.newParamCollection(postdata.fields), files: files};
@@ -110,16 +123,19 @@ function lib_server() {
         }
       },
       debug: function(o) {
-        wsh.stdout.write('<<' + json.stringify({action: 'debug', value: o},true) + '>>');
+        wsh.stdout.write(encodeMessage({action: 'debug', value: o}));
         wsh.stdin.readLine();
       },
       clear: function() {
         res = newResponse();
       },
       write: function(s) {
+        //res.body.push({data: s, encoding: 'utf8'});
         res.body.push(s);
       },
       writebin: function(b) {
+        //TODO: Implement Binary Response
+        //res.body.push({data: b.toString('hex'), encoding: 'hex'});
         throw new Error('Binary Response not implemented in WSH');
       },
       end: function() {
@@ -142,7 +158,7 @@ function lib_server() {
           action: 'app_var_get',
           name: n
         };
-        wsh.stdout.write('<<' + json.stringify(msg,true) + '>>');
+        wsh.stdout.write(encodeMessage(msg));
         var val = wsh.stdin.readLine();
         try {
           val = json.parse(val);
@@ -155,7 +171,7 @@ function lib_server() {
           name: n,
           value: json.stringify(val,true)
         };
-        wsh.stdout.write('<<' + json.stringify(msg,true) + '>>');
+        wsh.stdout.write(encodeMessage(msg));
         wsh.stdin.readLine();
       }
     })
@@ -181,19 +197,18 @@ function lib_server() {
    * Return a new file description object containing the properties and methods expected by the
    * framework including image type and dimensions if applicable.
    *
-   * @param {Object} f File properties as passed from webserver
+   * @param {Object} f File properties object received from server
    */
   function processUploadedFile(f) {
-    var file = new ActiveXObject("Persits.Upload").openFile(mapPath(f.path));
+    var file = new ActiveXObject("Persits.Upload").openFile(sys.mappath(f.path));
     var fd = Object.create({
       move: function(p) {
-        app.res.debug('Move: ' + file.name + ' -> ' + p);
-        app.res.debug('sys.path: ' + sys.path(p));
-        app.res.debug('sys.mappath: ' + sys.mappath(p));
-        file.move(sys.mappath(p));
+        //file.move(sys.mappath(p));
+        sys.fs.moveFile(f.path, p);
       },
       discard: function() {
-        file.Delete();
+        //file.Delete();
+        sys.fs.deleteFile(f.path);
       }
     });
     Object.append(fd,{

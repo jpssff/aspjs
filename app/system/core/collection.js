@@ -10,11 +10,11 @@
  *  var product = new Collection({item:'apple',type:'fruit'});
  *  product('item','banana'); //shorthand for product.set(..)
  *  product('Type'); //returns 'fruit' (case-insensitive)
- *  product('valueOf',2.27);
+ *  product('valueOf', 2.27);
  *  product.count(); //returns 3
  *  product(); //returns object
- *   {item:'banana',type:'fruit','valueOf':2.27}
- *  product({price:2.95,inStock:true}); //append
+ *   {item: 'banana', type: 'fruit', 'valueOf': 2.27}
+ *  product({price: 2.95, inStock: true}); //append
  *  product(function(n,val){ display(n,val); }); //iterate
  *
  */
@@ -35,8 +35,7 @@ function Collection(data) {
   var proto = obj.__proto__ = Collection.proto;
   for (var n in proto) if (proto.hasOwnProperty(n)) obj[n] = proto[n];
   obj['toString'] = proto['toString'];
-  obj['valueOf'] = proto['valueOf'];
-  
+
   if (data) {
     obj.append(data);
   }
@@ -47,21 +46,18 @@ function Collection(data) {
 
 function _Collection_proto() {
   
-  function each(o,f) {
-    for (var n in o) if (exists(o,n)) f.call(o,n,o[n]);
+  function fn_each(o,f) {
+    for (var n in o) if (fn_exists(o,n)) f.call(o,n,o[n]);
     var a = ['constructor','hasOwnProperty','isPrototypeOf','propertyIsEnumerable','toLocaleString','toString','valueOf'];
-    for (var i=0;i<a.length;i++) if (exists(o,a[i])) f.call(o,a[i],o[a[i]]);
+    for (var i=0;i<a.length;i++) if (fn_exists(o,a[i])) f.call(o,a[i],o[a[i]]);
   }
-  function exists(o,n) {
+  function fn_exists(o,n) {
     return Object.prototype.hasOwnProperty.call(o,n);
   }
-  function vartype(obj) {
-    if (obj === null) return 'null';
-    var type = typeof obj;
+  function fn_typeOf(obj) {
+    var type = (obj === null) ? 'null' : typeof obj;
     if (obj instanceof Object) {
-      var arr = Object.prototype.toString.call(obj).match(/(\w+)\]$/);
-      if (arr) type = arr[1].toLowerCase();
-      return type;
+      return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
     }
     return (type == 'object') ? 'unknown' : type;
   }
@@ -69,16 +65,14 @@ function _Collection_proto() {
   return {
     access: function(p1,p2){
       if (arguments.length == 0) {
-        return this.valueOf();
+        return this.toObject();
       } else
       if (arguments.length == 1) {
-        switch (vartype(p1)) {
+        switch (fn_typeOf(p1)) {
           case 'function':
             return this.each(p1);
-            break;
           case 'object':
             return this.append(p1);
-            break;
           default:
             return this.get(p1);
         }
@@ -93,7 +87,7 @@ function _Collection_proto() {
       return this;
     },
     get: function(key) {
-      if (vartype(key) == 'function') return this.each(key);
+      if (fn_typeOf(key) == 'function') return this.each(key);
       key = String(key);
       if (this.exists(key)) {
         this.trigger('get',key);
@@ -129,12 +123,12 @@ function _Collection_proto() {
       if (obj.__proto__ === Collection.proto) {
         obj.each(obj,function(n,val){ col.set(n,val); });
       } else {
-        each(obj,function(n,val){ col.set(n,val); });
+        fn_each(obj,function(n,val){ col.set(n,val); });
       }
       return this;
     },
     exists: function(key) {
-      return exists(this._items,String(key).toUpperCase());
+      return fn_exists(this._items,String(key).toUpperCase());
     },
     count: function() {
       return this._count;
@@ -156,12 +150,12 @@ function _Collection_proto() {
     },
     keys: function() {
       var o = this._items, a = [];
-      for (var n in o) if (exists(o,n)) a.push(o[n][0]);
+      for (var n in o) if (fn_exists(o,n)) a.push(o[n][0]);
       return a;
     },
     values: function() {
       var o = this._items, a = [];
-      for (var n in o) if (exists(o,n)) a.push(o[n][1]);
+      for (var n in o) if (fn_exists(o,n)) a.push(o[n][1]);
       return a;
     },
     sort: function() {
@@ -177,7 +171,7 @@ function _Collection_proto() {
     },
     on: function(evt,fn) {
       var lis = this._listeners;
-      if (vartype(fn) == 'function') {
+      if (fn_typeOf(fn) == 'function') {
         if (!lis[evt]) lis[evt] = [];
         lis[evt].push(fn);
       }
@@ -190,16 +184,19 @@ function _Collection_proto() {
       lis[evt][i].apply(this,Array.prototype.slice.call(arguments,1));
       return this;
     },
+    toObject: function() {
+      var o = this._items, obj = {};
+      for (var n in o) if (fn_exists(o,n)) obj[o[n][0]] = o[n][1];
+      return obj;
+    },
     toString: function() {
       return '[object Collection]';
     },
-    valueOf: function() {
-      var o = this._items, obj = {};
-      for (var n in o) if (exists(o,n)) obj[o[n][0]] = o[n][1];
-      return obj;
-    },
     type: function(n) {
-      return vartype(this.get(n));
+      return fn_typeOf(this.get(n));
+    },
+    toJSON: function() {
+      return this.toObject();
     }
   };
   

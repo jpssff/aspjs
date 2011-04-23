@@ -1,4 +1,4 @@
-register('ready',function() {
+﻿register('ready',function() {
   
   /*
    * Testing Routes
@@ -9,23 +9,32 @@ register('ready',function() {
     res.die([req.method(), req.url('path'), req.params()]);
   });
 
+  app('/test/binary', function(p) {
+    var b = new Binary('\uC548\uB155\uD558\uC138\uC694', 'utf16');
+    res.die([b.toString('hex'), b.length()]);
+  });
+
+  app('/test/json', function() {
+    var json = require('json'), undef, fn = function(a){return true}, re = /abc/i;
+    var a = {num: 1, str: 'strîng', arr: [1, 'two', true, '€', null, undef, fn], obj: {n: '2x9',
+      val: 27}, dt: Date.fromString('29 Apr 2006'), re: re, fn: fn, bin: new Binary('«'),
+      col: new Collection({a: 1, b: 'stür'}), undef: undef, nul: null, bool: false};
+    var out = [json.stringify(a), json.stringify(a, true)];
+    res.die(out.join('\r\n'), 'text/plain');
+  });
+
   app('/test/upload', function() {
-    var templ = require('templ')
-      , html = templ.render('test/upload');
+    var templ = require('templ');
+    var html = templ.render('test/upload');
     res.die(html,'text/html');
   });
 
   app('/test/upload/post', function() {
-    var filestore = require('filestore'), json = require('json');
-    //res.die(server.req.getPostData());
+    var json = require('json'), filestore = require('filestore');
     var out = [], uploads = req.uploads();
     uploads.each(function(n, upload) {
       out.push('<pre>' + htmlEnc(json.stringify(upload)) + '</pre>');
-      try {
-        var file = filestore.saveUpload(upload);
-      } catch(e) {
-        res.die('Error saving file: ' + upload.name);
-      }
+      var file = filestore.saveUpload(upload);
       out.push('<pre>' + htmlEnc(json.stringify(file)) + '</pre>');
       out.push('<p><a href="/test/dl/' + file.id + '/' + urlEnc(file.attr('name')) + '">' +
         htmlEnc(file.attr('name'))  + '</a></p>');

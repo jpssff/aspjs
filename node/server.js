@@ -1,8 +1,8 @@
 //System Modules
 var fs = require('fs');
 var path = require('path');
-require.paths.unshift('./lib');
-require.paths.unshift('./support');
+require.paths.unshift(__dirname + '/lib');
+require.paths.unshift(__dirname + '/support');
 
 //Library Modules
 var dispatch = require('dispatch');

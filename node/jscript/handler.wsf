@@ -1,27 +1,31 @@
-<job id="one">
-<script language="javascript" src="..\..\app\config\config.js"></script>
-<script language="javascript" src="..\..\app\system\config\config.js"></script>
-<script language="javascript" src="..\..\app\system\adapters\wsh.js"></script>
-<script language="javascript" src="..\..\app\system\core.js"></script>
-<script language="javascript" src="..\..\app\system\core\application.js"></script>
-<script language="javascript" src="..\..\app\system\core\binary.js"></script>
-<script language="javascript" src="..\..\app\system\core\collection.js"></script>
-<script language="javascript" src="..\..\app\system\core\globals.js"></script>
-<script language="javascript" src="..\..\app\system\core\handlers.js"></script>
-<script language="javascript" src="..\..\app\system\core\request.js"></script>
-<script language="javascript" src="..\..\app\system\core\response.js"></script>
-<script language="javascript" src="..\..\app\system\core\router.js"></script>
-<script language="javascript" src="..\..\app\system\core\system.js"></script>
-<script language="javascript" src="..\..\app\system\core\util.js"></script>
-<script language="javascript" src="..\..\app\system\lib\docstore.js"></script>
-<script language="javascript" src="..\..\app\system\lib\json.js"></script>
-<script language="javascript" src="..\..\app\system\lib\msaccess.js"></script>
-<script language="javascript" src="..\..\app\system\lib\net.js"></script>
-<script language="javascript" src="..\..\app\system\lib\templ.js"></script>
-<script language="javascript" src="..\..\app\code\handlers.js"></script>
-<script language="javascript" src="..\..\app\code\helpers.js"></script>
-<script language="javascript" src="..\..\app\controllers\test.js"></script>
-<script language="javascript">
-app_init();
-</script>
-</job>
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <job id="one">
+    <script language="javascript" src="..\..\app\config\config.js"></script>
+    <script language="javascript" src="..\..\app\system\config\config.js"></script>
+    <script language="javascript" src="..\..\app\system\adapters\wsh.js"></script>
+    <script language="javascript" src="..\..\app\system\core.js"></script>
+    <script language="javascript" src="..\..\app\system\core\application.js"></script>
+    <script language="javascript" src="..\..\app\system\core\binary.js"></script>
+    <script language="javascript" src="..\..\app\system\core\collection.js"></script>
+    <script language="javascript" src="..\..\app\system\core\globals.js"></script>
+    <script language="javascript" src="..\..\app\system\core\handlers.js"></script>
+    <script language="javascript" src="..\..\app\system\core\request.js"></script>
+    <script language="javascript" src="..\..\app\system\core\response.js"></script>
+    <script language="javascript" src="..\..\app\system\core\router.js"></script>
+    <script language="javascript" src="..\..\app\system\core\system.js"></script>
+    <script language="javascript" src="..\..\app\system\core\util.js"></script>
+    <script language="javascript" src="..\..\app\system\lib\docstore.js"></script>
+    <script language="javascript" src="..\..\app\system\lib\filestore.js"></script>
+    <script language="javascript" src="..\..\app\system\lib\json.js"></script>
+    <script language="javascript" src="..\..\app\system\lib\msaccess.js"></script>
+    <script language="javascript" src="..\..\app\system\lib\net.js"></script>
+    <script language="javascript" src="..\..\app\system\lib\templ.js"></script>
+    <script language="javascript" src="..\..\app\code\handlers.js"></script>
+    <script language="javascript" src="..\..\app\code\helpers.js"></script>
+    <script language="javascript" src="..\..\app\controllers\test.js"></script>
+    <script language="javascript">
+    app_init();
+    </script>
+  </job>
+</package>

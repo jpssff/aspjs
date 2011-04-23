@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * Declare global variables
  */
 var __approot, __date, __now;

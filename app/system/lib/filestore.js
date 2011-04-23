@@ -103,8 +103,9 @@ function lib_filestore() {
         attachment: opts.attachment
       });
     },
-    valueOf: function() {
+    toJSON: function() {
       var obj = Object.append({id: this.id}, this._rec);
+      //TODO: remove this when docstore prototype chain is fixed
       Object.remove(obj, '_id');
       return obj;
     }
@@ -115,7 +116,7 @@ function lib_filestore() {
     try {
       upload.move(path);
     } catch(e) {
-      if (e.message.match(/file already exists/)) {
+      if (e.message.match(/file already exists/i)) {
         try {
           upload.discard();
         } catch(e) {}

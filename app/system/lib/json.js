@@ -14,7 +14,10 @@ function lib_json() {
   
   /* JSON FUNCTIONS */
   
-  function fn_Stringify(o,strict) {
+  function fn_Stringify(o, strict) {
+    if (o instanceof Object && o.toJSON instanceof Function) {
+      o =  o.toJSON();
+    }
     var s = '', t = fn_typeOf(o);
     if (t == 'null' || t == 'unknown') {
       s = 'null';
@@ -38,7 +41,8 @@ function lib_json() {
     if (t == 'array') {
       var a = [];
       fn_each(o,function(i,o){
-        a.push(fn_Stringify(o,strict))
+        var s = fn_Stringify(o, strict);
+        a.push(s.length ? s : 'null')
       });
       s = '[' + a.join(',') + ']';
     } else
@@ -54,44 +58,35 @@ function lib_json() {
         s = '{}';
       } else {
         var m = ((o.global) ? 'g' : '') + ((o.ignoreCase) ? 'i' : '') + ((o.multiline) ? 'm' : '');
-        s = 'new RegExp(' + fn_Stringify(o.source,strict) + ',"' + m + '")';
+        s = 'new RegExp(' + fn_Stringify(o.source, strict) + ',"' + m + '")';
+      }
+    } else
+    if (o instanceof Function) {
+      if (!strict) {
+        s = Function.prototype.toString.call(o).replace(/function\s*\w*\s*\(\s*([\w, ]*)\s*\)\s*\{([\w\W]*)\}/gim,function(src,args,code){
+          var items = []
+            , args = args.split(/[,\s]+/);
+          if (args.join('')) {
+            fn_each(args,function(i,s){
+              items.push(fn_Stringify(s, strict));
+            });
+          }
+          items.push(fn_Stringify(code.replace(/^[\r\n]*/gm,'').replace(/[\r\n]*$/gm,''), strict));
+          return 'new Function(' + items.join(',') + ')';
+        });
       }
     } else {
-      if (o.toJSON instanceof Function) {
-        return o.toJSON(strict);
-      } else
-      if (o.valueOf instanceof Function) {
-        o = o.valueOf();
-      }
-      if (o instanceof Function) {
-        if (strict) {
-          s = '{}';
-        } else {
-          s = Function.prototype.toString.call(o).replace(/function\s*\w*\s*\(\s*([\w, ]*)\s*\)\s*\{([\w\W]*)\}/gim,function(src,args,code){
-            var items = []
-              , args = args.split(/[,\s]+/);
-            if (args.join('')) {
-              fn_each(args,function(i,s){
-                items.push(fn_Stringify(s,strict));
-              });
-            }
-            items.push(fn_Stringify(code.replace(/^[\r\n]*/gm,'').replace(/[\r\n]*$/gm,''),strict));
-            return 'new Function(' + items.join(',') + ')';
-          });
-        }
-      } else {
-        var a = [];
-        fn_each(o,function(n,o){
-          var s = fn_Stringify(o,strict);
-          if (s) a.push('"' + fn_esc(n) + '":' + s);
-        });
-        s = '{' + a.join(',') + '}';
-      }
+      var a = [];
+      fn_each(o,function(n,o){
+        var s = fn_Stringify(o, strict);
+        if (s.length) a.push('"' + fn_esc(n) + '":' + s);
+      });
+      s = '{' + a.join(',') + '}';
     }
     return s;
   }
   
-  function fn_Parse(s,strict) {
+  function fn_Parse(s, strict) {
     if (fn_typeOf(s) !== 'string' || !s) {
       return null;
     }
@@ -117,25 +112,22 @@ function lib_json() {
   /* HELPER FUNCTIONS */
   
   function fn_typeOf(obj) {
-    if (obj === null) return 'null';
-    var type = typeof obj;
+    var type = (obj === null) ? 'null' : typeof obj;
     if (obj instanceof Object) {
-      var arr = Object.prototype.toString.call(obj).match(/(\w+)\]$/);
-      if (arr) type = arr[1].toLowerCase();
-      return type;
+      return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
     }
     return (type == 'object') ? 'unknown' : type;
   }
   
-  function fn_each(o,fn) {
+  function fn_each(o, fn) {
     if (o instanceof Array) {
       for (var i = 0, l = o.length; i < l; i++) {
-        if (fn.call(o,i,o[i]) === false) break;
+        if (fn.call(o, i, o[i]) === false) break;
       }
     } else {
       for (var n in o) {
         if (o.hasOwnProperty(n)) {
-          if (fn.call(o,n,o[n]) === false) break;
+          if (fn.call(o, n, o[n]) === false) break;
         }
       }
     }
@@ -172,21 +164,20 @@ function lib_json() {
     }
   }
   
-  function fn_pad(s) {
-    return ('00' + s).replace(/^.*(\d\d)$/,'$1');
+  function fn_pad(s, l) {
+    return (new Array(l + 1).join('0') + s).slice(0 - l);
   }
   
   function fn_fDate(d) {
-    //{yyyy}-{mm}-{dd}T{HH}:{nn}:{ss}Z
+    //{yyyy}-{mm}-{dd}T{HH}:{nn}:{ss}.{ms}Z
     var a = fn_parseDate(d);
     if (a) {
-      return a[0] + '-' + fn_pad(a[1] + 1) + '-' + fn_pad(a[2]) + 'T' + fn_pad(a[3]) + ':' + fn_pad(a[4]) + ':' + fn_pad(a[5]) + 'Z';
+      return a[0] + '-' + fn_pad(a[1] + 1, 2) + '-' + fn_pad(a[2], 2) + 'T' + fn_pad(a[3], 2) + ':' +
+        fn_pad(a[4], 2) + ':' + fn_pad(a[5], 2) + '.' + fn_pad(a[5], 3) + 'Z';
     }
   }
   
 
-  /* RETURN PUBLIC OBJECT */
-  
   return {
     stringify: fn_Stringify,
     parse: fn_Parse

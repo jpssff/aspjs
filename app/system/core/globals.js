@@ -136,8 +136,15 @@ function lib_globals() {
     return new F();
   };
   //Extend an object so it "inherits" from parent but contains the given properties as its own
-  Object.extend = function(parent, properties) {
-    return Object.append(Object.create(parent), {_super: parent}, properties);
+  Object.extend = function(parent, ext) {
+    var obj = Object.create(parent);
+    if (ext instanceof Function) {
+      Object.append(obj, ext.call(parent, parent));
+    } else
+    if (ext instanceof Object) {
+      Object.append(obj, {_super: parent}, ext)
+    }
+    return obj;
   };
   Object.each = function(o,f) {
     var i = 0;
@@ -174,12 +181,9 @@ function lib_globals() {
     return a;
   };
   Object.vartype = function(obj) {
-    if (obj === null) return 'null';
-    var type = typeof obj;
+    var type = (obj === null) ? 'null' : typeof obj;
     if (obj instanceof Object) {
-      var arr = Object.prototype.toString.call(obj).match(/(\w+)\]$/);
-      if (arr) type = arr[1].toLowerCase();
-      return type;
+      return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
     }
     return (type == 'object') ? 'unknown' : type;
   };

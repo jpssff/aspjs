@@ -1,3 +1,5 @@
+var cwd = process.cwd();
+var path = require('path');
 var spawn = require('child_process').spawn;
 var app_vars = {};
 
@@ -12,14 +14,14 @@ function shellEnc(str) {
   .replace(/%22/g, '`');
 }
 
-//function parseCharset(str) {
-//  str = String(str).toLowerCase().replace(/-/g,'');
-//  if (str.match(/^(utf8|ucs2)$/)) {
-//    return str;
-//  } else {
-//    return 'ascii';
-//  }
-//}
+function shellDec(str) {
+  str = String(str).replace(/`/g, '"').replace(/\+/g,' ');
+  try {
+    return decodeURIComponent(str);
+  } catch(e) {
+    return unescape(str);
+  }
+}
 
 function handleRPC(rpc, stream) {
   if (rpc.action == 'app_var_set') {
@@ -39,17 +41,19 @@ exports.exec = function(scriptName) {
 
   function proxy(req_data, callback, errback) {
     var m, stderr_data = '', stdout_data = '';
+    process.chdir(path.join(__dirname,'..'));
     var child = spawn('cscript', ['//nologo', scriptName, shellEnc(JSON.stringify(req_data))]);
-    child.stderr.setEncoding('utf8');
+    process.chdir(cwd);
+    child.stderr.setEncoding('ascii');
     child.stderr.on('data', function(data){
       stderr_data += data;
     });
-    child.stdout.setEncoding('utf8');
+    child.stdout.setEncoding('ascii');
     child.stdout.on('data', function(data){
       stdout_data += data;
       if (m = stdout_data.match(/^<<(.*)>>$/)) {
         stdout_data = '';
-        handleRPC(JSON.parse(m[1]), child.stdin);
+        handleRPC(JSON.parse(shellDec(m[1])), child.stdin);
       }
     });
     child.on('exit', function(){
@@ -57,7 +61,7 @@ exports.exec = function(scriptName) {
         return errback(stderr_data);
       }
       try {
-        var obj = JSON.parse(stdout_data);
+        var obj = JSON.parse(shellDec(stdout_data));
       } catch(e) {
         return errback(stdout_data);
       }
@@ -84,14 +88,13 @@ exports.exec = function(scriptName) {
         req_data.postdata.fields = req.form.fields;
       }
       if (req.form.files) {
-        Object.keys(req.form.files).forEach(function(n){
+        Object.keys(req.form.files).forEach(function(n) {
           var files = req.form.files[n];
           if (!(files instanceof Array)) {
             files = [files];
           }
-          files.forEach(function(file){
-            var pos = file.path.indexOf('/app/data');
-            if (~pos) file.path = file.path.substr(pos + 1);
+          files.forEach(function(file) {
+            file.path = file.path.replace(/^.*\/app\//, '');
           });
         });
         req_data.postdata.files = req.form.files;

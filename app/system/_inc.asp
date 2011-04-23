@@ -1,4 +1,4 @@
-<script runat="server" language="javascript" src="adapters/asp.js"></script>
+﻿<script runat="server" language="javascript" src="adapters/asp.js"></script>
 <script runat="server" language="javascript" src="core.js"></script>
 <script runat="server" language="javascript" src="core/application.js"></script>
 <script runat="server" language="javascript" src="core/binary.js"></script>
