@@ -4,6 +4,7 @@
  * is specific to this application or deployment.
  *
  */
+if (!this.lib_appcfg) this.lib_appcfg = lib_appcfg;
 function lib_appcfg() {
   return {
     

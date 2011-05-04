@@ -78,6 +78,7 @@ function fngetset(params,context) {
  * libraries.
  *
  */
+if (!this.lib_globals) this.lib_globals = lib_globals;
 function lib_globals() {
 
   function getGlobal() {

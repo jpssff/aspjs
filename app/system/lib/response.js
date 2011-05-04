@@ -9,6 +9,7 @@
  *
  */
 
+if (!this.lib_response) this.lib_response = lib_response;
 function lib_response() {
   var res, server = require('server');
   var _super = server.res;

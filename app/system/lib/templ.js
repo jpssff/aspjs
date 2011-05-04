@@ -16,6 +16,7 @@
  * sub-templates
  *
  */
+if (!this.lib_templ) this.lib_templ = lib_templ;
 function lib_templ(exports) {
   
   var TOKEN_RE = new RegExp("(\{[\=\:\#\/].+?\})")

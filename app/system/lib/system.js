@@ -3,6 +3,7 @@
  * filesystem, logging and path manipulation.
  *
  */
+if (!this.lib_system) this.lib_system = lib_system;
 function lib_system(sys) {
   
   /*

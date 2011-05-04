@@ -5,6 +5,7 @@
  * Requires: lib_docstore
  *
  */
+if (!this.lib_filestore) this.lib_filestore = lib_filestore;
 function lib_filestore() {
   var docstore = require('docstore')
     , fs_database = app.cfg('filestore/database')

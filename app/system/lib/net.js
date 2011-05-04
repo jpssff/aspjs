@@ -1,3 +1,4 @@
+if (!this.lib_net) this.lib_net = lib_net;
 function lib_net() {
   var util = require('util');
   return {

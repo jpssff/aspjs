@@ -1,3 +1,4 @@
+if (!this.lib_util) this.lib_util = lib_util;
 function lib_util() {
 
   var REG_EMAIL = /^[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)+$/i;

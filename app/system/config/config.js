@@ -4,6 +4,7 @@
  * serves as default if not overridden elsewhere.
  *
  */
+if (!this.lib_syscfg) this.lib_syscfg = lib_syscfg;
 function lib_syscfg() {
   return {
     

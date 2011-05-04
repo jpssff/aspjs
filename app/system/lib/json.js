@@ -1,3 +1,4 @@
+if (!this.lib_json) this.lib_json = lib_json;
 function lib_json() {
   
   /* PRIVATE VARIABLES */

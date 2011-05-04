@@ -7,6 +7,7 @@
  * Optional: lib_json, Binary
  *
  */
+if (!this.lib_server) this.lib_server = lib_server;
 function lib_server() {
   
   var util = require('util');

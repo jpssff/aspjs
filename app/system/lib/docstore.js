@@ -20,6 +20,7 @@
  * - The order of document properties (keys) are not preserved.
  *
  */
+if (!this.lib_docstore) this.lib_docstore = lib_docstore;
 function lib_docstore() {
   
   var msa = require('msaccess')

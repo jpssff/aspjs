@@ -6,6 +6,7 @@
  * Inspired by base2 and Prototype
  *
  */
+if (!this.lib_class) this.lib_class = lib_class;
 function lib_class() {
   var initializing = false, fnTest = /xyz/.test(function(){xyz;}) ? /\b_super\b/ : /.*/;
 

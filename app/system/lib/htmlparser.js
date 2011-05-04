@@ -23,6 +23,7 @@
  *
  */
 
+if (!this.lib_htmlparser) this.lib_htmlparser = lib_htmlparser;
 function lib_htmlparser(exports) {
 
   // Regular Expressions for parsing tags and attributes

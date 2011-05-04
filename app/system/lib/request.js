@@ -9,6 +9,7 @@
  *
  */
 
+if (!this.lib_request) this.lib_request = lib_request;
 function lib_request() {
   var util = require('util');
 

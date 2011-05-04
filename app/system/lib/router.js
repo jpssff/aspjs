@@ -11,6 +11,7 @@
  *
  */
 
+if (!this.lib_router) this.lib_router = lib_router;
 function lib_router() {
   
   var routes = [];

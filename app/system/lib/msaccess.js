@@ -10,6 +10,7 @@
  *
  *
  */
+if (!this.lib_msaccess) this.lib_msaccess = lib_msaccess;
 function lib_msaccess() {
 
   var util = require('util');
