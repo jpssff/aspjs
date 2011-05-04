@@ -1,12 +1,11 @@
 <%@LANGUAGE="JAVASCRIPT" CODEPAGE="65001"%>
 <script runat="server" language="javascript" src="app/system/adapters/asp.js"></script>
 <script runat="server" language="javascript" src="app/system/core.js"></script>
-<script runat="server" language="javascript" src="app/system/core/globals.js"></script>
-<script runat="server" language="javascript" src="app/system/core/collection.js"></script>
+<script runat="server" language="javascript" src="app/system/lib/globals.js"></script>
+<script runat="server" language="javascript" src="app/system/lib/collection.js"></script>
 <script language="javascript" runat="server">
 /**
- * Dispatch request to appropriate controller script based on
- *   a set of primitive routing rules.
+ * Dispatch request to appropriate controller
  *
  * IMPORTANT:
  * In a production environment *without* URL Rewrite, be sure to use "/bin/" for application root.

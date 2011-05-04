@@ -1,17 +1,19 @@
 /**
- * Templating Engine: This module presents functions for reading,
- * compiling and rendering templates / pages from the views folder.
+ * Templating Engine
  *
- * The template files are stored in subdirectories of the views folder
- * and must have the html file extension. There are three types of
- * these files.
+ * Based on normal-template from NitroJS project
+ * http://github.com/gmosx/normal-template
  *
- * - Partials are blocks of HTML that can be included on any page or
- *   template.
- * - Pages are full pages or sub-pages that may specify a parent
- *   page/template.
- * - Templates are pages that have no parent page. They allow
- *   sub-pages to specify them as a parent.
+ * This module presents functions for reading, compiling and rendering templates (views). Template
+ * files are stored within the views folder and usually have an html file extension,
+ * but can be of any file type.
+ *
+ * There are three types of template files:
+ * - Partials - blocks of text/markup that can be included from a template or sub-template
+ * - Sub-Templates - files that specify a parent file and contain content for each region specified
+ * by the parent
+ * - Templates - files that do not have a parent, but may optionally include regions for use by
+ * sub-templates
  *
  */
 function lib_templ(exports) {
@@ -53,9 +55,9 @@ function lib_templ(exports) {
     return obj;
   }
   
-  var esc1 = /[\\"\b\f\n\r\t]/g
+  var esc1 = /[\\"\x08\f\n\r\t]/g
     , esc2 = {'\\':'\\\\','\b':'\\b','\t':'\\t','\n':'\\n','\f':'\\f','\r':'\\r','"':'\\"'}
-    , esc3 = /[\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
+    , esc3 = /[\x00-\x1f\x7f-\xff\u0100-\uffff]/g;
   
   var esc = function(o) {
     var s = String(o);
@@ -117,9 +119,9 @@ function lib_templ(exports) {
   };
   
   var re_tag1  = /<%--(.*?)--%>/gi
-    , re_tag2s = /<%\s*(\w+)(\s+[\w-\/.]+)*\s*%>/gi
+    , re_tag2s = /<%\s*(\w+)(\s+[\w\-\/.]+)*\s*%>/gi
     , re_tag2e = /<%\s*end\s+(\w+)\s*%>/gi
-    , re_tag3  = /<%\s*=\s*([\w-\/.]+)((\s+[\w-\/.]+)*)\s*%>/gi
+    , re_tag3  = /<%\s*=\s*([\w\-\/.]+)((\s+[\w\-\/.]+)*)\s*%>/gi
     , re_tag4s = /<%#(.*?)\s*%>/gi
     , re_tag4e = /<%#end\s+(.*?)\s*%>/gi;
   
@@ -147,7 +149,7 @@ function lib_templ(exports) {
     return s;
   };
   
-  var DATA_TAG_RE = /\{#data\s+([\w-\/.]+)[\s=]+"((""|[^"])+)"\s*\}/gi;
+  var DATA_TAG_RE = /\{#data\s+([\w\-\/.]+)[\s=]+"((""|[^"])+)"\s*\}/gi;
   exports.parseDataTags = function(src) {
     var s = String(src), data = this;
     s = s.replace(DATA_TAG_RE, function(tag,n,val){

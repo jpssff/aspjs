@@ -4,7 +4,7 @@ function lib_json() {
   
   var esc1 = /[\\"\x08\f\n\r\t]/g
     , esc2 = {'\\':'\\\\','"':'\\"','\b':'\\b','\f':'\\f','\n':'\\n','\r':'\\r','\t':'\\t'}
-    , esc3 = /[\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
+    , esc3 = /[\x00-\x1f\x7f-\xff\u0100-\uffff]/g;
   
   var rvalidchars = /^[\],:{}\s]*$/
     , rvalidescape = /\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g
@@ -136,10 +136,10 @@ function lib_json() {
   
   function fn_esc(o) {
     var s = String(o);
-    s = s.replace(esc1,function(c){
+    s = s.replace(esc1, function(c) {
       return esc2[c];
     });
-    s = s.replace(esc3,function(c){
+    s = s.replace(esc3, function(c) {
       return '\\u' + ('0000' + c.charCodeAt(0).toString(16)).slice(-4);
     });
     return s;
@@ -160,7 +160,8 @@ function lib_json() {
       }
     }
     if (d) {
-      return [d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds(),d.getUTCMilliseconds()];
+      return [d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(),
+        d.getUTCSeconds(), d.getUTCMilliseconds()];
     }
   }
   

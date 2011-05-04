@@ -11,7 +11,8 @@
  *
  */
 function lib_msaccess() {
-  
+
+  var util = require('util');
   var msaccess, fs = sys.fs, connections = {};
   
   function Connection(name,db_file) {
@@ -67,7 +68,7 @@ function lib_msaccess() {
         //TODO: Performance Tune (looping vs. get all)
         while (!rs.eof && !abort) {
           var rec = {};
-          Enumerator.each(rs.fields,function(i,field){
+          util.enumerate(rs.fields,function(i,field){
             rec[field.name] = fn_fromADO(field.value);
           });
           abort = ( func(rec,i++) === false );

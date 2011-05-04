@@ -1,13 +1,13 @@
 /**
- * Document Data Store: This class presents an abstraction layer
- * for storing document objects (key/value pairs of serializable data)
- * in a shema-less fashion. The underlying structure in this case is a
- * simple relational database, existing in the form of a file on disk,
- * which is created if it does not already exist.
+ * Document Data Store
  *
- * The class abstracts the database so that it can be interacted with as
- * if it were shema-less; in essence, presenting a data-access library 
- * to insert, query, update and delete document objects from collections.
+ * This class presents an abstraction layer for storing document objects (key/value pairs of
+ * serializable data types) in a schema-less fashion. The underlying structure in this case is a
+ * file-based relational database, which is created if it does not already exist.
+ *
+ * The class abstracts the database so that it can be interacted with as if it were schema-less; in
+ * essence, presenting a data-access library to insert, query, update and delete document objects
+ * from collections.
  *
  * The interface is loosely based on MongoDB (http://www.mongodb.org/).
  *
@@ -16,15 +16,15 @@
  * - Documents are like rows in that they are children of Collections
  *   and one or more is returned by a query.
  * - Documents contain key-value pairs and the values can be of any supported
- *   type including lists of values (arrays), other key-value pairs, or
- *   pointers to document objects in the same another collection.
+ *   type including lists (arrays), serializable objects, or primitives.
  * - The order of document properties (keys) are not preserved.
  *
  */
 function lib_docstore() {
   
   var msa = require('msaccess')
-    , json = require('json');
+    , json = require('json')
+    , util = require('util');
   
   var sys_cfg = app.cfg('docstore');
   
@@ -159,8 +159,8 @@ function lib_docstore() {
         existing = this.get(source._id);
       }
       if (!existing) {
-        q = "INSERT INTO [doc] ([col],[guid],[created]) VALUES ($1,CAST_GUID($2),NOW_UTC())";
-        var dbid = db.exec(q,[col_id,String.getGUID()],true);
+        var q = "INSERT INTO [doc] ([col],[guid],[created]) VALUES ($1,CAST_GUID($2),NOW_UTC())";
+        var dbid = db.exec(q,[col_id,util.getGUID()],true);
         db.exec("UPDATE [doc] SET [doc_num] = $1 WHERE [doc_id] = $2",[dbid + 121392,dbid])
         existing = this._get({dbid:dbid});
       }
@@ -207,13 +207,13 @@ function lib_docstore() {
     return new Document(col,{id:ref.doc_num,guid:ref.guid,dbid:ref.doc_id,created:ref.created},data);
   }
   function dbInit(conn) {
-    var q = "CREATE TABLE [col] ([col_id] COUNTER CONSTRAINT [pk_col_id] PRIMARY KEY, [col_name] TEXT(255), [status] TEXT(50))"
+    var q = "CREATE TABLE [col] ([col_id] COUNTER CONSTRAINT [pk_col_id] PRIMARY KEY, [col_name] TEXT(255), [status] TEXT(50))";
     conn.exec(q);
-    //var q = "CREATE TABLE [doc] ([doc_id] COUNTER CONSTRAINT [pk_doc_id] PRIMARY KEY, [col] INT, [doc_num] COUNTER(121393,1), [guid] GUID, [created] DATETIME)"
+    //var q = "CREATE TABLE [doc] ([doc_id] COUNTER CONSTRAINT [pk_doc_id] PRIMARY KEY, [col] INT, [doc_num] COUNTER(121393,1), [guid] GUID, [created] DATETIME)";
     //conn.exec(q);
-    var q = "CREATE TABLE [doc] ([doc_id] COUNTER CONSTRAINT [pk_doc_id] PRIMARY KEY, [doc_num] INT, [guid] GUID, [col] INT, [created] DATETIME)"
+    var q = "CREATE TABLE [doc] ([doc_id] COUNTER CONSTRAINT [pk_doc_id] PRIMARY KEY, [doc_num] INT, [guid] GUID, [col] INT, [created] DATETIME)";
     conn.exec(q);
-    var q = "CREATE TABLE [rec] ([rec_id] COUNTER CONSTRAINT [pk_rec_id] PRIMARY KEY, [doc] INT, [name] TEXT(255), [type] TEXT(255), [value] MEMO)"
+    var q = "CREATE TABLE [rec] ([rec_id] COUNTER CONSTRAINT [pk_rec_id] PRIMARY KEY, [doc] INT, [name] TEXT(255), [type] TEXT(255), [value] MEMO)";
     conn.exec(q);
   }
   
@@ -244,8 +244,11 @@ function lib_docstore() {
   
   function fn_encode(val) {
     var type = vartype(val), data, json = require('json');
-    if (['boolean','number','string'].exists(type)) {
+    if (['boolean','number'].exists(type)) {
       data = {type:type,val:String(val)};
+    } else
+    if (type == 'string') {
+      data = {type:'string',val:val.replace(/[%\x00-\x1f\x7f-\xff\u0100-\uffff]+/g, encodeURI)};
     } else
     if (type == 'date') {
       data = {type:'date',val:String(new Date(val).valueOf())};
@@ -258,17 +261,21 @@ function lib_docstore() {
     return data;
   }
   
-  function fn_decode(type,val) {
+  function fn_decode(type, val) {
     var decode, data, json = require('json');
     decode = {
-      boolean:function(s){ return (s == 'true'); },
-      number:Number,
-      string:String,
-      date:function(s){ return new Date(Number(s)); },
-      array:json.parse,
-      object:json.parse
+      boolean: function(s) {
+        return (s == 'true');
+      },
+      number: Number,
+      string: decodeURI,
+      date: function(s) {
+        return new Date(Number(s));
+      },
+      array: json.parse,
+      object: json.parse
     };
-    if (Object.exists(decode,type)) {
+    if (Object.exists(decode, type)) {
       data = decode[type](val);
     }
     return data;

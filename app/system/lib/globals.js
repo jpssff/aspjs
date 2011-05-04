@@ -225,20 +225,7 @@ function lib_globals() {
     for (var i = 0; i < len; i++) arr[i] = obj[i];
     return arr;
   };
-  Array.isSafeArray = function(a) {
-    if (Object.vartype(a) == 'unknown') {
-      return (typeof a.toArray == 'function');
-    }
-    return false;
-  }
-  Array.toSafeArray = function(a) {
-    var d = new ActiveXObject("Scripting.Dictionary");
-    if (a instanceof Array) {
-      for (var i=0,len=a.length;i<len;i++) d.Add(d.Count,a[i]);
-    }
-    return d.Items();
-  }
-  
+
   Function.prototype.bind = function(obj){
     var fn = this;
     return function(){ return fn.apply(obj,arguments) };
@@ -259,11 +246,10 @@ function lib_globals() {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower;
   };
   
-  String.prototype._split = String.prototype.split;
-  
+  var _split = String.prototype.split;
   String.prototype.split = function (s, limit) {
     if (Object.vartype(s) !== 'regexp') {
-      return String.prototype._split.apply(this, arguments);
+      return _split.apply(this, arguments);
     }
     var str = String(this),
       output = [],
@@ -323,11 +309,11 @@ function lib_globals() {
   };
   String.prototype.startsWith = function(s) {
     var self = this, re = new RegExp('^' + RegExp.escape(s),'i');
-    return String(self).match(re) ? true : false;
+    return !!String(self).match(re);
   };
   String.prototype.endsWith = function(s) {
     var self = this, re = new RegExp(RegExp.escape(s) + '$','i');
-    return String(self).match(re) ? true : false;
+    return !!String(self).match(re);
   };
   String.prototype.replaceHead = function(s1,s2) {
     var self = this, re = new RegExp('^' + RegExp.escape(s1),'i');
@@ -344,11 +330,7 @@ function lib_globals() {
     var a = new Array(n + 1);
     return a.join(s);
   };
-  String.getGUID = function() {
-    var r = new ActiveXObject("Scriptlet.TypeLib").Guid;
-    return r.substr(0,r.length - 2);
-  };
-  
+
   String.urlEnc = function(s) {
     return String(s).replace(/[^0-9a-f!$'()*,-.\/:;@[\\\]^_{|}~]+/ig,function(s){
       return encodeURIComponent(s);
@@ -471,13 +453,6 @@ function lib_globals() {
     var m = 'g' + ((o.ignoreCase) ? 'i' : '') + ((o.multiline) ? 'm' : '');
     return new RegExp(o.source,m);
   };
-  
-  Enumerator.each = function(col,fn) {
-    var i = 0;
-    for(var e=new Enumerator(col);!e.atEnd();e.moveNext()) {
-      if (fn.call(col,i++,e.item()) === false) break;
-    }
-  }
 
   //"Shorthand" Copies
   vartype = Object.vartype;

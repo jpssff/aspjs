@@ -2,6 +2,7 @@
 <script runat="server" language="javascript" src="core.js"></script>
 <script runat="server" language="javascript" src="lib/application.js"></script>
 <script runat="server" language="javascript" src="lib/binary.js"></script>
+<script runat="server" language="javascript" src="lib/class.js"></script>
 <script runat="server" language="javascript" src="lib/collection.js"></script>
 <script runat="server" language="javascript" src="lib/docstore.js"></script>
 <script runat="server" language="javascript" src="lib/filestore.js"></script>

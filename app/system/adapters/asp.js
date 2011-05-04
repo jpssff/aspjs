@@ -95,7 +95,7 @@ function lib_server() {
       getCookies: function() {
         var cookies = {};
         if (iis.req.cookies) {
-          Enumerator.each(iis.req.cookies.contents,function(i,key){
+          util.enumerate(iis.req.cookies.contents,function(i,key){
             cookies[key] = iis.req.cookies(key).item();
           });
         }
@@ -267,14 +267,27 @@ function lib_server() {
     if (isPrimitive(val) || !json) {
       return val;
     } else {
-      return Array.toSafeArray([json.stringify(val)]);
+      return toSafeArray([json.stringify(val)]);
     }
   }
   function jsDec(val) {
-    if (json && Array.isSafeArray(val) && val.dimensions() == 1 && val.ubound() == 0) {
+    if (json && isSafeArray(val) && val.dimensions() == 1 && val.ubound() == 0) {
       return json.parse(val.getItem(0));
     }
     return val;
+  }
+  function isSafeArray(a) {
+    if (Object.vartype(a) == 'unknown') {
+      return (typeof a.toArray == 'function');
+    }
+    return false;
+  }
+  function toSafeArray(a) {
+    var d = new ActiveXObject("Scripting.Dictionary");
+    if (a instanceof Array) {
+      for (var i=0,len=a.length;i<len;i++) d.add(d.Count,a[i]);
+    }
+    return d.Items();
   }
 
   /**
@@ -329,7 +342,7 @@ function lib_server() {
      */
     obj.sel = function(rex,fn){
       var items = {};
-      Enumerator.each(col,function(i,key){
+      util.enumerate(col,function(i,key){
         var matches = key.match(rex);
         if (matches) {
           items[key] = [key,dec(col(key))].append(matches.slice(1));
@@ -346,7 +359,7 @@ function lib_server() {
     };
     obj.all = function(){
       var items = {};
-      Enumerator.each(col,function(i,key){
+      util.enumerate(col,function(i,key){
         if (key.startsWith(pre)) {
           items[key.replaceHead(pre,'')] = dec(col(key));
         }

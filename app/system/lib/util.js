@@ -135,11 +135,30 @@ function lib_util() {
       return col;
     },
     /**
+     * Enumerate an ActiveX Collection
+     *
+     */
+    enumerate: function(col, fn) {
+      var i = 0;
+      for(var e=new Enumerator(col);!e.atEnd();e.moveNext()) {
+        if (fn.call(col,i++,e.item()) === false) break;
+      }
+    },
+    /**
      * Check Email Address Syntax
      *
      */
     isEmail: function(str) {
       return !!String(str).match(REG_EMAIL);
+    },
+    /**
+     * Randomly generate a Globally Unique Identifier
+     *
+     */
+    getGUID: function() {
+      return String("##-#-#-#-###").replace(/#/g, function() {
+        return ('0000' + (Math.random() * 0x10000).toString(16)).slice(-4);
+      });
     },
     /**
      * Check GUID Syntax

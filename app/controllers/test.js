@@ -9,6 +9,48 @@
     res.die([req.method(), req.url('path'), req.params()]);
   });
 
+  app('/inheritance', function(p) {
+    var out = [], Class = require('class');
+    res.die(out.join('\r\n'));
+  });
+
+  app('/test/class', function(p) {
+    var out = [], Class = require('class');
+    var Person = Class.extend({
+      init: function(isDancing){
+        this.dancing = isDancing;
+      },
+      dance: function(){
+        return this.dancing;
+      }
+    });
+    var Ninja = Person.extend({
+      init: function(){
+        this._super( false );
+      },
+      dance: function(){
+        return this._super();
+      },
+      swingSword: function(){
+        return true;
+      }
+    });
+
+    var p = new Person(true);
+    out.push("true: " + p.dance());
+
+    var n = new Ninja();
+    out.push("false: " + n.dance());
+    out.push("true: " + n.swingSword());
+
+    out.push("true: " + (p instanceof Person));
+    out.push("true: " + (p instanceof Class));
+    out.push("true: " + (n instanceof Ninja));
+    out.push("true: " + (n instanceof Person));
+    out.push("true: " + (n instanceof Class));
+    res.die(out.join('\r\n'));
+  });
+
   app('/test/binary', function(p) {
     var b = new Binary('\uC548\uB155\uD558\uC138\uC694', 'utf16');
     res.die([b.toString('hex'), b.length()]);
