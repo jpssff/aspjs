@@ -1,12 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <package>
-  <job id="one">
+  <job id="main">
     <script language="javascript" src="..\..\app\config\config.js"></script>
     <script language="javascript" src="..\..\app\system\config\config.js"></script>
     <script language="javascript" src="..\..\app\system\adapters\wsh.js"></script>
     <script language="javascript" src="..\..\app\system\core.js"></script>
     <script language="javascript" src="..\..\app\system\lib\application.js"></script>
     <script language="javascript" src="..\..\app\system\lib\binary.js"></script>
+    <script language="javascript" src="..\..\app\system\lib\class.js"></script>
     <script language="javascript" src="..\..\app\system\lib\collection.js"></script>
     <script language="javascript" src="..\..\app\system\lib\docstore.js"></script>
     <script language="javascript" src="..\..\app\system\lib\filestore.js"></script>

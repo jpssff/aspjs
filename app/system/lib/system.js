@@ -95,7 +95,7 @@ function lib_system(sys) {
     var date = Date.format(Date.now(),'{yyyy}-{mm}-{dd} {HH}:{nn}:{ss}',true)
       , data = args
       , p = path('data/logs/' + logfile.replaceTail('.log','') + '.log');
-    var json = require('json');
+    var json = lib('json');
     forEach(data,function(i,line){
       data[i] = (isPrimitive(line)) ? String(line) : json.stringify(line);
     });

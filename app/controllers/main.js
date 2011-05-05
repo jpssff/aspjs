@@ -1,4 +1,4 @@
-﻿register('ready', function() {
+﻿bind('ready', function() {
   
   /*
    * Default Route (Home Page)

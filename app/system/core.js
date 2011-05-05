@@ -1,11 +1,48 @@
 ﻿/*!
  * Declare global variables
  */
-var __approot, __date, __now;
-var global, server, app, sys, req, res;
+//var __approot, __date, __now;
+//var global, server, app, sys, req, res;
 
 /**
- * Initialize Application Environment
+ * Dispatch Request
+ * This is a lighter-weight dispatch function similar to app_init, but requires fewer library files
+ * to be included in the script calling this function and doesn't use the event model.
+ *
+ * Receives a function and calls it with the following parameters:
+ * server: Server abstraction interface
+ * req: Request object
+ * res: Response object
+ *
+ * @param {Object} map
+ */
+function dispatch(map) {
+  __approot = '/app/';
+  global = lib('globals');
+  server = lib('server');
+  req = server.req;
+  res = server.res;
+  res.clear();
+  forEach(map, function(key, script) {
+    var re, path = req.getURLParts().path;
+    if (key.match(/\/$/)) {
+      re = new RegExp('^' + RegExp.escape(key), 'i');
+    } else {
+      re = new RegExp('^' + RegExp.escape(key) + '(/|$)', 'i');
+    }
+    if (path.match(re)) {
+      server.exec(__approot + script);
+    }
+  });
+  res.headers('content-type', 'text/plain');
+  res.write('ERROR: No Route for ' + path);
+  res.end();
+}
+
+
+/**
+ * Initialize Application Environment and Trigger Request Routing
+ *
  * Sets global variables required by the application environment and dispatches request using the
  * event model. This requires most of the core & library files to be included within the script
  * calling this function.
@@ -20,16 +57,16 @@ function app_init() {
   __date = new Date();
   __now = __date.valueOf();
 
-  global = require('globals');
-  server = require('server');
-  app = require('application');
-  sys = app.sys = require('system');
-  req = app.req = require('request');
-  res = app.res = require('response');
+  global = lib('globals');
+  server = lib('server');
+  app = lib('application');
+  sys = app.sys = lib('system');
+  req = app.req = lib('request');
+  res = app.res = lib('response');
   if (req) {
-    req.router = require('router');
+    req.router = lib('router');
   }
-  app.util = require('util');
+  app.util = lib('util');
   res.clear();
   trigger('ready');
   trigger('route');
@@ -38,53 +75,31 @@ function app_init() {
 
 
 /**
- * Dispatch Request
- * This is a lighter-weight dispatch function similar to app_init, but requires fewer library files
- * to be included in the script calling this function and doesn't use the event model.
- *
- * Receives a function and calls it with the following parameters:
- * server: Server abstraction interface
- * req: Request object
- * res: Response object
- *
- * @param {Function} fn
- */
-function dispatch(fn) {
-  global = require('globals');
-  server = require('server');
-  req = server.req;
-  res = server.res;
-  res.clear();
-  fn(server, req, res);
-  res.end();
-}
-
-
-/**
- * Require a Library. If the library is already registered (via register() then it
- * returns a saved copy. If the library exists as a function begining with lib_
- * then it executes that now and saves the result for next time it is required.
+ * Load a library. Libraries exist as special loader functions (prefixed with "lib_") that are
+ * executed to return the library's "module" which can be any non-primitive data type. A loader
+ * function is not executed before the first call to lib() and it is never executed twice. If the
+ * library has been loaded before then a saved copy of the module is returned.
  *
  * @param {String} name
  * @returns {Object}
  */
-function require(name) {
-  var list = require.list || (require.list = {});
-  var lib = list[name], exports;
-  if (lib) {
-    return lib;
+function lib(name) {
+  var cache = lib.cache || (lib.cache = {});
+  var module = cache[name];
+  if (module) {
+    return module;
   }
-  lib = this['lib_' + name];
-  if (lib) {
+  module = this['lib_' + name];
+  if (module) {
     var exports = {};
-    var r = lib.call(exports,exports) || exports;
-    return list[name] = r;
+    var r = module.call(exports,exports) || exports;
+    return cache[name] = r;
   }
 }
 
 
 /**
- * Register an Event Handler
+ * Bind an Application Event Handler
  * Accepts a function which is added to the list of functions to be executed any time the event is
  * triggered. Prepend ":" to the event name to append the function to _top_ of the list.
  *
@@ -94,8 +109,8 @@ function require(name) {
  * @param {String} name Event Name
  * @param {Function} func Function to be executed when Event fires
  */
-function register(name, func) {
-  var events = register.events || (register.events = {});
+function bind(name, func) {
+  var events = bind.events || (bind.events = {});
   var rex = /^:(\w+)/, top = false;
   if (name.match(rex)) {
     name = name.replace(rex,'$1');
@@ -122,7 +137,7 @@ function register(name, func) {
  * @param {Array} args Arguments
  */
 function trigger(name, data, args){
-  var events = register.events || {};
+  var events = bind.events || {};
   data = data || {};
   if (Object.exists(events,name)) {
     events[name].each(function(i,event){
@@ -130,4 +145,15 @@ function trigger(name, data, args){
     });
   }
   return data;
+}
+
+/*!
+ * Compatibility for v8cgi
+ */
+if (typeof exports != 'undefined') {
+  exports.app_init = app_init;
+  exports.dispatch = dispatch;
+  exports.lib = lib;
+  exports.bind = bind;
+  exports.trigger = trigger;
 }

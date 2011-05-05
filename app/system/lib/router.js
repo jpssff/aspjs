@@ -97,7 +97,7 @@ function lib_router() {
    * Setup route event (triggered from controller stub).
    *
    */
-  register('route',function(){
+  bind('route',function(){
     router.process();
   });
   

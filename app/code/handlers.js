@@ -3,7 +3,7 @@
  * executed) before controller code.
  *
  */
-register('ready',function(){
+bind('ready',function(){
   
   /**
    * Load a previously saved "flash" message.
@@ -37,7 +37,7 @@ register('ready',function(){
  * if none have called stop() or ended the request.
  *
  */
-register('no-route',function(){
+bind('no-route',function(){
   //Attempt to render a "public" page.
   var matches = req.url('path').match(/^\/([^\/.]+)$/);
   if (matches) {
@@ -57,14 +57,14 @@ register('no-route',function(){
  *
  */
 if (false)
-register(':404',function(){
+bind(':404',function(){
   //Log Requested URL
   if (!req.url('path').match(/\/(favicon\.ico|robots\.txt)$/)) {
     sys.log(req.url() + ' ' + server.vars('ipaddr'), 'sys-not-found');
   }
   //HTML Redirect to friendly 404 page
   var url = '/?not-found=' + urlEnc(req.url())
-    , templ = require('templ')
+    , templ = lib('templ')
     , markup = app.cfg('html_redir');
   if (templ && markup) {
     //Pass rendered markup down the event chain

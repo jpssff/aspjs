@@ -16,6 +16,7 @@
  * bin.toString().length; //returns 5 (5 chars)
  *
  */
+if (!this.Binary) this.Binary = Binary;
 function Binary(data, enc) {
   
   if (!Binary.prototype.toArray) {

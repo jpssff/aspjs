@@ -6,9 +6,10 @@
  *
  */
 
+if (!this.lib_application) this.lib_application = lib_application;
 function lib_application() {
 
-  var server = require('server'), req = require('request');
+  var server = lib('server'), req = lib('request');
 
   /**
    * Wrapper function for easy access to common tasks.
@@ -41,8 +42,8 @@ function lib_application() {
   app.cfg = function(n){
     if (!app.cfg.data) {
       var cfg = {}
-        , syscfg = require('syscfg')
-        , appcfg = require('appcfg');
+        , syscfg = lib('syscfg')
+        , appcfg = lib('appcfg');
       if (syscfg) {
         Object.combine(cfg,syscfg);
       }

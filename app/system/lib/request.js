@@ -11,7 +11,7 @@
 
 if (!this.lib_request) this.lib_request = lib_request;
 function lib_request() {
-  var util = require('util');
+  var util = lib('util');
 
   var url
     , url_parts

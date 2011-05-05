@@ -12,8 +12,8 @@
 if (!this.lib_server) this.lib_server = lib_server;
 function lib_server() {
 
-  var util = require('util');
-  var json = require('json');
+  var util = lib('util');
+  var json = lib('json');
   var REG_URL = /^([^?]*)(\?|$)(.*)/;
 
   var wsh = global['WScript'];

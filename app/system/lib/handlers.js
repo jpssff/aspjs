@@ -4,7 +4,7 @@
  * attached with a : preceding its name).
  *
  */
-register('ready',function(){
+bind('ready',function(){
   
   //Process pre-route redirects
   var redir = app.cfg('redir') || {}
@@ -20,7 +20,7 @@ register('ready',function(){
  * and after the no-route event.
  *
  */
-register('404',function(){
+bind('404',function(){
   //If response data is present from prior 404 handler, use that
   //Otherwise use default 404 response from config
   var data = this.response || app.cfg('res_404');

@@ -1,4 +1,4 @@
-﻿register('ready',function() {
+﻿bind('ready', function() {
   
   /*
    * Testing Routes
@@ -6,16 +6,39 @@
    */
 
   app('/test', function(p) {
-    res.die([req.method(), req.url('path'), req.params()]);
+    var out = [];
+    var ActiveRecord = lib('activerecord');
+    ActiveRecord.connect(ActiveRecord.Adapters.msaccess);
+    var User = ActiveRecord.create('users', {
+      username: '',
+      password: '',
+      post_count: 0,
+      profile: ''
+    }, {
+      getProfileWordCount: function () {
+        return this.get('profile').split(/\s+/).length;
+      }
+    });
+
+    var jessica = User.create({
+      username: "Jessica",
+      password: "rabbit"
+    });
+    jessica.set('password', 'rabbit123');
+    jessica.save();
+    //jessica.destroy();
+
+    res.die(jessica);
+    //res.die([req.method(), req.url('path'), req.params()]);
   });
 
   app('/inheritance', function(p) {
-    var out = [], Class = require('class');
+    var out = [], Class = lib('class');
     res.die(out.join('\r\n'));
   });
 
   app('/test/class', function(p) {
-    var out = [], Class = require('class');
+    var out = [], Class = lib('class');
     var Person = Class.extend({
       init: function(isDancing){
         this.dancing = isDancing;
@@ -57,7 +80,7 @@
   });
 
   app('/test/json', function() {
-    var json = require('json'), undef, fn = function(a){return true}, re = /abc/i;
+    var json = lib('json'), undef, fn = function(a){return true}, re = /abc/i;
     var a = {num: 1, str: 'strîng', arr: [1, 'two', true, '€', null, undef, fn], obj: {n: '2x9',
       val: 27}, dt: Date.fromString('29 Apr 2006'), re: re, fn: fn, bin: new Binary('«'),
       col: new Collection({a: 1, b: 'stür'}), undef: undef, nul: null, bool: false};
@@ -66,13 +89,13 @@
   });
 
   app('/test/upload', function() {
-    var templ = require('templ');
+    var templ = lib('templ');
     var html = templ.render('test/upload');
     res.die(html,'text/html');
   });
 
   app('/test/upload/post', function() {
-    var json = require('json'), filestore = require('filestore');
+    var json = lib('json'), filestore = lib('filestore');
     var out = [], uploads = req.uploads();
     uploads.each(function(n, upload) {
       out.push('<pre>' + htmlEnc(json.stringify(upload)) + '</pre>');
@@ -85,7 +108,7 @@
   });
   
   app('/test/dl/:id/:name', function(p) {
-    var filestore = require('filestore');
+    var filestore = lib('filestore');
     var file = filestore.getFile(p('id'));
     if (file) {
       file.send();
@@ -113,7 +136,7 @@
   
   //test database
   app('/test/db', function(p) {
-    var docstore = require('docstore')
+    var docstore = lib('docstore')
       , store = docstore.getStore('main')
       , members = store.get('items');
     var m = {first:'Simon',last:'Sturmer'};
@@ -125,7 +148,7 @@
   
   //test docstore
   app('/test/docstore', function(p) {
-    var docstore = require('docstore')
+    var docstore = lib('docstore')
       , store = docstore.getStore('main');
     
     var items = store.get('items');
@@ -141,7 +164,7 @@
   
   //test email sending
   app('/test/email', function() {
-    var net = require('net');
+    var net = lib('net');
     net.sendEmail({
       to:        'simon.sturmer@gmail.com',
       from:      'simon@blupinnacle.net',

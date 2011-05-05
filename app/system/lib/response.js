@@ -11,7 +11,7 @@
 
 if (!this.lib_response) this.lib_response = lib_response;
 function lib_response() {
-  var res, server = require('server');
+  var res, server = lib('server');
   var _super = server.res;
   return res = Object.extend(_super,{
     clear: function(type) {
@@ -24,7 +24,7 @@ function lib_response() {
       if (isPrimitive(data)) {
         _super.write(String(data));
       } else {
-        var json = require('json');
+        var json = lib('json');
         _super.write((json) ? json.stringify(data) : String(data));
       }
     },
@@ -59,7 +59,7 @@ function lib_response() {
   });
   
   function html_redirect(url) {
-    var templ = require('templ')
+    var templ = lib('templ')
       , markup = app.cfg('html_redir');
     if (templ && markup) {
       res.clear('text/html');

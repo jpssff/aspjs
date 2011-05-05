@@ -18,10 +18,11 @@
  *  product(function(n,val){ display(n,val); }); //iterate
  *
  */
+if (!this.Collection) this.Collection = Collection;
 function Collection(data) {
   
-  if (!Collection.proto) {
-    Collection.proto = _Collection_proto();
+  if (!Collection.prototype.access) {
+    Collection.prototype = _Collection_proto();
   }
   
   var obj = function() {
@@ -32,9 +33,13 @@ function Collection(data) {
   obj._dirty = false;
   obj._listeners = {};
   
-  var proto = obj.__proto__ = Collection.proto;
-  for (var n in proto) if (proto.hasOwnProperty(n)) obj[n] = proto[n];
-  obj['toString'] = proto['toString'];
+  if (Object.prototype === {}.__proto__) {
+    obj.__proto__ = Collection.prototype;
+  } else {
+    var proto = obj.__proto__ = Collection.prototype;
+    for (var n in proto) if (proto.hasOwnProperty(n)) obj[n] = proto[n];
+    obj['toString'] = proto['toString'];
+  }
 
   if (data) {
     obj.append(data);
@@ -51,6 +56,12 @@ function _Collection_proto() {
     var a = ['constructor','hasOwnProperty','isPrototypeOf','propertyIsEnumerable','toLocaleString','toString','valueOf'];
     for (var i=0;i<a.length;i++) if (fn_exists(o,a[i])) f.call(o,a[i],o[a[i]]);
   }
+  function fn_append(o,p) {
+    fn_each(p, function(n, val) {
+      o[n] = val;
+    });
+    return o;
+  }
   function fn_exists(o,n) {
     return Object.prototype.hasOwnProperty.call(o,n);
   }
@@ -61,8 +72,13 @@ function _Collection_proto() {
     }
     return (type == 'object') ? 'unknown' : type;
   }
-  
-  return {
+  var proto;
+  if (Object.prototype === {}.__proto__) {
+    proto = Object.create(Function.prototype);
+  } else {
+    proto = {};
+  }
+  return fn_append(proto, {
     access: function(p1,p2){
       if (arguments.length == 0) {
         return this.toObject();
@@ -120,7 +136,7 @@ function _Collection_proto() {
     },
     append: function(obj) {
       var col = this;
-      if (obj.__proto__ === Collection.proto) {
+      if (obj.__proto__ === Collection.prototype) {
         obj.each(obj,function(n,val){ col.set(n,val); });
       } else {
         fn_each(obj,function(n,val){ col.set(n,val); });
@@ -198,6 +214,6 @@ function _Collection_proto() {
     toJSON: function() {
       return this.toObject();
     }
-  };
+  });
   
 }

@@ -23,9 +23,9 @@
 if (!this.lib_docstore) this.lib_docstore = lib_docstore;
 function lib_docstore() {
   
-  var msa = require('msaccess')
-    , json = require('json')
-    , util = require('util');
+  var msa = lib('msaccess')
+    , json = lib('json')
+    , util = lib('util');
   
   var sys_cfg = app.cfg('docstore');
   
@@ -244,7 +244,7 @@ function lib_docstore() {
   }
   
   function fn_encode(val) {
-    var type = vartype(val), data, json = require('json');
+    var type = vartype(val), data, json = lib('json');
     if (['boolean','number'].exists(type)) {
       data = {type:type,val:String(val)};
     } else
@@ -263,7 +263,7 @@ function lib_docstore() {
   }
   
   function fn_decode(type, val) {
-    var decode, data, json = require('json');
+    var decode, data, json = lib('json');
     decode = {
       boolean: function(s) {
         return (s == 'true');

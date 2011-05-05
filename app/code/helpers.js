@@ -5,7 +5,7 @@
  * accessible using "this" keyword inside routing functions.
  * 
  */
-register('preroute',function(){
+bind('preroute',function(){
   var data = this;
   
   /*
@@ -13,7 +13,7 @@ register('preroute',function(){
    * Classes (libraries) and private variables
    */
   
-  var templ = require('templ');
+  var templ = lib('templ');
   
   //data passed to template (see render function)
   var templ_data = {

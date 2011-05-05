@@ -13,7 +13,7 @@
 if (!this.lib_msaccess) this.lib_msaccess = lib_msaccess;
 function lib_msaccess() {
 
-  var util = require('util');
+  var util = lib('util');
   var msaccess, fs = sys.fs, connections = {};
   
   function Connection(name,db_file) {
@@ -67,15 +67,17 @@ function lib_msaccess() {
         }
         var abort = false, i = 0;
         //TODO: Performance Tune (looping vs. get all)
-        while (!rs.eof && !abort) {
-          var rec = {};
-          util.enumerate(rs.fields,function(i,field){
-            rec[field.name] = fn_fromADO(field.value);
-          });
-          abort = ( func(rec,i++) === false );
-          rs.movenext();
+        if (rs.state) {
+          while (!rs.eof && !abort) {
+            var rec = {};
+            util.enumerate(rs.fields,function(i,field){
+              rec[field.name] = fn_fromADO(field.value);
+            });
+            abort = ( func(rec,i++) === false );
+            rs.movenext();
+          }
+          rs.close();
         }
-        rs.close();
         return query;
       };
       query.getOne = function() {
@@ -200,7 +202,7 @@ function lib_msaccess() {
     return conn;
   }
   
-  register('destroy',function() {
+  bind('destroy',function() {
     Object.each(connections,function(name,conn){
       if (conn.state != 0) conn.close();
     });

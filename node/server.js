@@ -9,28 +9,35 @@ var dispatch = require('dispatch');
 var connect = require('connect');
 var form = require('connect-form');
 
-var logfile = fs.createWriteStream(__dirname + '/logs/http.log');
+//Configuration
+var scriptEngine = 'wsh';
+var logFile = fs.createWriteStream(__dirname + '/logs/http.log');
 
+//Helper Functions
 function getPath(p) {
   p = p || '';
   return path.join(__dirname, '..', p);
 }
 
+//HTTP Server
 connect(
-  connect.logger({stream:logfile}),
+  connect.logger({stream:logFile}),
   connect.cookieParser(),
   form({uploadDir: path.join(__dirname, '../app/data/temp')}),
   //Static/Public Assets
   function(req, res, next){
     console.log(req.method + ' ' + req.url);
+    if (req.url.toLowerCase() == '/favicon.ico') {
+      req.url = '/assets/favicon.ico';
+    }
     if (req.url.match(/^\/assets\//i)) {
       connect.static(getPath('/'))(req, res, next);
     } else {
       next();
     }
   },
-  //Execute ASP Script
-  dispatch.exec('jscript/handler.wsf'),
+  //Dispatch to Request Handler
+  dispatch.getHandler(scriptEngine),
   //Not Found
   function(req, res){
     res.statusCode = 404;

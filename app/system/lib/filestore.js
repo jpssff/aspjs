@@ -7,7 +7,7 @@
  */
 if (!this.lib_filestore) this.lib_filestore = lib_filestore;
 function lib_filestore() {
-  var docstore = require('docstore')
+  var docstore = lib('docstore')
     , fs_database = app.cfg('filestore/database')
     , fs_location = app.cfg('filestore/location')
     , col;

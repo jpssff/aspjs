@@ -4,7 +4,7 @@
  */
 
 //These will become shorthand for Object.vartype, Array.toArray, String.urlEnc, etc
-var vartype, isPrimitive, isSet, toArray, urlEnc, urlDec, htmlEnc, htmlDec;
+//var vartype, isPrimitive, isSet, toArray, urlEnc, urlDec, htmlEnc, htmlDec;
 
 /**
  * Shorthand to iterate Array / Object
@@ -466,4 +466,21 @@ function lib_globals() {
   htmlDec = String.htmlDec;
 
   return getGlobal();
+}
+
+/*!
+ * Compatibility for v8cgi
+ */
+if (typeof exports != 'undefined') {
+  //exports.vartype = vartype;
+  //exports.isPrimitive = isPrimitive;
+  //exports.isSet = isSet;
+  //exports.toArray = toArray;
+  //exports.urlEnc = urlEnc;
+  //exports.urlDec = urlDec;
+  //exports.htmlEnc = htmlEnc;
+  //exports.htmlDec = htmlDec;
+  exports.forEach = forEach;
+  exports.getset = getset;
+  exports.fngetset = fngetset;
 }
