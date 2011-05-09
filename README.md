@@ -10,14 +10,13 @@ sessions, templating and other server-side concepts into clean, functional Javas
 + No Inline Code / <% %> tags
 + CommonJS-like Modules
 + Event-based Request Processing
-+ Fea
++ Rich Templating Engine (based on normal-template from [Nitro](/gmosx/nitro))
++ ActiveRecord (based on [Aptana's ActiveJS](/aptana/activejs))
 + Helper functions for:
   - date parsing/formatting
   - sending email
   - handling binary data
   - charset conversion
-  - and more
-+ ActiveRecord (Based on [Aptana's ActiveJS](/aptana/activejs))
 
 ## Description
 Asp-JS focuses on separating business logic from presentation (view) and achieves this in several ways
@@ -35,7 +34,7 @@ Applications consist primarily of request handler functions which are defined in
 Request handlers are attached to the application (request router) when the "ready" event fires. This
 event occurs after the framework has loaded.
 
-An event handler is registered as follows:
+An event handler is defined as follows:
   bind('ready', function() {
     //CODE HERE
   });
