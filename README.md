@@ -35,21 +35,25 @@ Request handlers are attached to the application (request router) when the "read
 event occurs after the framework has loaded.
 
 An event handler is defined as follows:
+
     bind('ready', function() {
       //CODE HERE
     });
 
 Within the "ready" event handler, request processing can be defined as follows:
+
     req.router.addRoute('GET', '/', function() {
       res.die('<p>Hello World</p>', 'text/html');
     });
 
 Or, more concisely:
+
     app('/', function() {
       res.die('<p>Hello World</p>', 'text/html');
     });
 
 Named parameters are available via a passed-in accessor like so:
+
     app('/user/:name', function(params) {
       res.die('<p>Hello ' + htmlEnc(params('name')) + '</p>', 'text/html');
     });
@@ -66,9 +70,11 @@ Other important global functions are: `bind` and `lib`
 
 Also, the global objects `app`, `req`, `res` and `util` are also available for for convenience so you
 don't have to explicitly load them like:
+
     var app = lib('application'), req = lib('request'), res = lib('response'), util = lib('util');
 
 An example of loading, the "net" library and calling the redirect method:
+
     var net = lib('net');
     net.sendEmail({
       to:        'john.doe@gmail.com',
