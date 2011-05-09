@@ -3,7 +3,6 @@
 <script runat="server" language="javascript" src="system/config/config.js"></script>
 <!--#include file="system/_inc.asp" -->
 <!--#include file="code/_inc.asp" -->
-<script runat="server" language="javascript" src="system/lib/activerecord.js"></script>
 <script runat="server" language="javascript" src="controllers/test.js"></script>
 <script runat="server" language="javascript">
 /*!

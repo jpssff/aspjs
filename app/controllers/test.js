@@ -8,7 +8,7 @@
   app('/test', function(p) {
     var out = [];
     var ActiveRecord = lib('activerecord');
-    ActiveRecord.connect(ActiveRecord.Adapters.msaccess);
+    ActiveRecord.connect(ActiveRecord.Adapters.Access);
     var User = ActiveRecord.create('users', {
       username: '',
       password: '',

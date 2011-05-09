@@ -17,3 +17,6 @@
 <script runat="server" language="javascript" src="lib/system.js"></script>
 <script runat="server" language="javascript" src="lib/templ.js"></script>
 <script runat="server" language="javascript" src="lib/util.js"></script>
+<script runat="server" language="javascript" src="lib/activejs/active_support.js"></script>
+<script runat="server" language="javascript" src="lib/activejs/active_event.js"></script>
+<script runat="server" language="javascript" src="lib/activejs/active_record.js"></script>

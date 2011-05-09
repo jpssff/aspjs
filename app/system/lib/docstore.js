@@ -208,13 +208,13 @@ function lib_docstore() {
     return new Document(col,{id:ref.doc_num,guid:ref.guid,dbid:ref.doc_id,created:ref.created},data);
   }
   function dbInit(conn) {
-    var q = "CREATE TABLE [col] ([col_id] COUNTER CONSTRAINT [pk_col_id] PRIMARY KEY, [col_name] TEXT(255), [status] TEXT(50))";
+    var q = "CREATE TABLE [col] ([col_id] INTEGER IDENTITY(123,1) CONSTRAINT [pk_col_id] PRIMARY KEY, [col_name] TEXT(255), [status] TEXT(50))";
     conn.exec(q);
-    //var q = "CREATE TABLE [doc] ([doc_id] COUNTER CONSTRAINT [pk_doc_id] PRIMARY KEY, [col] INT, [doc_num] COUNTER(121393,1), [guid] GUID, [created] DATETIME)";
+    //var q = "CREATE TABLE [doc] ([doc_id] INTEGER IDENTITY(123,1) CONSTRAINT [pk_doc_id] PRIMARY KEY, [col] INT, [doc_num] COUNTER(121393,1), [guid] GUID, [created] DATETIME)";
     //conn.exec(q);
-    var q = "CREATE TABLE [doc] ([doc_id] COUNTER CONSTRAINT [pk_doc_id] PRIMARY KEY, [doc_num] INT, [guid] GUID, [col] INT, [created] DATETIME)";
+    var q = "CREATE TABLE [doc] ([doc_id] INTEGER IDENTITY(123,1) CONSTRAINT [pk_doc_id] PRIMARY KEY, [doc_num] INT, [guid] GUID, [col] INT, [created] DATETIME)";
     conn.exec(q);
-    var q = "CREATE TABLE [rec] ([rec_id] COUNTER CONSTRAINT [pk_rec_id] PRIMARY KEY, [doc] INT, [name] TEXT(255), [type] TEXT(255), [value] MEMO)";
+    var q = "CREATE TABLE [rec] ([rec_id] INTEGER IDENTITY(123,1) CONSTRAINT [pk_rec_id] PRIMARY KEY, [doc] INT, [name] TEXT(255), [type] TEXT(255), [value] MEMO)";
     conn.exec(q);
   }
   
