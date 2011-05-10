@@ -11,9 +11,9 @@ function lib_domwrapper() {
     return tagName + '[' + i + ']';
   }
 
-  function htmlNode(data) {
-    if (!(this instanceof htmlNode)) {
-      return new htmlNode(data);
+  function HtmlNode(data) {
+    if (!(this instanceof HtmlNode)) {
+      return new HtmlNode(data);
     }
     if (vartype(data) == 'string') {
       var doc = htmlparser.HTMLtoDOM(data), body;
@@ -33,7 +33,43 @@ function lib_domwrapper() {
       }
     }
   }
-  htmlNode.prototype = {
+  HtmlNode.prototype = {
+    /*!
+     * Traversal Functions
+     */
+    firstChild: function() {
+      var node = this._xmlNode.firstChild;
+      return node ? new HtmlNode(node) : null;
+    },
+    parentNode: function() {
+      var node = this._xmlNode.parentNode;
+      return node ? new HtmlNode(node) : null;
+    },
+    childNodes: function() {
+      var arr = this._xmlNode.childNodes;
+      for (var i = 0; i < arr.length; i++) {
+        arr[i] = new HtmlNode(arr[i]);
+      }
+      return arr;
+    },
+    previousSibling: function() {
+      var node = this._xmlNode.previousSibling;
+      return node ? new HtmlNode(node) : null;
+    },
+    nextSibling: function() {
+      var node = this._xmlNode.nextSibling;
+      return node ? new HtmlNode(node) : null;
+    },
+    getPath: function() {
+      var node = this._xmlNode, path = [getTagPosition(node)];
+      while (node = node.parentNode) {
+        path.unshift(getTagPosition(node));
+      }
+      return path.join('/');
+    },
+    /*!
+     * Selection Functions
+     */
     xpath: function(path) {
       var node = this._xmlNode;
       path = path.split(/[\/.]/g);
@@ -52,87 +88,38 @@ function lib_domwrapper() {
           return null;
         }
       }
-      return new htmlNode(node);
+      return new HtmlNode(node);
     },
-    /*!
-     * Traversal Functions
-     */
-    firstChild: function() {
-      var node = this._xmlNode.firstChild;
-      return node ? new htmlNode(node) : null;
-    },
-    parentNode: function() {
-      var node = this._xmlNode.parentNode;
-      return node ? new htmlNode(node) : null;
-    },
-    childNodes: function() {
-      var arr = this._xmlNode.childNodes;
-      for (var i = 0; i < arr.length; i++) {
-        arr[i] = new htmlNode(arr[i]);
+    xpath: function(selector) {
+      var node = this._xmlNode;
+      if (node.tagName) {
+        path = path.replaceHead('/', '').replaceHead(node.tagName + '/', './');
       }
-      return arr;
+      var arr = this.getElementsByXPath(path);
+      return arr.length ? arr[0] : null;
     },
-    previousSibling: function() {
-      var node = this._xmlNode.previousSibling;
-      return node ? new htmlNode(node) : null;
-    },
-    nextSibling: function() {
-      var node = this._xmlNode.nextSibling;
-      return node ? new htmlNode(node) : null;
-    },
-    getPath: function() {
-      var node = this._xmlNode, path = [getTagPosition(node)];
-      while (node = node.parentNode) {
-        path.unshift(getTagPosition(node));
-      }
-      return path.join('/');
-    },
-    /*!
-     * Selection Functions
-     */
-    getElementsByAttr: function(name, val) {
-      var selector = val ? "//*[@" + name + "='" + val + "']" : "//*[@" + name + "]";
+    getElementsByXPath: function(selector) {
       this._xmlDoc.setProperty("SelectionNamespaces", "xmlns:xsl='http://www.w3.org/1999/XSL/Transform'");
       this._xmlDoc.setProperty("SelectionLanguage", "XPath");
       var arr = [], all = this._xmlNode.selectNodes(selector);
       for (var i = 0; i < all.length; i++) {
-        arr[i] = new htmlNode(all[i]);
+        arr[i] = new HtmlNode(all[i]);
       }
       return arr;
+    },
+    getElementsByAttr: function(name, val) {
+      var selector = val ? "//*[@" + name + "='" + val + "']" : "//*[@" + name + "]";
+      return this.getElementsByXPath(selector);
     },
     getElementById: function(id) {
       var arr = this.getElementsByAttr('id', id);
       return arr.length ? arr[0] : null;
     },
     getElementsByName: function(name) {
-//      var node = this._xmlNode, arr = [];
-//      name = name.toLowerCase();
-//      var all = typeof node.getElementsByTagName != "undefined" ? node.getElementsByTagName('*') : [];
-//      for (var i = 0; i < all.length; i++) {
-//        var val = all[i].getAttribute('name');
-//        if (val && val.toLowerCase() == name) {
-//          arr.push(new htmlNode(all[i]));
-//        }
-//      }
-//      return arr;
       return this.getElementsByAttr('name', name);
     },
-//    getElementsByTagName: function(name) {
-//      var node = this._xmlNode, arr = [];
-//      var all = typeof node.getElementsByTagName != "undefined" ? node.getElementsByTagName(name) : [];
-//      for (var i = 0; i < all.length; i++) {
-//        arr[i] = new htmlNode(all[i]);
-//      }
-//      return arr;
-//    },
     getElementsByTagName: function(name) {
-      this._xmlDoc.setProperty("SelectionNamespaces", "xmlns:xsl='http://www.w3.org/1999/XSL/Transform'");
-      this._xmlDoc.setProperty("SelectionLanguage", "XPath");
-      var arr = [], all = this._xmlNode.selectNodes("//" + name);
-      for (var i = 0; i < all.length; i++) {
-        arr[i] = new htmlNode(all[i]);
-      }
-      return arr;
+      return this.getElementsByXPath("//" + name);
     },
     /*!
      * Attribute Functions
@@ -147,12 +134,10 @@ function lib_domwrapper() {
       return this._xmlNode.nodeValue;
     },
     getAttribute: function(name) {
-      var val = this._xmlNode.getAttribute(name);
-      return val;
+      return this._xmlNode.getAttribute(name);
     },
     hasAttribute: function(name) {
-      var val = this._xmlNode.getAttribute(name);
-      return val !== null;
+      return this._xmlNode.getAttribute(name) !== null;
     },
     setAttribute: function(name, val) {
       this._xmlNode.setAttribute(name, val);
@@ -165,7 +150,7 @@ function lib_domwrapper() {
      * Content Functions
      */
     appendHTML: function(html) {
-      var node = this._xmlNode, newNode = new htmlNode(html)._xmlNode;
+      var node = this._xmlNode, newNode = new HtmlNode(html)._xmlNode;
       if (newNode.hasChildNodes()) {
         var children = newNode.childNodes;
         for (var i = 0; i < children.length; i++) {
@@ -188,16 +173,16 @@ function lib_domwrapper() {
     }
   };
 
-  function htmlDoc(html) {
-    if (!(this instanceof htmlDoc)) {
-      return new htmlDoc(html);
+  function HtmlDoc(html) {
+    if (!(this instanceof HtmlDoc)) {
+      return new HtmlDoc(html);
     }
     this._doctype = '<!DOCTYPE html>';
     this._xmlDoc = htmlparser.HTMLtoDOM(html);
     this._xmlNode = this._xmlDoc.documentElement;
   }
-  htmlDoc.prototype = Object.create(htmlNode.prototype);
-  Object.append(htmlDoc.prototype, {
+  HtmlDoc.prototype = Object.create(HtmlNode.prototype);
+  Object.append(HtmlDoc.prototype, {
     doctype: function(str) {
       if (arguments.length) {
         this._doctype = str;
@@ -214,13 +199,13 @@ function lib_domwrapper() {
   });
 
   return {
-    htmlNode: htmlNode,
-    htmlDoc: htmlDoc,
+    HtmlNode: HtmlNode,
+    HtmlDoc: HtmlDoc,
     isHtmlDoc: function(obj) {
-      return (obj instanceof htmlDoc);
+      return (obj instanceof HtmlDoc);
     },
     isHtmlNode: function(obj) {
-      return (obj instanceof htmlNode);
+      return (obj instanceof HtmlNode);
     }
   }
 

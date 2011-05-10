@@ -7,7 +7,7 @@
 
   app('/test/dom', function() {
     var dom = lib('domwrapper');
-    var doc = new dom.htmlDoc('<p class=a>Hello <b>World');
+    var doc = new dom.HtmlDoc('<p class=a>Hello <b>World');
     doc.xpath('body').appendHTML('<p id=two name=item_two>Another Paragraph</p>');
     var el = doc.getElementsByName('item_two');
     res.die(el.length ? el[0].getPath() : el);
@@ -18,7 +18,7 @@
   app('/test/sizzle', function() {
     var dom = lib('domwrapper');
     var sizzle = lib('sizzle');
-    var doc = new dom.htmlDoc('<p class=a name=one>Hello <b>World');
+    var doc = new dom.HtmlDoc('<p class=a name=one>Hello <b>World');
     doc.xpath('body').appendHTML('<p name=two>Another Paragraph</p>');
     var arr = sizzle('body>p[name=two]', doc);
     res.die(arr.length ? arr[0].getPath() : arr);

@@ -2,7 +2,7 @@ var htmlparser = {};
 lib_htmlparser(htmlparser);
 
 function createDoc(html) {
-  return new htmlDoc(html);
+  return new HtmlDoc(html);
 }
 
 //function createDoc(html) {

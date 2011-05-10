@@ -65,7 +65,7 @@ function lib_sizzle() {
 
     if ( parts.length > 1 && origPOS.exec( selector ) ) {
 
-      if ( parts.length === 2 && Expr.relative[ parts[0] ] ) {
+      if ( parts.length == 2 && Expr.relative[ parts[0] ] ) {
         set = posProcess( parts[0] + parts[1], context );
 
       } else {
@@ -87,7 +87,7 @@ function lib_sizzle() {
     } else {
       // Take a shortcut and set the context if the root selector is an ID
       // (but not if it'll be faster if the inner selector is an ID)
-      if ( !seed && parts.length > 1 && context.nodeType() === 9 && !contextXML &&
+      if ( !seed && parts.length > 1 && context.nodeType() == 9 && !contextXML &&
           Expr.match.ID.test(parts[0]) && !Expr.match.ID.test(parts[parts.length - 1]) ) {
 
         ret = Sizzle.find( parts.shift(), context, contextXML );
@@ -99,7 +99,7 @@ function lib_sizzle() {
       if ( context ) {
         ret = seed ?
           { expr: parts.pop(), set: makeArray(seed) } :
-          Sizzle.find( parts.pop(), parts.length === 1 && (parts[0] === "~" || parts[0] === "+") && context.parentNode() ? context.parentNode() : context, contextXML );
+          Sizzle.find( parts.pop(), parts.length == 1 && (parts[0] == "~" || parts[0] == "+") && context.parentNode() ? context.parentNode() : context, contextXML );
 
         set = ret.expr ?
           Sizzle.filter( ret.expr, ret.set ) :
@@ -125,7 +125,7 @@ function lib_sizzle() {
             pop = context;
           }
 
-          Expr.relative[ cur ]( checkSet, pop, contextXML );
+          Expr.relative[ cur ](checkSet, pop, contextXML);
         }
 
       } else {
@@ -141,20 +141,20 @@ function lib_sizzle() {
       Sizzle.error( cur || selector );
     }
 
-    if ( toString.call(checkSet) === "[object Array]" ) {
+    if ( toString.call(checkSet) == "[object Array]" ) {
       if ( !prune ) {
         results.push.apply( results, checkSet );
 
-      } else if ( context && context.nodeType() === 1 ) {
+      } else if ( context && context.nodeType() == 1 ) {
         for ( i = 0; checkSet[i] != null; i++ ) {
-          if ( checkSet[i] && (checkSet[i] === true || checkSet[i].nodeType() === 1 && Sizzle.contains(context, checkSet[i])) ) {
+          if ( checkSet[i] && (checkSet[i] === true || checkSet[i].nodeType() == 1 && Sizzle.contains(context, checkSet[i])) ) {
             results.push( set[i] );
           }
         }
 
       } else {
         for ( i = 0; checkSet[i] != null; i++ ) {
-          if ( checkSet[i] && checkSet[i].nodeType() === 1 ) {
+          if ( checkSet[i] && checkSet[i].nodeType() == 1 ) {
             results.push( set[i] );
           }
         }
@@ -179,7 +179,7 @@ function lib_sizzle() {
 
       if ( hasDuplicate ) {
         for ( var i = 1; i < results.length; i++ ) {
-          if ( results[i] === results[ i - 1 ] ) {
+          if ( results[i].getPath() === results[ i - 1 ].getPath() ) {
             results.splice( i--, 1 );
           }
         }
@@ -251,7 +251,7 @@ function lib_sizzle() {
 
           match.splice(1,1);
 
-          if ( left.substr( left.length - 1 ) === "\\" ) {
+          if ( left.substr( left.length - 1 ) == "\\" ) {
             continue;
           }
 
@@ -360,7 +360,7 @@ function lib_sizzle() {
 
     relative: {
       "+": function(checkSet, part){
-        var isPartStr = typeof part === "string",
+        var isPartStr = typeof part == "string",
           isTag = isPartStr && !rNonWord.test( part ),
           isPartStrNotTag = isPartStr && !isTag;
 
@@ -372,6 +372,7 @@ function lib_sizzle() {
           if ( (elem = checkSet[i]) ) {
             while ( (elem = elem.previousSibling()) && elem.nodeType() !== 1 ) {}
 
+            //TODO: split into string check and elem check to handle ===
             checkSet[i] = isPartStrNotTag || elem && elem.nodeName().toLowerCase() === part ?
               elem || false :
               elem === part;
@@ -385,7 +386,7 @@ function lib_sizzle() {
 
       ">": function( checkSet, part ) {
         var elem,
-          isPartStr = typeof part === "string",
+          isPartStr = typeof part == "string",
           i = 0,
           l = checkSet.length;
 
@@ -397,7 +398,7 @@ function lib_sizzle() {
 
             if ( elem ) {
               var parent = elem.parentNode();
-              checkSet[i] = parent.nodeName().toLowerCase() === part ? parent : false;
+              checkSet[i] = parent.nodeName().toLowerCase() == part ? parent : false;
             }
           }
 
@@ -408,7 +409,7 @@ function lib_sizzle() {
             if ( elem ) {
               checkSet[i] = isPartStr ?
                 elem.parentNode() :
-                elem.parentNode() === part;
+                elem.parentNode().getPath() === part.getPath();
             }
           }
 
@@ -416,34 +417,30 @@ function lib_sizzle() {
             Sizzle.filter( part, checkSet, true );
           }
         }
-//      },
-//
-//      "": function(checkSet, part, isXML){
-//        var nodeCheck,
-//          doneName = done++,
-//          checkFn = dirCheck;
-//
-//        if ( typeof part === "string" && !rNonWord.test( part ) ) {
-//          part = part.toLowerCase();
-//          nodeCheck = part;
-//          checkFn = dirNodeCheck;
-//        }
-//
-//        checkFn( "parentNode", part, doneName, checkSet, nodeCheck, isXML );
-//      },
-//
-//      "~": function( checkSet, part, isXML ) {
-//        var nodeCheck,
-//          doneName = done++,
-//          checkFn = dirCheck;
-//
-//        if ( typeof part === "string" && !rNonWord.test( part ) ) {
-//          part = part.toLowerCase();
-//          nodeCheck = part;
-//          checkFn = dirNodeCheck;
-//        }
-//
-//        checkFn( "previousSibling", part, doneName, checkSet, nodeCheck, isXML );
+      },
+
+      "": function(checkSet, part, isXML){
+        var doneName = done++,
+          checkFn = dirCheck;
+
+        if ( typeof part == "string" && !rNonWord.test( part ) ) {
+          part = part.toLowerCase();
+          checkFn = dirNodeCheck;
+        }
+
+        checkFn( "parentNode", part, doneName, checkSet );
+      },
+
+      "~": function( checkSet, part, isXML ) {
+        var doneName = done++,
+          checkFn = dirCheck;
+
+        if ( typeof part == "string" && !rNonWord.test( part ) ) {
+          part = part.toLowerCase();
+          checkFn = dirNodeCheck;
+        }
+
+        checkFn( "previousSibling", part, doneName, checkSet );
       }
     },
 
@@ -468,7 +465,7 @@ function lib_sizzle() {
             }
           }
 
-          return ret.length === 0 ? null : ret;
+          return ret.length == 0 ? null : ret;
         }
       },
 
@@ -511,7 +508,7 @@ function lib_sizzle() {
       },
 
       CHILD: function( match ) {
-        if ( match[1] === "nth" ) {
+        if ( match[1] == "nth" ) {
           if ( !match[2] ) {
             Sizzle.error( match[0] );
           }
@@ -520,7 +517,7 @@ function lib_sizzle() {
 
           // parse equations like 'even', 'odd', '5', '2n', '3n+2', '4n-1', '-n+6'
           var test = /(-?)(\d*)(?:n([+\-]?\d*))?/.exec(
-            match[2] === "even" && "2n" || match[2] === "odd" && "2n+1" ||
+            match[2] == "even" && "2n" || match[2] == "odd" && "2n+1" ||
             !/\D/.test( match[2] ) && "0n+" + match[2] || match[2]);
 
           // calculate the numbers (first)n+(last) including if they are negative
@@ -547,7 +544,7 @@ function lib_sizzle() {
         // Handle if an un-quoted value was used
         match[4] = ( match[4] || match[5] || "" ).replace( rBackslash, "" );
 
-        if ( match[2] === "~=" ) {
+        if ( match[2] == "~=" ) {
           match[4] = " " + match[4] + " ";
         }
 
@@ -555,7 +552,7 @@ function lib_sizzle() {
       },
 
       PSEUDO: function( match, curLoop, inplace, result, not ) {
-        if ( match[1] === "not" ) {
+        if ( match[1] == "not" ) {
           // If we're dealing with a complex expression, or a simple one
           if ( ( chunker.exec(match[3]) || "" ).length > 1 || /^\w/.test(match[3]) ) {
             match[3] = Sizzle(match[3], null, null, curLoop);
@@ -639,7 +636,7 @@ function lib_sizzle() {
 
       submit: function( elem ) {
         var name = elem.nodeName().toLowerCase();
-        return (name === "input" || name === "button") && elem.getAttribute('type') == 'submit';
+        return (name == "input" || name == "button") && elem.getAttribute('type') == 'submit';
       },
 
       image: function( elem ) {
@@ -648,12 +645,12 @@ function lib_sizzle() {
 
       reset: function( elem ) {
         var name = elem.nodeName().toLowerCase();
-        return (name === "input" || name === "button") && elem.getAttribute('type') == 'reset';
+        return (name == "input" || name == "button") && elem.getAttribute('type') == 'reset';
       },
 
       button: function( elem ) {
         var name = elem.nodeName().toLowerCase();
-        return name === "input" && elem.getAttribute('type') == 'button' || name === "button";
+        return name == "input" && elem.getAttribute('type') == 'button' || name == "button";
       },
 
       input: function( elem ) {
@@ -662,19 +659,19 @@ function lib_sizzle() {
     },
     setFilters: {
       first: function( elem, i ) {
-        return i === 0;
+        return i == 0;
       },
 
       last: function( elem, i, match, array ) {
-        return i === array.length - 1;
+        return i == array.length - 1;
       },
 
       even: function( elem, i ) {
-        return i % 2 === 0;
+        return i % 2 == 0;
       },
 
       odd: function( elem, i ) {
-        return i % 2 === 1;
+        return i % 2 == 1;
       },
 
       lt: function( elem, i, match ) {
@@ -686,11 +683,11 @@ function lib_sizzle() {
       },
 
       nth: function( elem, i, match ) {
-        return match[3] - 0 === i;
+        return match[3] - 0 == i;
       },
 
       eq: function( elem, i, match ) {
-        return match[3] - 0 === i;
+        return match[3] - 0 == i;
       }
     },
     filter: {
@@ -701,14 +698,14 @@ function lib_sizzle() {
         if ( filter ) {
           return filter( elem, i, match, array );
 
-        } else if ( name === "contains" ) {
+        } else if ( name == "contains" ) {
           return (elem.textContent || elem.innerText || Sizzle.getText([ elem ]) || "").indexOf(match[3]) >= 0;
 
-        } else if ( name === "not" ) {
+        } else if ( name == "not" ) {
           var not = match[3];
 
           for ( var j = 0, l = not.length; j < l; j++ ) {
-            if ( not[j] === elem ) {
+            if ( not[j].getPath() == elem.getPath() ) {
               return false;
             }
           }
@@ -728,12 +725,12 @@ function lib_sizzle() {
           case "only":
           case "first":
             while ( (node = node.previousSibling()) )	 {
-              if ( node.nodeType() === 1 ) {
+              if ( node.nodeType() == 1 ) {
                 return false;
               }
             }
 
-            if ( type === "first" ) {
+            if ( type == "first" ) {
               return true;
             }
 
@@ -741,7 +738,7 @@ function lib_sizzle() {
 
           case "last":
             while ( (node = node.nextSibling()) )	 {
-              if ( node.nodeType() === 1 ) {
+              if ( node.nodeType() == 1 ) {
                 return false;
               }
             }
@@ -752,42 +749,42 @@ function lib_sizzle() {
             var first = match[2],
               last = match[3];
 
-            if ( first === 1 && last === 0 ) {
+            if ( first == 1 && last == 0 ) {
               return true;
             }
 
             var doneName = match[0],
+              nodeIndex = 0,
               parent = elem.parentNode();
 
-            if ( parent && (parent.sizcache !== doneName || !elem.nodeIndex) ) {
+            if ( parent ) {
               var count = 0;
 
               for ( node = parent.firstChild(); node; node = node.nextSibling() ) {
-                if ( node.nodeType() === 1 ) {
-                  node.nodeIndex = ++count;
+                if ( node.nodeType() == 1 ) {
+                  nodeIndex = ++count;
                 }
               }
 
-              parent.sizcache = doneName;
             }
 
-            var diff = elem.nodeIndex - last;
+            var diff = nodeIndex - last;
 
-            if ( first === 0 ) {
-              return diff === 0;
+            if ( first == 0 ) {
+              return diff == 0;
 
             } else {
-              return ( diff % first === 0 && diff / first >= 0 );
+              return ( diff % first == 0 && diff / first >= 0 );
             }
         }
       },
 
       ID: function( elem, match ) {
-        return elem.nodeType() === 1 && elem.getAttribute("id") === match;
+        return elem.nodeType() == 1 && elem.getAttribute("id") == match;
       },
 
       TAG: function( elem, match ) {
-        return (match === "*" && elem.nodeType() === 1) || elem.nodeName().toLowerCase() === match;
+        return (match == "*" && elem.nodeType() == 1) || elem.nodeName().toLowerCase() == match;
       },
 
       CLASS: function( elem, match ) {
@@ -807,23 +804,23 @@ function lib_sizzle() {
           check = match[4];
 
         return result == null ?
-          type === "!=" :
-          type === "=" ?
-          value === check :
-          type === "*=" ?
+          type == "!=" :
+          type == "=" ?
+          value == check :
+          type == "*=" ?
           value.indexOf(check) >= 0 :
-          type === "~=" ?
+          type == "~=" ?
           (" " + value + " ").indexOf(check) >= 0 :
           !check ?
           value && result !== false :
-          type === "!=" ?
+          type == "!=" ?
           value !== check :
-          type === "^=" ?
-          value.indexOf(check) === 0 :
-          type === "$=" ?
-          value.substr(value.length - check.length) === check :
-          type === "|=" ?
-          value === check || value.substr(0, check.length + 1) === check + "-" :
+          type == "^=" ?
+          value.indexOf(check) == 0 :
+          type == "$=" ?
+          value.substr(value.length - check.length) == check :
+          type == "|=" ?
+          value == check || value.substr(0, check.length + 1) == check + "-" :
           false;
       },
 
@@ -870,12 +867,12 @@ function lib_sizzle() {
       cur = aup;
 
     // The nodes are identical, we can exit early
-    if ( a === b ) {
+    if ( a.getPath() == b.getPath() ) {
       hasDuplicate = true;
       return 0;
 
     // If the nodes are siblings (or identical) we can do a quick check
-    } else if ( aup === bup ) {
+    } else if ( aup.getPath() == bup.getPath() ) {
       return siblingCheck( a, b );
 
     // If no parents were found then the nodes are disconnected
@@ -911,24 +908,22 @@ function lib_sizzle() {
     }
 
     // We ended someplace up the tree so do a sibling check
-    return i === al ?
+    return i == al ?
       siblingCheck( a, bp[i], -1 ) :
       siblingCheck( ap[i], b, 1 );
   };
 
   siblingCheck = function( a, b, ret ) {
-    if ( a === b ) {
+    var path = b.getPath();
+    if ( a.getPath() == path ) {
       return ret;
     }
 
-    var cur = a.nextSibling();
-
-    while ( cur ) {
-      if ( cur === b ) {
+    var cur = a;
+    while ( cur = cur.nextSibling() ) {
+      if ( cur.getPath() == path ) {
         return -1;
       }
-
-      cur = cur.nextSibling();
     }
 
     return 1;
@@ -942,7 +937,7 @@ function lib_sizzle() {
       elem = elems[i];
 
       // Get the text from text nodes and CDATA nodes
-      if ( elem.nodeType() === 3 || elem.nodeType() === 4 ) {
+      if ( elem.nodeType() == 3 || elem.nodeType() == 4 ) {
         ret += elem.nodeValue();
 
       // Traverse everything else, except comment nodes
@@ -954,32 +949,22 @@ function lib_sizzle() {
     return ret;
   };
 
-  function dirNodeCheck( dir, cur, doneName, checkSet, nodeCheck, isXML ) {
+  function dirNodeCheck( dir, cur, doneName, checkSet ) {
     for ( var i = 0, l = checkSet.length; i < l; i++ ) {
       var elem = checkSet[i];
 
       if ( elem ) {
         var match = false;
 
-        elem = elem[dir];
+        elem = elem[dir]();
 
         while ( elem ) {
-          if ( elem.sizcache === doneName ) {
-            match = checkSet[elem.sizset];
-            break;
-          }
-
-          if ( elem.nodeType() === 1 && !isXML ){
-            elem.sizcache = doneName;
-            elem.sizset = i;
-          }
-
-          if ( elem.nodeName().toLowerCase() === cur ) {
+          if ( elem.nodeName().toLowerCase() == cur ) {
             match = elem;
             break;
           }
 
-          elem = elem[dir];
+          elem = elem[dir]();
         }
 
         checkSet[i] = match;
@@ -987,29 +972,19 @@ function lib_sizzle() {
     }
   }
 
-  function dirCheck( dir, cur, doneName, checkSet, nodeCheck, isXML ) {
+  function dirCheck( dir, cur, doneName, checkSet ) {
     for ( var i = 0, l = checkSet.length; i < l; i++ ) {
       var elem = checkSet[i];
 
       if ( elem ) {
         var match = false;
 
-        elem = elem[dir];
+        elem = elem[dir]();
 
         while ( elem ) {
-          if ( elem.sizcache === doneName ) {
-            match = checkSet[elem.sizset];
-            break;
-          }
-
-          if ( elem.nodeType() === 1 ) {
-            if ( !isXML ) {
-              elem.sizcache = doneName;
-              elem.sizset = i;
-            }
-
+          if ( elem.nodeType() == 1 ) {
             if ( typeof cur !== "string" ) {
-              if ( elem === cur ) {
+              if ( elem.getPath() == cur.getPath() ) {
                 match = true;
                 break;
               }
@@ -1020,7 +995,7 @@ function lib_sizzle() {
             }
           }
 
-          elem = elem[dir];
+          elem = elem[dir]();
         }
 
         checkSet[i] = match;

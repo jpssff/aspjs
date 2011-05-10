@@ -1,6 +1,6 @@
 function lib_jqlite() {
 
-  var domwrapper = lib('domwrapper');
+  var HtmlDoc = lib('domwrapper').HtmlDoc;
   var sizzle = lib('sizzle');
 
   function WrappedSet(arr) {
@@ -12,7 +12,6 @@ function lib_jqlite() {
     },
     append: function(html) {
       this.each(function(i, el) {
-        //htmlparser.HTMLtoXML();
         el.appendHTML(html);
       });
       return this;
@@ -21,10 +20,10 @@ function lib_jqlite() {
       this.each(function(i, el) {
         var classList = el.getAttribute('class') || '';
         classList = classList.trim();
-        if (classList.toLowerCase().split(/\s+/).indexOf(className.toLowerCase()) >= 0) {
+        if (classList.toLowerCase().split(/\s+/).indexOf(className.toLowerCase()) < 0) {
           classList = classList + ' ' + className;
         }
-        el.setAttribute('class', classList);
+        el.setAttribute('class', classList.trim());
       });
       return this;
     }
@@ -49,7 +48,7 @@ function lib_jqlite() {
     wrap: function(items) {
       return new WrappedSet(items);
     },
-    toString: function() {
+    serialize: function() {
       return this.doc.outerHTML();
     }
   };
@@ -57,7 +56,7 @@ function lib_jqlite() {
   return {
     create: function(html) {
       var inst = new jqLite();
-      inst.doc = new domwrapper.htmlDoc(html);
+      inst.doc = new HtmlDoc(html);
       return inst;
     }
   }
