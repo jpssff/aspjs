@@ -67,9 +67,9 @@ app('/user/:name', function(params) {
 ```
 
 
-The (global) `htmlEnc()` function here is shorthand for `String.htmlEnc()` and will make your output
-safe for HTML such that if the name "John&Jane" was passed in, it would be output as `John&amp;Jane`
-in HTML.
+The `htmlEnc()` function here is shorthand for `String.htmlEnc()` and will make your output safe for
+HTML such that if the name "John & Jane" was passed in, it would be output as `John &amp; Jane` in
+HTML.
 
 Global shorthand functions include: `vartype`, `isPrimitive`, `isSet`, `toArray`, `forEach`,
 `urlEnc`, `urlDec`, `htmlEnc` and `htmlDec`
@@ -83,7 +83,7 @@ don't have to explicitly load them like:
 var app = lib('application'), req = lib('request'), res = lib('response'), util = lib('util');
 ```
 
-An example of loading, the "net" library and calling the redirect method:
+An example of loading, the "net" library, sending an email and then redirecting the visitor:
 
 ```javascript
 var net = lib('net');

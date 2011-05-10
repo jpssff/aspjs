@@ -4,23 +4,22 @@
  * Based on normal-template from NitroJS project
  * http://github.com/gmosx/normal-template
  *
- * This module presents functions for reading, compiling and rendering templates (views). Template
- * files are stored within the views folder and usually have an html file extension,
- * but can be of any file type.
+ * Presents functions to read, compile and render templates (views). Template files are stored within
+ * the views folder and usually have an html file extension, but can be of any file type.
  *
  * There are three types of template files:
  * - Partials - blocks of text/markup that can be included from a template or sub-template
  * - Sub-Templates - files that specify a parent file and contain content for each region specified
- * by the parent
+ *   by the parent
  * - Templates - files that do not have a parent, but may optionally include regions for use by
- * sub-templates
+ *   sub-templates
  *
  */
 if (!this.lib_templ) this.lib_templ = lib_templ;
 function lib_templ(exports) {
   
-  var TOKEN_RE = new RegExp("(\{[\=\:\#\/].+?\})")
-    , COMMAND_RE = new RegExp("^\{[\:\/\=]")
+  var TOKEN_RE = new RegExp("(\{[=:#\/].+?\})")
+    , COMMAND_RE = new RegExp("^\{[:/=]")
     , PATH_RE = /^[a-z_$][a-z0-9_$]*(?:[.\/][a-z_$][a-z0-9_$]*)*$/i;
   
   var xpath = function(path) {
@@ -208,14 +207,14 @@ function lib_templ(exports) {
   
   
   /**
-   * Template filters. Add your own to this dictionary.
+   * Template filters. Add your own here
    */
   exports.filters = {
     // used to stringify a value
     val: function(obj) { 
       var type = vartype(obj);
       if (type == 'date') {
-        return Date.format(app.util.applyTimezone(obj),app.cfg('template/defaults/date_format'));
+        return Date.format(app.util.applyTimezone(obj), app.cfg('template/defaults/date_format'));
       } else {
         return String(obj);
       }
@@ -253,7 +252,7 @@ function lib_templ(exports) {
       return urlEnc(s);
     },
     escape: function(s) {
-      return escape(s).replace(/\+/g,'%2B');
+      return escape(s).replace(/\+/g, '%2B');
     }
   }
   
@@ -426,12 +425,11 @@ function lib_templ(exports) {
       return exports.compile(src);
     },
     render: function(path, data) {
-      var args = Array.toArray(arguments)
-        , path = args.shift();
+      var args = Array.toArray(arguments), path = args.shift();
       var data = {};
       args.unshift(data);
-      Object.append.apply(this,args);
-      return lib.compile(path,data)(data);
+      Object.append.apply(null, args);
+      return lib.compile(path, data)(data);
     }
   };
   

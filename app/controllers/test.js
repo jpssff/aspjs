@@ -5,6 +5,37 @@
    * These are for testing and framework development
    */
 
+  app('/test/dom', function() {
+    var dom = lib('domwrapper');
+    var doc = new dom.htmlDoc('<p class=a>Hello <b>World');
+    doc.xpath('body').appendHTML('<p id=two name=item_two>Another Paragraph</p>');
+    var el = doc.getElementsByName('item_two');
+    res.die(el.length ? el[0].getPath() : el);
+    res.die(arr.map(function(el){ return el.outerHTML(); }));
+    res.die(doc.outerHTML());
+  });
+
+  app('/test/sizzle', function() {
+    var dom = lib('domwrapper');
+    var sizzle = lib('sizzle');
+    var doc = new dom.htmlDoc('<p class=a name=one>Hello <b>World');
+    doc.xpath('body').appendHTML('<p name=two>Another Paragraph</p>');
+    var arr = sizzle('body>p[name=two]', doc);
+    res.die(arr.length ? arr[0].getPath() : arr);
+  });
+
+  app('/test/jqlite', function() {
+    var jq = lib('jqlite');
+    var $ = jq.create('<p class=a>Hello <b>World');
+    $('body').append('<p id=two>Another Paragraph</p>');
+    var results = $('body p').addClass('b');
+    res.die($.serialize());
+  });
+
+  app('/test/wsc', function() {
+    //var htmldom = GetObject('script:' + sys.mappath('system/wsc/htmldom.wsc'));
+  });
+
   app('/test', function(p) {
     var out = [];
     var ActiveRecord = lib('activerecord');

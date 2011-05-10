@@ -1,13 +1,11 @@
-/**
+/*!
  * Request Router
  *
- * NOTES: Request routing parses and handles the requested URL. A route
- *        matches a particular URL pastern to a function in a controller
- *        that should handle the request.
+ * Request routing parses and handles the requested URL. A route matches a particular URL pattern to
+ * a route handler function.
  *
- *        The method this framework uses for describing URL patterns is
- *        similar to Sinatra (Ruby). The general form is /path/:param
- *        which allows named parameters preceded by colon characters.
+ * The method this framework uses for describing URL patterns is similar to Sinatra. The
+ * general form is /path/:param which allows named parameters.
  *
  */
 
@@ -39,7 +37,7 @@ function lib_router() {
     .replace(/([\/.-])/g, '\\$1')
     .replace(/\*/g, '(.+)');
     var rex = new RegExp('^' + str + '$','i');
-    return [rex,function(matches){
+    return [rex, function(matches){
       var params = new Collection();
       Object.each(keys,function(i,str){ params(str,urlDec(matches[i])); });
       return fn.call(this,params);
@@ -52,7 +50,7 @@ function lib_router() {
       var type = vartype(a);
       verb = String.parse(verb).toUpperCase();
       if (type == 'string' && a.match(/[:*]/)) {
-        routes.push([verb].append(parseRoute(a,b)));
+        routes.push([verb].concat(parseRoute(a,b)));
       } else
       if (type == 'string' || type == 'regexp') {
         routes.push([verb,a,b]);

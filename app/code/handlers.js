@@ -1,77 +1,81 @@
-/**
+/*!
  * The following adds handlers that are attached (and
  * executed) before controller code.
  *
  */
-bind('ready',function(){
-  
-  /**
-   * Load a previously saved "flash" message.
-   * Numeric key in URL query string or HTTP Referrer
-   * references a message object in QuickStore which contains
-   * a notification or error that should be displayed to the
-   * user at page load.
+bind('ready', function() {
+
+  //Process pre-route redirects
+  var redir = app.cfg('redir') || {}, path = req.url('path');
+  if (Object.exists(redir, path)) {
+    res.redirect(redir[path], '301');
+  }
+
+  /*!
+   * Load a previously saved "flash" message (specified by numeric key in query string or referrer)
+   * retrieve it from QuickStore and save it to req.msg.
    *
    */
-  var referrer = req.headers('referrer')
-    , matches = req.url('qs').match(/^\?(\d+)$/);
-  if (matches) {
-    if (referrer) {
-      res.redirect(req.url('path'),'html');
+  var ref = req.headers('referrer'), m = req.url('qs').match(/^\?(\d+)$/);
+  if (m) {
+    if (ref) {
+      res.redirect(req.url('path'), 'html');
     } else {
-      req.msg = app.checkout(matches[1]);
+      req.msg = app.checkout(m[1]);
     }
   } else
-  if (referrer.indexOf('://' + req.headers('host') + '/') > 0) {
-    matches = referrer.match(/\?(\d+)$/);
-    if (matches) {
-      req.msg = app.checkout(matches[1]);
+  if (ref.indexOf('://' + req.headers('host') + '/') > 0) {
+    m = ref.match(/\?(\d+)$/);
+    if (m) {
+      req.msg = app.checkout(m[1]);
     }
   }
   
   
 });
 
-/**
- * This event fires after all routes have been processed
- * if none have called stop() or ended the request.
+/*!
+ * The no-route event fires after all routes have been processed if none have called stop() or ended
+ * the request.
  *
  */
-bind('no-route',function(){
+bind('no-route', function() {
+
   //Attempt to render a "public" page.
   var matches = req.url('path').match(/^\/([^\/.]+)$/);
   if (matches) {
     try {
       this.render('public/' + matches[1]);
     } catch(e) {
-      //Page may not exist
+      //View file may not exist for this URL
     }
   }
+
 });
 
 /**
- * This handler is executed *before* the default 404
- * handler (specified by preceding colon) and it modifies
- * this.response which gets passed down the chain to the
- * default handler.
+ * This handler is executed *before* the default 404 handler (note the preceding colon) and it
+ * modifies this.response which gets passed down the event chain to the last handler.
  *
  */
-if (false)
 bind(':404',function(){
-  //Log Requested URL
-  if (!req.url('path').match(/\/(favicon\.ico|robots\.txt)$/)) {
-    sys.log(req.url() + ' ' + server.vars('ipaddr'), 'sys-not-found');
-  }
-  //HTML Redirect to friendly 404 page
-  var url = '/?not-found=' + urlEnc(req.url())
-    , templ = lib('templ')
-    , markup = app.cfg('html_redir');
-  if (templ && markup) {
-    //Pass rendered markup down the event chain
-    this.response = {
-      type: 'text/html',
-      body: templ.renderContent(markup,{redir:url})
-    };
-  }
+
+//  //Log Requested URL
+//  if (!req.url('path').match(/\/(favicon\.ico|robots\.txt)$/)) {
+//    sys.log(req.url() + ' ' + server.vars('ipaddr'), 'sys-not-found');
+//  }
+//
+//  //HTML Redirect to friendly 404 page
+//  var url = '/?not-found=' + urlEnc(req.url())
+//    , templ = lib('templ')
+//    , markup = app.cfg('html_redir');
+//  if (templ && markup) {
+//    //Pass rendered markup down the event chain
+//    this.response = {
+//      type: 'text/html',
+//      body: templ.renderContent(markup,{redir:url})
+//    };
+//  }
+
 });
 

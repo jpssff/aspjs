@@ -176,11 +176,10 @@ function lib_util() {
      */
     xpath: function(obj,sep) {
       sep = (sep) ? String(sep) : '/';
-      return function(path){
-        var val = obj
-          , arr = String(path).split(sep);
-        while (arr.length) {
-          var key = arr.shift();
+      return function(path) {
+        var val = obj, arr = String(path).split(sep);
+        for (var i = 0; i < arr.length; i++) {
+          var key = arr[i];
           if (key && val) {
             val = val[key]
           }

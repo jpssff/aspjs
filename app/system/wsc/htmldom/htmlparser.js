@@ -63,7 +63,7 @@ function lib_htmlparser(exports) {
       if ( !stack.last() || !special[ stack.last() ] ) {
 
         // Comment
-        if ( html.indexOf("<!--") == 0 ) {
+        if ( html.indexOf("\x3C!--") == 0 ) {
           index = html.indexOf("-->");
   
           if ( index >= 0 ) {
@@ -106,7 +106,7 @@ function lib_htmlparser(exports) {
 
       } else {
         html = html.replace(new RegExp("(.*)<\/" + stack.last() + "[^>]*>"), function(all, text){
-          text = text.replace(/<!--(.*?)-->/g, "$1")
+          text = text.replace(/\x3C!--(.*?)--\x3E/g, "$1")
             .replace(/<!\[CDATA\[(.*?)]]>/g, "$1");
 
           if ( handler.chars )
@@ -205,7 +205,7 @@ function lib_htmlparser(exports) {
         results += text;
       },
       comment: function( text ) {
-        results += "<!--" + text + "-->";
+        results += "\x3C!--" + text + "--\x3E";
       }
     });
     
@@ -223,25 +223,16 @@ function lib_htmlparser(exports) {
     };
   
     if ( !doc ) {
-      if ( typeof DOMDocument != "undefined" )
-        doc = new DOMDocument();
-      else if ( typeof document != "undefined" && document.implementation && document.implementation.createDocument )
-        doc = document.implementation.createDocument("", "", null);
-      else if ( typeof ActiveX != "undefined" )
-        doc = new ActiveXObject("Msxml.DOMDocument");
-      
-    } else
-      doc = doc.ownerDocument ||
-        doc.getOwnerDocument && doc.getOwnerDocument() ||
-        doc;
-    
+      doc = new ActiveXObject("Msxml.DOMDocument");
+    } else {
+      doc = doc.ownerDocument || doc.getOwnerDocument && doc.getOwnerDocument() || doc;
+    }
+
     var elems = [],
-      documentElement = doc.documentElement ||
-        doc.getDocumentElement && doc.getDocumentElement();
-        
+      documentElement = doc.documentElement;// || doc.getDocumentElement && doc.getDocumentElement();
     // If we're dealing with an empty document then we
     // need to pre-populate it with the HTML document structure
-    if ( !documentElement && doc.createElement ) (function(){
+    if ( !documentElement && typeof doc.createElement !== 'undefined' ) (function(){
       var html = doc.createElement("html");
       var head = doc.createElement("head");
       head.appendChild( doc.createElement("title") );
@@ -249,16 +240,16 @@ function lib_htmlparser(exports) {
       html.appendChild( doc.createElement("body") );
       doc.appendChild( html );
     })();
-    
+
     // Find all the unique elements
-    if ( doc.getElementsByTagName )
+    if ( typeof doc.getElementsByTagName !== 'undefined' )
       for ( var i in one )
         one[ i ] = doc.getElementsByTagName( i )[0];
-    
+
     // If we're working with a document, inject contents into
     // the body element
     var curParentNode = one.body;
-    
+
     HTMLParser( html, {
       start: function( tagName, attrs, unary ) {
         // If it's a pre-built element, then we can ignore
@@ -269,14 +260,15 @@ function lib_htmlparser(exports) {
         }
       
         var elem = doc.createElement( tagName );
-        
-        for ( var attr in attrs )
-          elem.setAttribute( attrs[ attr ].name, attrs[ attr ].value );
-        
+
+        for (var i = 0; i < attrs.length; i++) {
+          elem.setAttribute( attrs[ i ].name, attrs[ i ].value );
+        }
+
         if ( structure[ tagName ] && typeof one[ structure[ tagName ] ] != "boolean" )
           one[ structure[ tagName ] ].appendChild( elem );
         
-        else if ( curParentNode && curParentNode.appendChild )
+        else if ( curParentNode && typeof curParentNode.appendChild !== 'undefined' )
           curParentNode.appendChild( elem );
           
         if ( !unary ) {
@@ -297,7 +289,7 @@ function lib_htmlparser(exports) {
         // create comment node
       }
     });
-    
+
     return doc;
   };
 

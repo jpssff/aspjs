@@ -1,14 +1,15 @@
 ﻿/*!
  * Declare global variables
  */
-//var __approot, __date, __now;
-//var global, server, app, sys, req, res;
+var __approot, __date, __now;
+var global, server, app, sys, req, res;
 
 /**
  * Dispatch Request
  * This is a lighter-weight dispatch function similar to app_init, but requires fewer library files
  * to be included in the script calling this function and doesn't use the event model.
  *
+
  * Receives a function and calls it with the following parameters:
  * server: Server abstraction interface
  * req: Request object

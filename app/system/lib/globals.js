@@ -4,7 +4,7 @@
  */
 
 //These will become shorthand for Object.vartype, Array.toArray, String.urlEnc, etc
-//var vartype, isPrimitive, isSet, toArray, urlEnc, urlDec, htmlEnc, htmlDec;
+var vartype, isPrimitive, isSet, toArray, urlEnc, urlDec, htmlEnc, htmlDec;
 
 /**
  * Shorthand to iterate Array / Object
@@ -72,7 +72,6 @@ function fngetset(params,context) {
 
 /**
  * Extend built-in objects
- * This function should be called before any app code.
  *
  * Some of this code is inspired by or based on ECMAScript 5 and/or various open-source JavasScript
  * libraries.
@@ -143,42 +142,47 @@ function lib_globals() {
       Object.append(obj, ext.call(parent, parent));
     } else
     if (ext instanceof Object) {
-      Object.append(obj, {_super: parent}, ext)
+      //Object.append(obj, {_super: parent})
+      Object.append(obj, ext)
     }
     return obj;
   };
-  Object.each = function(o,f) {
+  Object.each = function(o, f) {
     var i = 0;
     for (var n in o) if (Object.exists(o,n)) if (f.call(o,n,o[n],(i++)) === false) break;
     return o;
   };
-  Object.exists = function(o,n) {
+  Object.exists = function(o, n) {
     return Object.prototype.hasOwnProperty.call(o,n);
   };
   Object.isPrimitive = function(obj) {
-    return 'boolean,null,number,string,undefined'.split(',').exists(Object.vartype(obj));
+    return 'boolean null number string undefined'.w().exists(Object.vartype(obj));
   };
   Object.isSet = function(obj) {
     return !(obj === null || obj === undefined);
   };
   Object.keys = function(o) {
     var a = [];
-    Object.each(o,function(n){ a.push(n); });
+    Object.each(o, function(n) {
+      a.push(n);
+    });
     return a;
   };
-  Object.remove = function(o,a) {
+  Object.remove = function(o, a) {
     var type = Object.vartype(a);
     if (type == 'array') {
-      for (var i=0;i<a.length;i++) Object.remove(o,a[i]);
+      for (var i=0; i<a.length; i++) Object.remove(o, a[i]);
     } else
-    if (type == 'string' && Object.exists(o,a)) {
+    if (type == 'string' && Object.exists(o, a)) {
       delete o[a];
     }
     return o;
   };
   Object.values = function(o) {
     var a = [];
-    Object.each(o,function(n,val){ a.push(val); });
+    Object.each(o, function(n, val) {
+      a.push(val);
+    });
     return a;
   };
   Object.vartype = function(obj) {
@@ -188,38 +192,63 @@ function lib_globals() {
     }
     return (type == 'object') ? 'unknown' : type;
   };
-  
-  Array.prototype.each = function(f) {
-    var a = this;
-    for (var i=0,len=a.length;i<len;i++) if (f.call(a,i,a[i]) === false) break;
-    return a;
-  };
-  Array.prototype.indexOf = function(obj) {
-    var a = this;
-    for (var i=0,len=a.length;i<len;i++) if (a[i] === obj) return i;
-    return -1;
-  };
-  Array.prototype.exists = function(obj) {
-    var a = this;
-    return ( Array.prototype.indexOf.call(a,obj) >= 0 );
-  };
-  Array.prototype.map = function(f) {
-    var a = [];
-    Array.prototype.each.call(this,function(i,e){ a.push(f(e)); });
-    return a;
-  };
-  Array.prototype.filter = function(f) {
-    var a = [];
-    Array.prototype.each.call(this,function(i,e){ if (f(e)) a.push(e); });
-    return a;
-  };
-  Array.prototype.append = function(a) {
-    if (a instanceof Array) {
-      for (var i=0;i<a.length;i++) Array.prototype.push.call(this,a[i]);
-    } else {
-      Array.prototype.push.call(this,a);
+
+  Array.prototype.each = function(fn) {
+    var arr = this, len = arr.length;
+    for (var i = 0; i < len; i++) {
+      if (fn.call(arr, i, arr[i]) === false) break;
     }
-    return this;
+    return arr;
+  };
+  if (!Array.prototype.forEach)
+  Array.prototype.forEach = function (fn, context) {
+    var arr = this, len = context.length;
+    context = context || arr;
+    for (var i = 0; i < len; i++) {
+      if (i in arr) fn.call(context, arr[i], i, arr);
+    }
+  };
+  if (!Array.prototype.indexOf)
+  Array.prototype.indexOf = function(el, i) {
+    var arr = this, len = arr.length;
+    i = i || 0;
+    if (i < 0) i = len + i;
+    for (; i < len; i++) {
+      if (arr[i] === el) return i;
+    }
+    return -1
+  };
+  Array.prototype.exists = function(el) {
+    return (Array.prototype.indexOf.call(this, el) >= 0);
+  };
+  if (!Array.prototype.filter)
+  Array.prototype.filter = function(fn) {
+    var arr = [];
+    Array.prototype.each.call(this, function(i, el){
+      if (fn(el, i)) arr.push(el);
+    });
+    return arr;
+  };
+  if (!Array.prototype.map)
+  Array.prototype.map = function(fn) {
+    var arr = [];
+    Array.prototype.each.call(this, function(i, el){
+      arr.push(fn(el, i));
+    });
+    return arr;
+  };
+  if (!Array.prototype.reduce)
+  Array.prototype.reduce = function(fn, init) {
+    var arr = this, len = arr.length, out, i = 0;
+    if (arguments.length >= 2) {
+      out = init;
+    } else {
+      out = arr[i++];
+    }
+    while (i < len) {
+      out = fn.call(arr, out, arr[i], i++, arr);
+    }
+    return out;
   };
   Array.toArray = function(obj) {
     var len = obj.length, arr = new Array(len);
@@ -229,34 +258,31 @@ function lib_globals() {
 
   Function.prototype.bind = function(obj){
     var fn = this;
-    return function(){ return fn.apply(obj,arguments) };
+    return function(){ return fn.apply(obj, arguments) };
   };
   Function.noop = function(){};
   
-  Number.parse = function(s,d) {
+  Number.parse = function(s, d) {
     if (!d) d = 0;
     var i = parseFloat(s);
     return isFinite(i) ? i : d;
   };
-  Number.parseInt = function(s,d) {
+  Number.parseInt = function(s, d) {
     if (!d) d = 0;
-    var i = parseInt(s,10);
+    var i = parseInt(s, 10);
     return isFinite(i) ? i : d;
   };
-  Number.random = function(lower,upper) {
+  Number.random = function(lower, upper) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower;
   };
   
   var _split = String.prototype.split;
-  String.prototype.split = function (s, limit) {
+  String.prototype.split = function(s, limit) {
     if (Object.vartype(s) !== 'regexp') {
       return _split.apply(this, arguments);
     }
-    var str = String(this),
-      output = [],
-      lastLastIndex = 0,
-      match, lastLength;
-    if (limit === undefined || +limit < 0) {
+    var str = String(this), out = [], lastLastIndex = 0, match, lastLength;
+    if (arguments.length < 2 || +limit < 0) {
       limit = Infinity;
     } else {
       limit = Math.floor(+limit);
@@ -267,78 +293,82 @@ function lib_globals() {
     s = RegExp.copyAsGlobal(s);
     while (match = s.exec(str)) {
       if (s.lastIndex > lastLastIndex) {
-        output.push(str.slice(lastLastIndex, match.index));
+        out.push(str.slice(lastLastIndex, match.index));
         if (match.length > 1 && match.index < str.length) {
-          Array.prototype.push.apply(output, match.slice(1));
+          Array.prototype.push.apply(out, match.slice(1));
         }
         lastLength = match[0].length;
         lastLastIndex = s.lastIndex;
-        if (output.length >= limit)
+        if (out.length >= limit)
           break;
       }
       if (s.lastIndex === match.index)
         s.lastIndex++;
     }
     if (lastLastIndex === str.length) {
-      if (!RegExp.prototype.test.call(s, "") || lastLength)
-        output.push("");
+      if (!RegExp.prototype.test.call(s, '') || lastLength)
+        out.push('');
     } else {
-      output.push(str.slice(lastLastIndex));
+      out.push(str.slice(lastLastIndex));
     }
-    return (output.length > limit) ? output.slice(0, limit) : output;
+    return (out.length > limit) ? out.slice(0, limit) : out;
   };
   
-  String.prototype.replaceAll = function(a,b) {
-    return String.prototype.replace.call(this,new RegExp(RegExp.escape(a),'ig'),b);
+  String.prototype.replaceAll = function(a, b) {
+    return String.prototype.replace.call(this, new RegExp(RegExp.escape(a), 'ig'), b);
   };
   String.prototype.trimLeft = function() {
-    return String.prototype.replace.call(this,/^\w*/,'');
+    return String.prototype.replace.call(this, /^\w*/, '');
   };
   String.prototype.trimRight = function() {
-    return String.prototype.replace.call(this,/\w*$/,'');
+    return String.prototype.replace.call(this, /\w*$/, '');
   };
   String.prototype.trim = function() {
-    return String.prototype.replace.call(this,/^\s*(\S*(\s+\S+)*)\s*$/,'$1');
+    return String.prototype.replace.call(this, /^\s*(\S*(\s+\S+)*)\s*$/ , '$1');
   };
-  String.prototype.padLeft = function(n,s) {
+  String.prototype.padLeft = function(n, s) {
     var r = String(this), len = r.length;
     return (len < n) ? new Array(n - len + 1).join(s) + r : r;
   };
-  String.prototype.padRight = function(n,s) {
+  String.prototype.padRight = function(n, s) {
     var r = String(this), len = r.length;
     return (len < n) ? r + new Array(n - len + 1).join(s) : r;
   };
   String.prototype.startsWith = function(s) {
-    var self = this, re = new RegExp('^' + RegExp.escape(s),'i');
+    var self = this, re = new RegExp('^' + RegExp.escape(s), 'i');
     return !!String(self).match(re);
   };
   String.prototype.endsWith = function(s) {
-    var self = this, re = new RegExp(RegExp.escape(s) + '$','i');
+    var self = this, re = new RegExp(RegExp.escape(s) + '$', 'i');
     return !!String(self).match(re);
   };
-  String.prototype.replaceHead = function(s1,s2) {
-    var self = this, re = new RegExp('^' + RegExp.escape(s1),'i');
-    return String(self).replace(re,s2);
+  String.prototype.replaceHead = function(s1, s2) {
+    var self = this, re = new RegExp('^' + RegExp.escape(s1), 'i');
+    return String(self).replace(re, s2);
   };
   String.prototype.replaceTail = function(s1,s2) {
-    var self = this, re = new RegExp(RegExp.escape(s1) + '$','i');
-    return String(self).replace(re,s2);
+    var self = this, re = new RegExp(RegExp.escape(s1) + '$', 'i');
+    return String(self).replace(re, s2);
+  };
+  String.prototype.w = function() {
+    return String.prototype.split.call(this, /\s+/);
   };
   String.parse = function(s) {
     return Object.isSet(s) ? String(s) : '';
   };
-  String.repeat = function(s,n) {
+  String.repeat = function(s, n) {
     var a = new Array(n + 1);
     return a.join(s);
   };
 
+  var re_urlEnc = /[^0-9a-f!$'()*,-.\/:;@[\\\]^_{|}~]+/ig;
   String.urlEnc = function(s) {
-    return String(s).replace(/[^0-9a-f!$'()*,-.\/:;@[\\\]^_{|}~]+/ig,function(s){
+    return String(s).replace(re_urlEnc, function(s) {
       return encodeURIComponent(s);
     });
   };
   String.urlDec = function(s) {
-    s = s.replace(/\+/g,' ');
+    s = s.replace(/\+/g, ' ');
     try {
       return decodeURIComponent(s);
     } catch(e) {
@@ -347,24 +377,21 @@ function lib_globals() {
   };
   
   String.htmlEnc = function(s) {
-    s = String(s)
-      .replace(/&/g,'&amp;')
-      .replace(/>/g,'&gt;')
-      .replace(/</g,'&lt;')
-      .replace(/"/g,'&quot;');
+    s = String(s).replace(/&/g, '&amp;').replace(/>/g, '&gt;')
+      .replace(/</g, '&lt;').replace(/"/g, '&quot;');
     return s;
   };
   String.htmlDec = function(s) {
-    var repl = {'amp':38,'apos':27,'gt':62,'lt':60,'quot':34};
+    var repl = {'amp': 38, 'apos': 27, 'gt': 62, 'lt': 60, 'quot': 34};
     try {
       repl = app.cfg('html_entities') || repl;
     } catch(e) {}
     s = String.parse(s);
-    s = replace(/&(\w{1,8});/g,function(ent,n){
+    s = replace(/&(\w{1,8});/g, function(ent,n) {
       var i = repl[n.toLowerCase()];
       return (i) ? String.fromCharCode(i) : ent;
     });
-    s = replace(/&#(\d+);/g,function(ent,n){
+    s = replace(/&#(\d+);/g, function(ent,n) {
       var i = parseInt(n,10);
       return (i) ? String.fromCharCode(i) : ent;
     });
@@ -374,7 +401,7 @@ function lib_globals() {
   Date.prototype.toGMTString = function() {
     var a = Date.prototype.toUTCString.call(this).split(' ');
     if (a[1].length == 1) a[1] = '0' + a[1];
-    return a.join(' ').replace(/UTC$/i,'GMT');
+    return a.join(' ').replace(/UTC$/i, 'GMT');
   };
   Date.now = function() {
     return new Date();
@@ -382,15 +409,15 @@ function lib_globals() {
 
   var REG_DATE_1 = /^(\d{4})-(\d{2})-(\d{2})\s*T?([\d:]+)(\.\d+)?($|[Z\s+-].*)$/i;
   var REG_DATE_2 = /(^|[^\d])(\d{4})-(\d{1,2})-(\d{1,2})($|[^\d])/;
-  Date.fromString = function(str,def) {
+  Date.fromString = function(str, def) {
     if (str instanceof Date) {
       return new Date(str);
     }
     str = String(str);
     //ISO 8601 / JSON-style date: "2008-12-13T16:08:32Z"
-    str = str.replace(REG_DATE_1,'$2/$3/$1 $4$6');
+    str = str.replace(REG_DATE_1, '$2/$3/$1 $4$6');
     //YYYY-M-D
-    str = str.replace(REG_DATE_2,'$1$2/$3/$4$5');
+    str = str.replace(REG_DATE_2, '$1$2/$3/$4$5');
     var i = Date.parse(str);
     if (isFinite(i)) {
       return new Date(i);
@@ -399,13 +426,14 @@ function lib_globals() {
       return def;
     }
   };
-  Date.fromUTCString = function(str,def) {
-    var d = Date.fromString(str,def);
+  Date.fromUTCString = function(str, def) {
+    var d = Date.fromString(str, def);
     if (d) {
-      return new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate(),d.getHours(),d.getMinutes(),d.getSeconds(),d.valueOf() % 1000));
+      return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(),
+        d.getMinutes(), d.getSeconds(), d.valueOf() % 1000));
     }
   };
-  Date.getParts = function(d,utc) {
+  Date.getParts = function(d, utc) {
     var part = {
       yyyy: (utc) ? d.getUTCFullYear() : d.getFullYear(),
       moy: (utc) ? d.getUTCMonth() : d.getMonth(),
@@ -417,21 +445,22 @@ function lib_globals() {
     };
     part.yy = String(part.yyyy).substr(2);
     part.m = part.moy + 1;
-    part.cc = ['January','February','March','April','May','June','July','August','September','October','November','December'][part.moy];
-    part.c = part.cc ? part.cc.substr(0,3) : '';
-    part.ww = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][part.dow];
+    part.cc = 'January February March April May June July August September October November December'
+      .w()[part.moy];
+    part.c = part.cc ? part.cc.substr(0, 3) : '';
+    part.ww = 'Sunday Monday Tuesday Wednesday Thursday Friday Saturday'.w()[part.dow];
     part.w = part.ww ? part.ww.substr(0,3) : '';
     part.h = (part.H > 12 || part.H == 0) ? Math.abs(part.H - 12) : part.H;
     part.p = (part.H > 11) ? 'pm' : 'am';
     part.P = (part.H > 11) ? 'PM' : 'AM';
-    ['m','d','H','h','n','s'].each(function(i,n){
+    'm d H h n s'.w().each(function(i, n) {
       part[n + n] = String(100 + part[n]).substring(1);
     });
     return function(n) {
       return String.parse(part[n]);
     };
   };
-  Date.format = function(d,fmt,utc) {
+  Date.format = function(d, fmt, utc) {
     var r, type = Object.vartype(d);
     if (type == 'date' || type == 'number') {
       d = new Date(d);
@@ -441,7 +470,7 @@ function lib_globals() {
     if (!d) return '';
     r = (fmt) ? String(fmt) : '{yyyy}/{mm}/{dd}';
     var part = Date.getParts(d,utc);
-    r = r.replace(/\{(\w+)\}/g,function(str,n){
+    r = r.replace(/\{(\w+)\}/g, function(str, n) {
       return part(n) || str;
     });
     return r;
@@ -472,14 +501,6 @@ function lib_globals() {
  * Compatibility for v8cgi
  */
 if (typeof exports != 'undefined') {
-  //exports.vartype = vartype;
-  //exports.isPrimitive = isPrimitive;
-  //exports.isSet = isSet;
-  //exports.toArray = toArray;
-  //exports.urlEnc = urlEnc;
-  //exports.urlDec = urlDec;
-  //exports.htmlEnc = htmlEnc;
-  //exports.htmlDec = htmlDec;
   exports.forEach = forEach;
   exports.getset = getset;
   exports.fngetset = fngetset;

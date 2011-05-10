@@ -13,7 +13,7 @@ if (!this.lib_response) this.lib_response = lib_response;
 function lib_response() {
   var res, server = lib('server');
   var _super = server.res;
-  return res = Object.extend(_super,{
+  return res = Object.extend(_super, {
     clear: function(type) {
       _super.clear();
       if (type) {

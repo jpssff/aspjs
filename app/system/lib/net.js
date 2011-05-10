@@ -29,7 +29,7 @@ function lib_net() {
           sys.log('Error Requesting: ' + req.url + '', 'Error: ' + res.error, 'err-httpreq');
         }
         if (!res.error) {
-          res.status = String.parse(xhr.status).split(' ')[0];
+          res.status = String.parse(xhr.status).w()[0];
           res.headers = new Collection(util.parseHeaders(xhr.getAllResponseHeaders()));
           res.ctype = (res.headers('Content-Type')) ? res.headers('Content-Type').split(';')[0] : 'application/octet-stream';
           res.body = new Binary(xhr.responseBody);
