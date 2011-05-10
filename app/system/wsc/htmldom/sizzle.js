@@ -42,7 +42,6 @@ function lib_sizzle() {
 
     var m, set, checkSet, extra, ret, cur, pop, i,
       prune = true,
-      contextXML = Sizzle.isXML( context ),
       parts = [],
       soFar = selector;
 
@@ -87,10 +86,10 @@ function lib_sizzle() {
     } else {
       // Take a shortcut and set the context if the root selector is an ID
       // (but not if it'll be faster if the inner selector is an ID)
-      if ( !seed && parts.length > 1 && context.nodeType() == 9 && !contextXML &&
+      if ( !seed && parts.length > 1 && context.nodeType() == 9 &&
           Expr.match.ID.test(parts[0]) && !Expr.match.ID.test(parts[parts.length - 1]) ) {
 
-        ret = Sizzle.find( parts.shift(), context, contextXML );
+        ret = Sizzle.find( parts.shift(), context );
         context = ret.expr ?
           Sizzle.filter( ret.expr, ret.set )[0] :
           ret.set[0];
@@ -99,7 +98,7 @@ function lib_sizzle() {
       if ( context ) {
         ret = seed ?
           { expr: parts.pop(), set: makeArray(seed) } :
-          Sizzle.find( parts.pop(), parts.length == 1 && (parts[0] == "~" || parts[0] == "+") && context.parentNode() ? context.parentNode() : context, contextXML );
+          Sizzle.find( parts.pop(), parts.length == 1 && (parts[0] == "~" || parts[0] == "+") && context.parentNode() ? context.parentNode() : context );
 
         set = ret.expr ?
           Sizzle.filter( ret.expr, ret.set ) :
@@ -125,7 +124,7 @@ function lib_sizzle() {
             pop = context;
           }
 
-          Expr.relative[ cur ](checkSet, pop, contextXML);
+          Expr.relative[ cur ](checkSet, pop);
         }
 
       } else {
@@ -197,7 +196,7 @@ function lib_sizzle() {
     return Sizzle( expr, null, null, [node] ).length > 0;
   };
 
-  Sizzle.find = function( expr, context, isXML ) {
+  Sizzle.find = function( expr, context ) {
     var set;
 
     if ( !expr ) {
@@ -214,7 +213,7 @@ function lib_sizzle() {
 
         if ( left.substr( left.length - 1 ) !== "\\" ) {
           match[1] = (match[1] || "").replace( rBackslash, "" );
-          set = Expr.find[ type ]( match, context, isXML );
+          set = Expr.find[ type ]( match, context );
 
           if ( set != null ) {
             expr = expr.replace( Expr.match[ type ], "" );
@@ -237,8 +236,7 @@ function lib_sizzle() {
     var match, anyFound,
       old = expr,
       result = [],
-      curLoop = set,
-      isXMLFilter = set && set[0] && Sizzle.isXML( set[0] );
+      curLoop = set;
 
     while ( expr && set.length ) {
       for ( var type in Expr.filter ) {
@@ -260,7 +258,7 @@ function lib_sizzle() {
           }
 
           if ( Expr.preFilter[ type ] ) {
-            match = Expr.preFilter[ type ]( match, curLoop, inplace, result, not, isXMLFilter );
+            match = Expr.preFilter[ type ]( match, curLoop, inplace, result, not );
 
             if ( !match ) {
               anyFound = found = true;
@@ -344,20 +342,6 @@ function lib_sizzle() {
 
     leftMatch: {},
 
-    attrMap: {
-//      "class": "className",
-//      "for": "htmlFor"
-    },
-
-    attrHandle: {
-//      href: function( elem ) {
-//        return elem.getAttribute( "href" );
-//      },
-//      type: function( elem ) {
-//        return elem.getAttribute( "type" );
-//      }
-    },
-
     relative: {
       "+": function(checkSet, part){
         var isPartStr = typeof part == "string",
@@ -419,7 +403,7 @@ function lib_sizzle() {
         }
       },
 
-      "": function(checkSet, part, isXML){
+      "": function(checkSet, part){
         var doneName = done++,
           checkFn = dirCheck;
 
@@ -431,7 +415,7 @@ function lib_sizzle() {
         checkFn( "parentNode", part, doneName, checkSet );
       },
 
-      "~": function( checkSet, part, isXML ) {
+      "~": function( checkSet, part ) {
         var doneName = done++,
           checkFn = dirCheck;
 
@@ -445,8 +429,8 @@ function lib_sizzle() {
     },
 
     find: {
-      ID: function( match, context, isXML ) {
-        if ( typeof context.getElementById !== "undefined" && !isXML ) {
+      ID: function( match, context ) {
+        if ( typeof context.getElementById !== "undefined" ) {
           var m = context.getElementById(match[1]);
           // Check parentNode to catch when Blackberry 4.6 returns
           // nodes that are no longer in the document #6963
@@ -476,12 +460,8 @@ function lib_sizzle() {
       }
     },
     preFilter: {
-      CLASS: function( match, curLoop, inplace, result, not, isXML ) {
+      CLASS: function( match, curLoop, inplace, result, not ) {
         match = " " + match[1].replace( rBackslash, "" ) + " ";
-
-        if ( isXML ) {
-          return match;
-        }
 
         for ( var i = 0, elem; (elem = curLoop[i]) != null; i++ ) {
           if ( elem ) {
@@ -534,12 +514,8 @@ function lib_sizzle() {
         return match;
       },
 
-      ATTR: function( match, curLoop, inplace, result, not, isXML ) {
+      ATTR: function( match, curLoop, inplace, result, not ) {
         var name = match[1] = match[1].replace( rBackslash, "" );
-
-//        if ( !isXML && Expr.attrMap[name] ) {
-//          match[1] = Expr.attrMap[name];
-//        }
 
         // Handle if an un-quoted value was used
         match[4] = ( match[4] || match[5] || "" ).replace( rBackslash, "" );
@@ -794,11 +770,7 @@ function lib_sizzle() {
 
       ATTR: function( elem, match ) {
         var name = match[1],
-          result = Expr.attrHandle[ name ] ?
-            Expr.attrHandle[ name ]( elem ) :
-            elem[ name ] != null ?
-              elem[ name ] :
-              elem.getAttribute( name ),
+          result = elem.getAttribute( name ),
           value = result + "",
           type = match[2],
           check = match[4];
@@ -1005,10 +977,6 @@ function lib_sizzle() {
 
   Sizzle.contains = function(parent, child) {
     return (child.getPath()).startsWith(parent.getPath() + '/')
-  };
-
-  Sizzle.isXML = function( elem ) {
-    return true;
   };
 
   var posProcess = function( selector, context ) {
