@@ -9,27 +9,31 @@
     var dom = lib('domwrapper');
     var doc = new dom.HtmlDoc('<p class=a>Hello <b>World');
     doc.xpath('body').appendHTML('<p id=two name=item_two>Another Paragraph</p>');
-    var el = doc.getElementsByName('item_two');
-    res.die(el.length ? el[0].getPath() : el);
+    var arr = doc.getElementsByTagName('p');
     res.die(arr.map(function(el){ return el.outerHTML(); }));
-    res.die(doc.outerHTML());
   });
 
   app('/test/sizzle', function() {
     var dom = lib('domwrapper');
     var sizzle = lib('sizzle');
     var doc = new dom.HtmlDoc('<p class=a name=one>Hello <b>World');
-    doc.xpath('body').appendHTML('<p name=two>Another Paragraph</p>');
-    var arr = sizzle('body>p[name=two]', doc);
-    res.die(arr.length ? arr[0].getPath() : arr);
+    doc.xpath('body').appendHTML('<p id=two>Another Paragraph</p>');
+    //res.die(doc.xpath('body/p').outerHTML());
+    var arr = doc.getElementsByTagName('p');
+    res.die(sizzle.matches('#two', arr[0]));
+    var arr = sizzle('span, b', arr[0]);
+    res.die(arr.map(function(el){ return el.outerHTML(); }));
   });
 
   app('/test/jqlite', function() {
     var jq = lib('jqlite');
+    var sizzle = lib('sizzle');
     var $ = jq.create('<p class=a>Hello <b>World');
     $('body').append('<p id=two>Another Paragraph</p>');
-    var results = $('body p').addClass('b');
-    res.die($.serialize());
+    var results = $('body p').addClass('b').add('<div id="three"/><div id="four"></div>');
+    //res.die(results.parent().toHTML());
+    //res.die(results.find('#two').size());
+    res.die($.toHTML());
   });
 
   app('/test/wsc', function() {

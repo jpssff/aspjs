@@ -14,10 +14,8 @@ function lib_sizzle() {
     rBackslash = /\\/g,
     rNonWord = /\W/;
 
-  // Here we check if the JavaScript engine is using some sort of
-  // optimization where it does not always call our comparison
-  // function. If that is the case, discard the hasDuplicate value.
-  //   Thus far that includes Google Chrome.
+  // Check if the JavaScript engine is using optimization where it does not always call our comparison
+  // function.
   [0, 0].sort(function() {
     baseHasDuplicate = false;
     return 0;
@@ -26,8 +24,11 @@ function lib_sizzle() {
   var Sizzle = function( selector, context, results, seed ) {
     results = results || [];
 
+    if (!context && seed && seed.length) {
+      context = seed[0].ownerDocument();
+    }
     if (!context) {
-      throw new Error('No Document/Context Specified');
+      throw new Error('No Document/Context Specified: ' + vartype(seed));
     }
 
     var origContext = context;
@@ -40,10 +41,7 @@ function lib_sizzle() {
       return results;
     }
 
-    var m, set, checkSet, extra, ret, cur, pop, i,
-      prune = true,
-      parts = [],
-      soFar = selector;
+    var m, set, checkSet, extra, ret, cur, pop, i, prune = true, parts = [], soFar = selector;
 
     // Reset the position of the chunker regexp (start from head)
     do {
@@ -99,7 +97,6 @@ function lib_sizzle() {
         ret = seed ?
           { expr: parts.pop(), set: makeArray(seed) } :
           Sizzle.find( parts.pop(), parts.length == 1 && (parts[0] == "~" || parts[0] == "+") && context.parentNode() ? context.parentNode() : context );
-
         set = ret.expr ?
           Sizzle.filter( ret.expr, ret.set ) :
           ret.set;
@@ -818,7 +815,7 @@ function lib_sizzle() {
   }
 
   var makeArray = function( array, results ) {
-    array = Array.prototype.slice.call( array, 0 );
+    array = Array.prototype.slice.call(array, 0);
 
     if ( results ) {
       results.push.apply( results, array );

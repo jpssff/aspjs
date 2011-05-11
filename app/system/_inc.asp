@@ -20,3 +20,7 @@
 <script runat="server" language="javascript" src="lib/activejs/active_support.js"></script>
 <script runat="server" language="javascript" src="lib/activejs/active_event.js"></script>
 <script runat="server" language="javascript" src="lib/activejs/active_record.js"></script>
+<script runat="server" language="javascript" src="lib/htmldom/domwrapper.js"></script>
+<script runat="server" language="javascript" src="lib/htmldom/htmlparser.js"></script>
+<script runat="server" language="javascript" src="lib/htmldom/jqlite.js"></script>
+<script runat="server" language="javascript" src="lib/htmldom/sizzle.js"></script>

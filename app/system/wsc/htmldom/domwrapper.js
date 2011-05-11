@@ -32,11 +32,15 @@ function lib_domwrapper() {
         this._xmlDoc.documentElement = data;
       }
     }
+
   }
   HtmlNode.prototype = {
     /*!
      * Traversal Functions
      */
+    ownerDocument: function() {
+      return new HtmlDoc(this._xmlDoc);
+    },
     firstChild: function() {
       var node = this._xmlNode.firstChild;
       return node ? new HtmlNode(node) : null;
@@ -46,9 +50,9 @@ function lib_domwrapper() {
       return node ? new HtmlNode(node) : null;
     },
     childNodes: function() {
-      var arr = this._xmlNode.childNodes;
-      for (var i = 0; i < arr.length; i++) {
-        arr[i] = new HtmlNode(arr[i]);
+      var arr = [], all = this._xmlNode.childNodes;
+      for (var i = 0; i < all.length; i++) {
+        arr[i] = new HtmlNode(all[i]);
       }
       return arr;
     },
@@ -72,26 +76,6 @@ function lib_domwrapper() {
      */
     xpath: function(path) {
       var node = this._xmlNode;
-      path = path.split(/[\/.]/g);
-      if (path[0].toLowerCase() == node.tagName.toLowerCase()) path.shift();
-      for (var i = 0; i < path.length; i++) {
-        var children = node.childNodes, found = null;
-        for (var j = 0; j < children.length; j++) {
-          if (children[j].tagName.toLowerCase() == path[i].toLowerCase()) {
-            found = children[j];
-            break;
-          }
-        }
-        if (found) {
-          node = found;
-        } else {
-          return null;
-        }
-      }
-      return new HtmlNode(node);
-    },
-    xpath: function(selector) {
-      var node = this._xmlNode;
       if (node.tagName) {
         path = path.replaceHead('/', '').replaceHead(node.tagName + '/', './');
       }
@@ -108,7 +92,7 @@ function lib_domwrapper() {
       return arr;
     },
     getElementsByAttr: function(name, val) {
-      var selector = val ? "//*[@" + name + "='" + val + "']" : "//*[@" + name + "]";
+      var selector = val ? ".//*[@" + name + "='" + val + "']" : "//*[@" + name + "]";
       return this.getElementsByXPath(selector);
     },
     getElementById: function(id) {
@@ -119,7 +103,7 @@ function lib_domwrapper() {
       return this.getElementsByAttr('name', name);
     },
     getElementsByTagName: function(name) {
-      return this.getElementsByXPath("//" + name);
+      return this.getElementsByXPath(".//" + name);
     },
     /*!
      * Attribute Functions
@@ -173,12 +157,12 @@ function lib_domwrapper() {
     }
   };
 
-  function HtmlDoc(html) {
+  function HtmlDoc(content) {
     if (!(this instanceof HtmlDoc)) {
-      return new HtmlDoc(html);
+      return new HtmlDoc(content);
     }
     this._doctype = '<!DOCTYPE html>';
-    this._xmlDoc = htmlparser.HTMLtoDOM(html);
+    this._xmlDoc = (vartype(content) == 'string') ? htmlparser.HTMLtoDOM(content) : content;
     this._xmlNode = this._xmlDoc.documentElement;
   }
   HtmlDoc.prototype = Object.create(HtmlNode.prototype);
@@ -188,6 +172,9 @@ function lib_domwrapper() {
         this._doctype = str;
       }
       return this._doctype;
+    },
+    nodeType: function() {
+      return this._xmlDoc.nodeType;
     },
     outerHTML: function() {
       var html = this._xmlNode.xml;
