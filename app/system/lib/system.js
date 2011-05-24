@@ -9,7 +9,7 @@ function lib_system(sys) {
   /*
    * Private Variables
    */
-  var vars = {files: {}, dirs: {}};
+  var vars = {files: {}, dirs: {}}, util = lib('util');
   
   
   /*
@@ -33,7 +33,7 @@ function lib_system(sys) {
     var p = String(s);
     p = p.replaceHead(__approot,'');
     p = p.replaceHead('/','');
-    return path.join(__approot,p);
+    return path.join(__approot, p);
   }
   
   /*
@@ -55,7 +55,7 @@ function lib_system(sys) {
    */
   sys.path.join = function(){
     var a = [];
-    toArray(arguments).each(function(i,s){
+    toArray(arguments).each(function(i, s){
       if (s) a.push(s);
     });
     var p = a.join('/');
@@ -96,7 +96,7 @@ function lib_system(sys) {
       , data = args
       , p = path('data/logs/' + logfile.replaceTail('.log','') + '.log');
     var json = lib('json');
-    forEach(data,function(i,line){
+    forEach(data, function(i, line){
       data[i] = (isPrimitive(line)) ? String(line) : json.stringify(line);
     });
     data.push('');
@@ -139,8 +139,9 @@ function lib_system(sys) {
     return r;
   };
   
-  fs.readTextFile = function(f,enc) {
-    if (!enc) enc = app.cfg('defaults/charset') || 'UTF-8';
+  fs.readTextFile = function(f, enc) {
+    if (!enc && app) enc = app.cfg('defaults/charset');
+    if (!enc) enc = 'UTF-8';
     if (enc.match(/UTF-?8/i)) {
       return fs.readTextFileStream(f,'UTF-8');
     } else
@@ -155,7 +156,7 @@ function lib_system(sys) {
     }
   };
   
-  fs.readTextFileStream = function(f,enc) {
+  fs.readTextFileStream = function(f, enc) {
     var o = new ActiveXObject('ADODB.Stream');
     o.open();
     o.type = 2;
@@ -166,7 +167,7 @@ function lib_system(sys) {
     return s;
   };
   
-  fs.writeTextToFile = function(f,s,cfg) {
+  fs.writeTextToFile = function(f, s, cfg) {
     if (!cfg) cfg = {};
     //TODO: Character Encoding
     var mode = (cfg.overwrite === true) ? 2 : 8;
@@ -190,19 +191,69 @@ function lib_system(sys) {
   fs.createDir = function(f, n) {
     var p = path.join(f, n);
     try {
-      fs.getFSO().getFolder(mappath(path.parent(p))).SubFolders.Add(path.member(p));
+      fs.getFSO().getFolder(mappath(path.parent(p))).subFolders.add(path.member(p));
     } catch(e) {
       throw new Error('Error Creating Directory: ' + p);
     }
   };
   
-  fs.removeDir = function(f,r) {
+  fs.removeDir = function(f, r) {
     f = path(f);
     try {
-      fs.getFSO().deleteFolder(f,true);
+      fs.getFSO().deleteFolder(f, true);
     } catch(e) {}
   };
-  
+
+  fs.stat = function(f, deep) {
+    var fso = fs.getFSO(), obj, stat = {}, getChildren;
+    if (vartype(f) == 'string') {
+      f = path(f);
+      try {
+        obj = fso.getFolder(mappath(f));
+        getChildren = true;
+      } catch(e) {
+        obj = fso.getFile(mappath(f));
+      }
+    } else {
+      obj = f;
+    }
+    stat.name = obj.name;
+    stat.size = obj.size;
+    stat.dateCreated = new Date(obj.dateCreated);
+    stat.dateLastAccessed = new Date(obj.dateLastAccessed);
+    stat.dateLastModified = new Date(obj.dateLastModified);
+    if (obj.type == 'File Folder') {
+      stat.type = 'folder';
+      stat.children = [];
+      if (getChildren || deep) {
+        stat.folders = [];
+        stat._folders = [];
+        util.enumerate(obj.subFolders, function(i, item) {
+          stat.folders.push(item.name);
+          stat._folders.push(fs.stat(item, deep));
+          stat.children.push(stat._folders[i]);
+        });
+        stat.files = [];
+        stat._files = [];
+        util.enumerate(obj.files, function(i, item) {
+          stat.files.push(item.name);
+          stat._files.push(fs.stat(item, deep));
+          stat.children.push(stat._files[i]);
+        });
+      }
+    } else {
+      stat.type = 'file';
+      stat._delete = function() {
+        obj.Delete();
+      };
+      stat._move = function(p) {
+        obj.move(mappath(p));
+      };
+      stat.fileType = obj.type;
+    }
+    return stat;
+  };
+
   
   /*
    * Quick access to useful functions

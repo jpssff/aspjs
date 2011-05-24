@@ -244,7 +244,7 @@ function lib_sizzle() {
 
           anyFound = false;
 
-          match.splice(1,1);
+          match.splice(1, 1);
 
           if ( left.substr( left.length - 1 ) == "\\" ) {
             continue;

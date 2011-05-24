@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component id="588E3062-7A52-11E0-9A74-8ED84824019B">
+<registration progid="HTML.DOM"/>
+
+<public>
+  <method name="create" internalName="createDoc" />
+</public>
+
+<script language="javascript" src="htmldom.js"></script>
+<script language="javascript" src="htmldom/htmlparser.js"></script>
+<script language="javascript" src="htmldom/domwrapper.js"></script>
+
+</component>

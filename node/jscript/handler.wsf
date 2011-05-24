@@ -12,12 +12,12 @@
     <script language="javascript" src="..\..\app\system\lib\docstore.js"></script>
     <script language="javascript" src="..\..\app\system\lib\filestore.js"></script>
     <script language="javascript" src="..\..\app\system\lib\globals.js"></script>
-    <script language="javascript" src="..\..\app\system\lib\handlers.js"></script>
     <script language="javascript" src="..\..\app\system\lib\json.js"></script>
     <script language="javascript" src="..\..\app\system\lib\msaccess.js"></script>
     <script language="javascript" src="..\..\app\system\lib\net.js"></script>
     <script language="javascript" src="..\..\app\system\lib\request.js"></script>
     <script language="javascript" src="..\..\app\system\lib\response.js"></script>
+
     <script language="javascript" src="..\..\app\system\lib\router.js"></script>
     <script language="javascript" src="..\..\app\system\lib\system.js"></script>
     <script language="javascript" src="..\..\app\system\lib\templ.js"></script>

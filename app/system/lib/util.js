@@ -141,8 +141,8 @@ function lib_util() {
      */
     enumerate: function(col, fn) {
       var i = 0;
-      for(var e=new Enumerator(col);!e.atEnd();e.moveNext()) {
-        if (fn.call(col,i++,e.item()) === false) break;
+      for(var e = new Enumerator(col); !e.atEnd(); e.moveNext()) {
+        if (fn.call(col, i++, e.item()) === false) break;
       }
     },
     /**

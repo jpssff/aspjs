@@ -9,7 +9,6 @@ include("../../../app/system/lib/collection.js");
 include("../../../app/system/lib/docstore.js");
 include("../../../app/system/lib/filestore.js");
 include("../../../app/system/lib/globals.js");
-include("../../../app/system/lib/handlers.js");
 include("../../../app/system/lib/json.js");
 include("../../../app/system/lib/msaccess.js");
 include("../../../app/system/lib/net.js");

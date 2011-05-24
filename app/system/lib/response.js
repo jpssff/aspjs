@@ -14,10 +14,13 @@ function lib_response() {
   var res, server = lib('server');
   var _super = server.res;
   return res = Object.extend(_super, {
-    clear: function(type) {
+    clear: function(type, status) {
       _super.clear();
       if (type) {
         res.headers('content-type', type);
+      }
+      if (status) {
+        res.status(status);
       }
     },
     write: function(data) {
@@ -32,7 +35,7 @@ function lib_response() {
       trigger('destroy');
       _super.end();
     },
-    die: function(data,type) {
+    die: function(data, type) {
       res.clear(type);
       if (global.Binary && data instanceof Binary) {
         res.writebin(data);

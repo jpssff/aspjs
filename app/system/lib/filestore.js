@@ -43,7 +43,6 @@ function lib_filestore() {
     if (!(this instanceof File)) return new File(rec);
     this.id = rec.__meta.guid;
     this._rec = rec;
-    return this;
   }
   File.prototype = {
     attr: fngetset({

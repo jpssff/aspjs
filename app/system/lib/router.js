@@ -66,15 +66,15 @@ function lib_router() {
       data.stop = function() {
         stop = true;
       };
-      trigger('preroute',data);
-      routes.each(function(i,arr){
+      trigger('preroute', data);
+      routes.each(function(i, arr) {
         if (arr[0] && arr[0] != verb) {
           return true; //Continue
         }
         if (vartype(arr[1]) == 'regexp') {
           var matches = arr[1].exec(url);
           if (matches) {
-            arr[2].call(data,matches.slice(1));
+            arr[2].call(data, matches.slice(1));
           }
         } else
         if (vartype(arr[1]) == 'string') {
@@ -85,9 +85,13 @@ function lib_router() {
         return !stop;
       });
       if (!stop) {
-        trigger('no-route',data);
+        trigger('no-route', data);
       }
-      trigger('404');
+      trigger('404', data = {});
+      var resData = data.response || app.cfg('res_404');
+      res.clear(resData.type, '404');
+      res.write(resData.body);
+      res.end();
     }
   };
   

@@ -1,5 +1,5 @@
-﻿bind('ready', function() {
-  
+bind('ready', function() {
+
   /*
    * Testing Routes
    * These are for testing and framework development
@@ -141,7 +141,7 @@
     });
     res.die(out.join('\r\n'),'text/html');
   });
-  
+
   app('/test/dl/:id/:name', function(p) {
     var filestore = lib('filestore');
     var file = filestore.getFile(p('id'));
@@ -168,7 +168,7 @@
       res.die('Invalid Date');
     }
   });
-  
+
   //test database
   app('/test/db', function(p) {
     var docstore = lib('docstore')
@@ -180,23 +180,23 @@
     members.save(m);
     res.die([m,m.__meta]);
   });
-  
+
   //test docstore
   app('/test/docstore', function(p) {
     var docstore = lib('docstore')
       , store = docstore.getStore('main');
-    
+
     var items = store.get('items');
-    
+
     var person = items.find({name:'simon'})[0]
     if (!person) {
       person = items.save({name:'simon',dob:Date.fromString('1970/01/01'),age:28});
     }
     person.name = 'sturmer';
-    items.save(person,true);
+    items.save(person, true);
     res.die(items.find({name:'sturmer'}));
   });
-  
+
   //test email sending
   app('/test/email', function() {
     var net = lib('net');
@@ -210,11 +210,11 @@
     var msg = 'Email Sent Successfully.';
     res.redirect('/?' + app.checkin({msg_text: msg}));
   });
-  
+
   //test error handling
   app('/test/error/:err?', function(p) {
     var err = p('err') || 'Unspecified Error';
     throw new Error(err);
   });
-  
+
 });

@@ -10,11 +10,11 @@ var vartype, isPrimitive, isSet, toArray, urlEnc, urlDec, htmlEnc, htmlDec;
  * Shorthand to iterate Array / Object
  *
  */
-function forEach(o,fn) {
+function forEach(o, fn) {
   if (o instanceof Array) {
-    return Array.prototype.each.call(o,fn);
+    return Array.prototype.each.call(o, fn);
   } else {
-    return Object.each(o,fn);
+    return Object.each(o, fn);
   }
 }
 
@@ -28,7 +28,7 @@ function forEach(o,fn) {
  * @param {Object} default_val
  */
 function getset(obj, prop, default_val) {
-  if (!Object.exists(obj,prop)) {
+  if (!Object.exists(obj, prop)) {
     obj[prop] = default_val;
   }
   return obj[prop];
@@ -43,29 +43,29 @@ function getset(obj, prop, default_val) {
  * @param {Object} [context] Context (becomes "this" inside getter/setter functions)
  * @returns {Function} Getter/Setter Function
  */
-function fngetset(params,context) {
+function fngetset(params, context) {
   var get = params.get
     , set = params.set
     , del = params.del
     , each = params.each;
-  function gettersetter(n,val){
+  function gettersetter(n, val){
     var self = context || this
       , type = vartype(n)
       , len = arguments.length;
     if (each && type == 'function') {
-      return each.call(self,n);
+      return each.call(self, n);
     }
     if (len == 1) {
       if (type == 'object') {
-        return Object.each(n,gettersetter);
+        return Object.each(n, gettersetter);
       } else {
-        return get.call(self,n);
+        return get.call(self, n);
       }
     }
     if (del && val === null) {
-      return del.call(self,n);
+      return del.call(self, n);
     }
-    return set.call(self,n,val);
+    return set.call(self, n, val);
   };
   return gettersetter;
 }
@@ -90,7 +90,7 @@ function lib_globals() {
     for (var i=0; i<args.length; i++) {
       if (args[i] instanceof Object) {
         if (ret) {
-          Object.each(args[i],function(n,val){
+          Object.each(args[i],function(n, val){
             ret[n] = val;
           });
         } else {
@@ -106,13 +106,13 @@ function lib_globals() {
     for (var i=0; i<args.length; i++) {
       if (args[i] instanceof Object) {
         if (ret) {
-          Object.each(args[i],function(n,val){
+          Object.each(args[i],function(n, val){
             if (Object.isPrimitive(val)) {
               ret[n] = val;
             } else
             if (Object.vartype(val) == 'object') {
               //TODO: valueOf
-              if (Object.exists(ret,n)) {
+              if (Object.exists(ret, n)) {
                 ret[n] = Object.combine(ret[n],val)
               } else {
                 ret[n] = Object.combine({},val)
@@ -149,11 +149,11 @@ function lib_globals() {
   };
   Object.each = function(o, f) {
     var i = 0;
-    for (var n in o) if (Object.exists(o,n)) if (f.call(o,n,o[n],(i++)) === false) break;
+    for (var n in o) if (Object.exists(o, n)) if (f.call(o, n, o[n],(i++)) === false) break;
     return o;
   };
   Object.exists = function(o, n) {
-    return Object.prototype.hasOwnProperty.call(o,n);
+    return Object.prototype.hasOwnProperty.call(o, n);
   };
   Object.isPrimitive = function(obj) {
     return 'boolean null number string undefined'.w().exists(Object.vartype(obj));
@@ -346,12 +346,12 @@ function lib_globals() {
     var self = this, re = new RegExp('^' + RegExp.escape(s1), 'i');
     return String(self).replace(re, s2);
   };
-  String.prototype.replaceTail = function(s1,s2) {
+  String.prototype.replaceTail = function(s1, s2) {
     var self = this, re = new RegExp(RegExp.escape(s1) + '$', 'i');
     return String(self).replace(re, s2);
   };
   String.prototype.w = function() {
-    return String.prototype.split.call(this, /\s+/);
+    return String.prototype.split.call(this, /[,\s]+/);
   };
   String.parse = function(s) {
     return Object.isSet(s) ? String(s) : '';
@@ -387,12 +387,12 @@ function lib_globals() {
       repl = app.cfg('html_entities') || repl;
     } catch(e) {}
     s = String.parse(s);
-    s = replace(/&(\w{1,8});/g, function(ent,n) {
+    s = replace(/&(\w{1,8});/g, function(ent, n) {
       var i = repl[n.toLowerCase()];
       return (i) ? String.fromCharCode(i) : ent;
     });
-    s = replace(/&#(\d+);/g, function(ent,n) {
-      var i = parseInt(n,10);
+    s = replace(/&#(\d+);/g, function(ent, n) {
+      var i = parseInt(n, 10);
       return (i) ? String.fromCharCode(i) : ent;
     });
     return s;
@@ -449,7 +449,7 @@ function lib_globals() {
       .w()[part.moy];
     part.c = part.cc ? part.cc.substr(0, 3) : '';
     part.ww = 'Sunday Monday Tuesday Wednesday Thursday Friday Saturday'.w()[part.dow];
-    part.w = part.ww ? part.ww.substr(0,3) : '';
+    part.w = part.ww ? part.ww.substr(0, 3) : '';
     part.h = (part.H > 12 || part.H == 0) ? Math.abs(part.H - 12) : part.H;
     part.p = (part.H > 11) ? 'pm' : 'am';
     part.P = (part.H > 11) ? 'PM' : 'AM';
@@ -469,7 +469,7 @@ function lib_globals() {
     }
     if (!d) return '';
     r = (fmt) ? String(fmt) : '{yyyy}/{mm}/{dd}';
-    var part = Date.getParts(d,utc);
+    var part = Date.getParts(d, utc);
     r = r.replace(/\{(\w+)\}/g, function(str, n) {
       return part(n) || str;
     });

@@ -6,16 +6,10 @@ var global, server, app, sys, req, res;
 
 /**
  * Dispatch Request
- * This is a lighter-weight dispatch function similar to app_init, but requires fewer library files
- * to be included in the script calling this function and doesn't use the event model.
+ * This is a dispatch function similar to app_init but has fewer dependencies, contains code to build
+ * the controller stubs and doesn't use the event model.
  *
-
- * Receives a function and calls it with the following parameters:
- * server: Server abstraction interface
- * req: Request object
- * res: Response object
- *
- * @param {Object} map
+ * @param {Object} map matches URL patterns to controllers
  */
 function dispatch(map) {
   __approot = '/app/';
@@ -24,20 +18,101 @@ function dispatch(map) {
   req = server.req;
   res = server.res;
   res.clear();
-  forEach(map, function(key, script) {
-    var re, path = req.getURLParts().path;
+  var path = req.getURLParts().path;
+  forEach(map, function(key, controller) {
+    var re, name = controller.controller || String(controller);
     if (key.match(/\/$/)) {
       re = new RegExp('^' + RegExp.escape(key), 'i');
     } else {
       re = new RegExp('^' + RegExp.escape(key) + '(/|$)', 'i');
     }
     if (path.match(re)) {
-      server.exec(__approot + script);
+      var script = __approot + 'build/' + name + '.asp';
+      try {
+        server.exec(script);
+      } catch(e) {
+        if (/(execute failed|could not be opened)/i.test(e.message)) {
+          buildControllerStubs(map);
+          server.exec(script);
+        } else {
+          throw e;
+        }
+      }
     }
   });
   res.headers('content-type', 'text/plain');
   res.write('ERROR: No Route for ' + path);
   res.end();
+}
+
+
+/**
+ * Build Controller Stubs
+ * Creates one or more files inside app/build that dispatch can execute as a controller stub.
+ *
+ * @param map
+ */
+function buildControllerStubs(map) {
+  var sys = lib('system'), stubs = [], cfg = {};
+  forEach(map, function(_, controller) {
+    var name = controller.controller || String(controller);
+    if (!cfg[name]) cfg[name] = {};
+    Object.append(cfg[name], controller);
+  });
+  var stat = sys.fs.stat('build');
+  forEach(stat._files, function(i, file) {
+    if (!file.name.startsWith('_')) {
+      file._delete();
+    }
+  });
+  var stat = sys.fs.stat('controllers', true);
+  forEach(stat._folders, function(i, folder) {
+    var list = [], name = folder.name;
+    forEach(folder.files, function(i, filename) {
+      if (!filename.startsWith('_')) {
+        list.push(folder.name + '/' + filename);
+      }
+    });
+    buildControllerStub(name, list, cfg);
+    stubs.push(name);
+  });
+  forEach(stat.files, function(i, filename) {
+    var name = filename.replace(/\.(.*?)$/, '');
+    if (!stubs.exists(name)) {
+      buildControllerStub(name, [filename], cfg);
+      stubs.push(name);
+    }
+  });
+  return stubs;
+}
+
+/**
+ * Build Controller Stub
+ *
+ * Helper function for buildControllerStubs to create a stub from template located at app/stub.asp
+ *
+ * @param name
+ * @param scripts
+ */
+function buildControllerStub(name, scripts, cfg) {
+  var sys = lib('system'), self = buildControllerStub;
+  var templ = self.templ || (self.templ = sys.readTextFile('stub.asp'));
+  var stub = String(templ), deps = [];
+  if (cfg && cfg[name] && cfg[name].inc) {
+    deps = deps.concat(cfg[name].inc.w());
+  }
+  stub = stub.replace(/<script.*?(controller\.js).*?><\/script>/i, function(tag, path) {
+    var tags = [];
+    forEach(deps, function(i, script) {
+      tags.push(tag.replace(/[^"]+\.js/, __approot + 'system/lib/' + script));
+    });
+    forEach(scripts, function(i, script) {
+      tags.push(tag.replace(path, script));
+    });
+    return tags.join('\r\n');
+  });
+  stub = stub.replaceAll(__approot, '../');
+  sys.writeTextToFile('build/' + name + '.asp', stub);
 }
 
 
@@ -93,7 +168,7 @@ function lib(name) {
   module = this['lib_' + name];
   if (module) {
     var exports = {};
-    var r = module.call(exports,exports) || exports;
+    var r = module.call(exports, exports) || exports;
     return cache[name] = r;
   }
 }
@@ -140,9 +215,9 @@ function bind(name, func) {
 function trigger(name, data, args){
   var events = bind.events || {};
   data = data || {};
-  if (Object.exists(events,name)) {
-    events[name].each(function(i,event){
-      event.apply(data,args || [])
+  if (Object.exists(events, name)) {
+    events[name].each(function(i, event){
+      event.apply(data, args || [])
     });
   }
   return data;
