@@ -577,6 +577,63 @@ function lib_jqlite() {
       frameborder: "frameBorder"
     };
 
+    //JQUERY QUEUE
+
+    jQuery.extend({
+      queue: function( elem, type, data ) {
+        if ( !elem ) {
+          return;
+        }
+
+        type = type + "queue";
+        var q = jQuery.data( elem, type );
+
+        // Speed up dequeue by getting out quickly if this is just a lookup
+        if ( !data ) {
+          return q || [];
+        }
+
+        if ( !q || jQuery.isArray(data) ) {
+          q = jQuery.data( elem, type, jQuery.makeArray(data) );
+
+        } else {
+          q.push( data );
+        }
+
+        return q;
+      },
+
+      dequeue: function( elem, type ) {
+        var queue = jQuery.queue( elem, type ), fn = queue.shift();
+
+        if ( fn ) {
+          fn.call(elem, function() {
+            jQuery.dequeue(elem, type);
+          });
+        }
+      }
+    });
+
+    jQuery.fn.extend({
+      queue: function( type, data ) {
+        if ( data === undefined ) {
+          return jQuery.queue( this[0], type );
+        }
+        return this.each(function( i, elem ) {
+          var queue = jQuery.queue( this, type, data );
+        });
+      },
+      dequeue: function( type ) {
+        return this.each(function() {
+          jQuery.dequeue( this, type );
+        });
+      },
+
+      clearQueue: function( type ) {
+        return this.queue( type, [] );
+      }
+    });
+
     //JQUERY ATTRIBUTES
 
     var rclass = /[\n\t]/g,
