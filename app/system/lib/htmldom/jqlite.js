@@ -23,7 +23,6 @@ function lib_jqlite() {
   function new_jQuery(document) {
   
     var jQuery = function( selector, context ) {
-        // The jQuery object is actually just the init constructor 'enhanced'
         return new jQuery.fn.init( selector, context );
       },
       // A central reference to the root jQuery(document)
@@ -97,7 +96,7 @@ function lib_jqlite() {
 
               } else {
                 ret = buildFragment( [ match[1] ], [ doc ] );
-                selector = (ret.cacheable ? ret.fragment.cloneNode(true) : ret.fragment).childNodes;
+                selector = (ret.cacheable ? ret.fragment.cloneNode(true) : ret.fragment).childNodes();
               }
 
               return jQuery.merge( this, selector );
@@ -327,17 +326,7 @@ function lib_jqlite() {
       },
 
       isPlainObject: function( obj ) {
-        // Must be an Object.
-        // Because of IE, we also have to check the presence of the constructor property.
-        // Make sure that DOM nodes and window objects don't pass through, as well
-        if ( !obj || toString.call(obj) !== "[object Object]" || obj.nodeType || obj.setInterval ) {
-          return false;
-        }
-
-        // Not own constructor property must be Object
-        if ( obj.constructor
-          && !hasOwnProperty.call(obj, "constructor")
-          && !hasOwnProperty.call(obj.constructor.prototype, "isPrototypeOf") ) {
+        if ( !obj || toString.call(obj) !== "[object Object]" || obj.nodeType ) {
           return false;
         }
 
@@ -364,7 +353,7 @@ function lib_jqlite() {
       noop: function() {},
 
       nodeName: function( elem, name ) {
-        return elem.nodeName && elem.nodeName.toUpperCase() === name.toUpperCase();
+        return elem.nodeName && elem.nodeName().toUpperCase() === name.toUpperCase();
       },
 
       // args is for internal usage only
@@ -531,6 +520,10 @@ function lib_jqlite() {
     // All jQuery objects should point back to these
     rootjQuery = jQuery(document);
 
+    jQuery.toHTML = function() {
+      return rootjQuery.html();
+    };
+
     // Mutifunctional method to get and set values to a collection
     // The value/s can be optionally by executed if its a function
     function access( elems, key, value, exec, fn, pass ) {
@@ -564,85 +557,11 @@ function lib_jqlite() {
       return (new Date).getTime();
     }
 
-    jQuery.props = {
-      "for": "htmlFor",
-      "class": "className",
-      readonly: "readOnly",
-      maxlength: "maxLength",
-      cellspacing: "cellSpacing",
-      rowspan: "rowSpan",
-      colspan: "colSpan",
-      tabindex: "tabIndex",
-      usemap: "useMap",
-      frameborder: "frameBorder"
-    };
-
-    //JQUERY QUEUE
-
-    jQuery.extend({
-      queue: function( elem, type, data ) {
-        if ( !elem ) {
-          return;
-        }
-
-        type = type + "queue";
-        var q = jQuery.data( elem, type );
-
-        // Speed up dequeue by getting out quickly if this is just a lookup
-        if ( !data ) {
-          return q || [];
-        }
-
-        if ( !q || jQuery.isArray(data) ) {
-          q = jQuery.data( elem, type, jQuery.makeArray(data) );
-
-        } else {
-          q.push( data );
-        }
-
-        return q;
-      },
-
-      dequeue: function( elem, type ) {
-        var queue = jQuery.queue( elem, type ), fn = queue.shift();
-
-        if ( fn ) {
-          fn.call(elem, function() {
-            jQuery.dequeue(elem, type);
-          });
-        }
-      }
-    });
-
-    jQuery.fn.extend({
-      queue: function( type, data ) {
-        if ( data === undefined ) {
-          return jQuery.queue( this[0], type );
-        }
-        return this.each(function( i, elem ) {
-          var queue = jQuery.queue( this, type, data );
-        });
-      },
-      dequeue: function( type ) {
-        return this.each(function() {
-          jQuery.dequeue( this, type );
-        });
-      },
-
-      clearQueue: function( type ) {
-        return this.queue( type, [] );
-      }
-    });
-
     //JQUERY ATTRIBUTES
 
     var rclass = /[\n\t]/g,
       rspace = /\s+/,
       rreturn = /\r/g,
-      rspecialurl = /href|src|style/,
-      rtype = /(button|input)/i,
-      rfocusable = /(button|input|object|select|textarea)/i,
-      rclickable = /^(a|area)$/i,
       rradiocheck = /radio|checkbox/;
 
     jQuery.fn.extend({
@@ -653,7 +572,7 @@ function lib_jqlite() {
       removeAttr: function( name, fn ) {
         return this.each(function(){
           jQuery.attr( this, name, "" );
-          if ( this.nodeType === 1 ) {
+          if ( this.nodeType() === 1 ) {
             this.removeAttribute( name );
           }
         });
@@ -673,7 +592,7 @@ function lib_jqlite() {
           for ( var i = 0, l = this.length; i < l; i++ ) {
             var elem = this[i];
 
-            if ( elem.nodeType === 1 ) {
+            if ( elem.nodeType() === 1 ) {
               if ( !elem.className ) {
                 elem.className = value;
 
@@ -707,7 +626,7 @@ function lib_jqlite() {
           for ( var i = 0, l = this.length; i < l; i++ ) {
             var elem = this[i];
 
-            if ( elem.nodeType === 1 && elem.className ) {
+            if ( elem.nodeType() === 1 && elem.className ) {
               if ( value ) {
                 var className = (" " + elem.className + " ").replace(rclass, " ");
                 for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
@@ -826,7 +745,7 @@ function lib_jqlite() {
         return this.each(function(i) {
           var self = jQuery(this), val = value;
 
-          if ( this.nodeType !== 1 ) {
+          if ( this.nodeType() !== 1 ) {
             return;
           }
 
@@ -864,18 +783,13 @@ function lib_jqlite() {
     jQuery.extend({
       attrFn: {
         val: true,
-        css: true,
         html: true,
-        text: true,
-        data: true,
-        width: true,
-        height: true,
-        offset: true
+        text: true
       },
 
       attr: function( elem, name, value, pass ) {
         // don't set attributes on text and comment nodes
-        if ( !elem || elem.nodeType === 3 || elem.nodeType === 8 ) {
+        if ( !elem || elem.nodeType() === 3 || elem.nodeType() === 8 ) {
           return undefined;
         }
 
@@ -885,35 +799,12 @@ function lib_jqlite() {
 
         var set = value !== undefined;
 
-        // Try to normalize/fix the name
-        name = jQuery.props[ name ] || name;
-
-        // Only do all the following if this is a node (faster for style)
-        if ( elem.nodeType === 1 ) {
-          // These attributes require special treatment
-          var special = rspecialurl.test( name );
-
-          // If applicable, access the attribute via the DOM 0 way
-          if ( name in elem && !special ) {
-            if ( set ) {
-              elem[ name ] = value;
-            }
-
-            // browsers index elements by id/name on forms, give priority to attributes.
-            if ( jQuery.nodeName( elem, "form" ) && elem.getAttributeNode(name) ) {
-              return elem.getAttributeNode( name ).nodeValue;
-            }
-
-            return elem[ name ];
-          }
-
+        // Only do all the following if this is a node
+        if ( elem.nodeType() === 1 ) {
           if ( set ) {
-            // convert the value to a string (all browsers do this but IE) see #1070
             elem.setAttribute( name, "" + value );
           }
-
           var attr = elem.getAttribute( name );
-
           // Non-existent attributes return null, we normalize to undefined
           return attr === null ? undefined : attr;
         }
@@ -934,8 +825,7 @@ function lib_jqlite() {
     var runtil = /Until$/,
       rparentsprev = /^(?:parents|prevUntil|prevAll)/,
       // Note: This RegExp should be improved, or likely pulled from Sizzle
-      rmultiselector = /,/,
-      slice = Array.prototype.slice;
+      rmultiselector = /,/;
 
     // Implement the identical functionality for filter and not
     var winnow = function( elements, qualifier, keep ) {
@@ -951,7 +841,7 @@ function lib_jqlite() {
 
       } else if ( typeof qualifier === "string" ) {
         var filtered = jQuery.grep(elements, function( elem ) {
-          return elem.nodeType === 1;
+          return elem.nodeType() === 1;
         });
 
         if ( isSimple.test( qualifier ) ) {
@@ -1037,7 +927,7 @@ function lib_jqlite() {
                   delete matches[selector];
                 }
               }
-              cur = cur.parentNode;
+              cur = cur.parentNode();
             }
           }
 
@@ -1052,7 +942,7 @@ function lib_jqlite() {
             if ( pos ? pos.index(cur) > -1 : jQuery(cur).is(selectors) ) {
               return cur;
             }
-            cur = cur.parentNode;
+            cur = cur.parentNode();
           }
           return null;
         });
@@ -1092,13 +982,13 @@ function lib_jqlite() {
     // A painfully simple check to see if an element is disconnected
     // from a document (should be improved, where feasible).
     function isDisconnected( node ) {
-      return !node || !node.parentNode || node.parentNode.nodeType === 11;
+      return !node || !node.parentNode() || node.parentNode().nodeType() === 11;
     }
 
     jQuery.each({
       parent: function( elem ) {
-        var parent = elem.parentNode;
-        return parent && parent.nodeType !== 11 ? parent : null;
+        var parent = elem.parentNode();
+        return parent && parent.nodeType() !== 11 ? parent : null;
       },
       parents: function( elem ) {
         return jQuery.dir( elem, "parentNode" );
@@ -1125,15 +1015,15 @@ function lib_jqlite() {
         return jQuery.dir( elem, "previousSibling", until );
       },
       siblings: function( elem ) {
-        return jQuery.sibling( elem.parentNode.firstChild, elem );
+        return jQuery.sibling( elem.parentNode().firstChild(), elem );
       },
       children: function( elem ) {
-        return jQuery.sibling( elem.firstChild );
+        return jQuery.sibling( elem.firstChild() );
       },
       contents: function( elem ) {
         return jQuery.nodeName( elem, "iframe" ) ?
           elem.contentDocument || elem.contentWindow.document :
-          jQuery.makeArray( elem.childNodes );
+          jQuery.makeArray( elem.childNodes() );
       }
     }, function( name, fn ) {
       jQuery.fn[ name ] = function( until, selector ) {
@@ -1168,8 +1058,8 @@ function lib_jqlite() {
 
       dir: function( elem, dir, until ) {
         var matched = [], cur = elem[dir];
-        while ( cur && cur.nodeType !== 9 && (until === undefined || cur.nodeType !== 1 || !jQuery( cur ).is( until )) ) {
-          if ( cur.nodeType === 1 ) {
+        while ( cur && cur.nodeType() !== 9 && (until === undefined || cur.nodeType() !== 1 || !jQuery( cur ).is( until )) ) {
+          if ( cur.nodeType() === 1 ) {
             matched.push( cur );
           }
           cur = cur[dir];
@@ -1182,7 +1072,7 @@ function lib_jqlite() {
         var num = 0;
 
         for ( ; cur; cur = cur[dir] ) {
-          if ( cur.nodeType === 1 && ++num === result ) {
+          if ( cur.nodeType() === 1 && ++num === result ) {
             break;
           }
         }
@@ -1194,7 +1084,7 @@ function lib_jqlite() {
         var r = [];
 
         for ( ; n; n = n.nextSibling ) {
-          if ( n.nodeType === 1 && n !== elem ) {
+          if ( n.nodeType() === 1 && n !== elem ) {
             r.push( n );
           }
         }
@@ -1205,20 +1095,7 @@ function lib_jqlite() {
 
     //JQUERY MANIPULATION
 
-    var rinlinejQuery = / jQuery\d+="(?:\d+|null)"/g,
-      rleadingWhitespace = /^\s+/,
-      rxhtmlTag = /(<([\w:]+)[^>]*?)\/>/g,
-      rselfClosing = /^(?:area|br|col|embed|hr|img|input|link|meta|param)$/i,
-      rtagName = /<([\w:]+)/,
-      rtbody = /<tbody/i,
-      rhtml = /<|&#?\w+;/,
-      rnocache = /<script|<object|<embed|<option|<style/i,
-      rchecked = /checked\s*(?:[^=]|=\s*.checked.)/i,  // checked="checked" or checked (html5)
-      fcloseTag = function( all, front, tag ) {
-        return rselfClosing.test( tag ) ?
-          all :
-          front + "></" + tag + ">";
-      },
+    var rnocache = /<script|<object|<embed|<option|<style/i,
       wrapMap = {
         option: [ 1, "<select multiple='multiple'>", "</select>" ],
         legend: [ 1, "<fieldset>", "</fieldset>" ],
@@ -1261,15 +1138,15 @@ function lib_jqlite() {
           // The elements to wrap the target around
           var wrap = jQuery( html, this[0].ownerDocument ).eq(0).clone(true);
 
-          if ( this[0].parentNode ) {
+          if ( this[0].parentNode() ) {
             wrap.insertBefore( this[0] );
           }
 
           wrap.map(function() {
             var elem = this;
 
-            while ( elem.firstChild && elem.firstChild.nodeType === 1 ) {
-              elem = elem.firstChild;
+            while ( elem.firstChild() && elem.firstChild().nodeType() === 1 ) {
+              elem = elem.firstChild();
             }
 
             return elem;
@@ -1307,14 +1184,14 @@ function lib_jqlite() {
       unwrap: function() {
         return this.parent().each(function() {
           if ( !jQuery.nodeName( this, "body" ) ) {
-            jQuery( this ).replaceWith( this.childNodes );
+            jQuery( this ).replaceWith( this.childNodes() );
           }
         }).end();
       },
 
       append: function() {
         return this.domManip(arguments, true, function( elem ) {
-          if ( this.nodeType === 1 ) {
+          if ( this.nodeType() === 1 ) {
             this.appendChild( elem );
           }
         });
@@ -1322,16 +1199,16 @@ function lib_jqlite() {
 
       prepend: function() {
         return this.domManip(arguments, true, function( elem ) {
-          if ( this.nodeType === 1 ) {
-            this.insertBefore( elem, this.firstChild );
+          if ( this.nodeType() === 1 ) {
+            this.insertBefore( elem, this.firstChild() );
           }
         });
       },
 
       before: function() {
-        if ( this[0] && this[0].parentNode ) {
+        if ( this[0] && this[0].parentNode() ) {
           return this.domManip(arguments, false, function( elem ) {
-            this.parentNode.insertBefore( elem, this );
+            this.parentNode().insertBefore( elem, this );
           });
         } else if ( arguments.length ) {
           var set = jQuery(arguments[0]);
@@ -1341,9 +1218,9 @@ function lib_jqlite() {
       },
 
       after: function() {
-        if ( this[0] && this[0].parentNode ) {
+        if ( this[0] && this[0].parentNode() ) {
           return this.domManip(arguments, false, function( elem ) {
-            this.parentNode.insertBefore( elem, this.nextSibling );
+            this.parentNode().insertBefore( elem, this.nextSibling );
           });
         } else if ( arguments.length ) {
           var set = this.pushStack( this, "after", arguments );
@@ -1356,8 +1233,8 @@ function lib_jqlite() {
       remove: function( selector, keepData ) {
         for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
           if ( !selector || jQuery.filter( selector, [ elem ] ).length ) {
-            if ( elem.parentNode ) {
-               elem.parentNode.removeChild( elem );
+            if ( elem.parentNode() ) {
+               elem.parentNode().removeChild( elem );
             }
           }
         }
@@ -1368,8 +1245,8 @@ function lib_jqlite() {
       empty: function() {
         for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
           // Remove any remaining nodes
-          while ( elem.firstChild ) {
-            elem.removeChild( elem.firstChild );
+          while ( elem.firstChild() ) {
+            elem.removeChild( elem.firstChild() );
           }
         }
 
@@ -1388,10 +1265,15 @@ function lib_jqlite() {
 
       html: function( value ) {
         if ( value === undefined ) {
-          return this[0] && this[0].nodeType === 1 ?
-            this[0].innerHTML().replace(rinlinejQuery, "") :
-            null;
-
+          if (this[0]) {
+            if (this[0].nodeType() === 9) {
+              return this[0].outerHTML();
+            } else
+            if (this[0].nodeType() === 1) {
+              return this[0].innerHTML();
+            }
+          }
+          return null;
         } else if ( jQuery.isFunction( value ) ) {
           this.each(function(i){
             var self = jQuery(this), old = self.html();
@@ -1408,7 +1290,7 @@ function lib_jqlite() {
       },
 
       replaceWith: function( value ) {
-        if ( this[0] && this[0].parentNode ) {
+        if ( this[0] && this[0].parentNode() ) {
           // Make sure that the elements are removed from the DOM before they are inserted
           // this can help fix replacing a parent with child elements
           if ( jQuery.isFunction( value ) ) {
@@ -1423,7 +1305,7 @@ function lib_jqlite() {
           }
 
           return this.each(function() {
-            var next = this.nextSibling, parent = this.parentNode;
+            var next = this.nextSibling, parent = this.parentNode();
 
             jQuery(this).remove();
 
@@ -1454,10 +1336,10 @@ function lib_jqlite() {
         }
 
         if ( this[0] ) {
-          parent = value && value.parentNode;
+          parent = value && value.parentNode();
 
           // If we're in a fragment, just use that instead of building a new one
-          if ( parent && parent.nodeType === 11 && parent.childNodes.length === this.length ) {
+          if ( parent && parent.nodeType() === 11 && parent.childNodes().length === this.length ) {
             results = { fragment: parent };
 
           } else {
@@ -1466,10 +1348,10 @@ function lib_jqlite() {
 
           fragment = results.fragment;
 
-          if ( fragment.childNodes.length === 1 ) {
-            first = fragment = fragment.firstChild;
+          if ( fragment.childNodes().length === 1 ) {
+            first = fragment = fragment.firstChild();
           } else {
-            first = fragment.firstChild;
+            first = fragment.firstChild();
           }
 
           if ( first ) {
@@ -1542,9 +1424,9 @@ function lib_jqlite() {
     }, function( name, original ) {
       jQuery.fn[ name ] = function( selector ) {
         var ret = [], insert = jQuery( selector ),
-          parent = this.length === 1 && this[0].parentNode;
+          parent = this.length === 1 && this[0].parentNode();
 
-        if ( parent && parent.nodeType === 11 && parent.childNodes.length === 1 && insert.length === 1 ) {
+        if ( parent && parent.nodeType() === 11 && parent.childNodes().length === 1 && insert.length === 1 ) {
           insert[ original ]( this[0] );
           return this;
 
