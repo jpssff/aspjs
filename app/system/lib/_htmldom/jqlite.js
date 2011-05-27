@@ -1,6 +1,7 @@
 function lib_jqlite() {
 
-  var domwrapper = lib('domwrapper'), sizzle = lib('sizzle');
+  var domwrapper = lib('domwrapper');
+  var sizzle = lib('sizzle');
 
   function WrappedSet(arr) {
     var obj = {};

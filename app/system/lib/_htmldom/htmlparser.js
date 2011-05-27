@@ -11,10 +11,20 @@
  *     comment: function(text) {}
  * });
  *
+ * // or to get an XML string:
+ * HTMLtoXML(htmlString);
+ *
+ * // or to get an XML DOM Document
+ * HTMLtoDOM(htmlString);
+ *
+ * // or to inject into an existing document/DOM node
+ * HTMLtoDOM(htmlString, document);
+ * HTMLtoDOM(htmlString, document.body);
+ *
  */
 
 if (!this.lib_htmlparser) this.lib_htmlparser = lib_htmlparser;
-function lib_htmlparser() {
+function lib_htmlparser(exports) {
 
   // Regular Expressions for parsing tags and attributes
   var startTag = /^<(\w+)((?:\s+\w+(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)>/,
@@ -30,7 +40,8 @@ function lib_htmlparser() {
   // Inline Elements - HTML 4.01
   var inline = makeMap("a,abbr,acronym,applet,b,basefont,bdo,big,br,button,cite,code,del,dfn,em,font,i,iframe,img,input,ins,kbd,label,map,object,q,s,samp,script,select,small,span,strike,strong,sub,sup,textarea,tt,u,var");
 
-  // Elements that you can, intentionally, leave open (and which close themselves)
+  // Elements that you can, intentionally, leave open
+  // (and which close themselves)
   var closeSelf = makeMap("colgroup,dd,dt,li,options,p,td,tfoot,th,thead,tr");
 
   // Attributes that have their values filled in disabled="disabled"
@@ -39,7 +50,7 @@ function lib_htmlparser() {
   // Special Elements (can contain anything)
   var special = makeMap("script,style");
 
-  function HTMLParser( html, handler ) {
+  var HTMLParser = exports.HTMLParser = function( html, handler ) {
     var index, chars, match, stack = [], last = html;
     stack.last = function(){
       return this[ this.length - 1 ];
@@ -173,17 +184,119 @@ function lib_htmlparser() {
         stack.length = pos;
       }
     }
-  }
+  };
   
+  exports.HTMLtoXML = function( html ) {
+    var results = "";
+    
+    HTMLParser(html, {
+      start: function( tag, attrs, unary ) {
+        results += "<" + tag;
+    
+        for ( var i = 0; i < attrs.length; i++ )
+          results += " " + attrs[i].name + '="' + attrs[i].escaped + '"';
+    
+        results += (unary ? "/" : "") + ">";
+      },
+      end: function( tag ) {
+        results += "</" + tag + ">";
+      },
+      chars: function( text ) {
+        results += text;
+      },
+      comment: function( text ) {
+        results += "\x3C!--" + text + "--\x3E";
+      }
+    });
+    
+    return results;
+  };
+  
+  exports.HTMLtoDOM = function( html, doc ) {
+    // There can be only one of these elements
+    var one = makeMap("html,head,body,title");
+    
+    // Enforce a structure for the document
+    var structure = {
+      link: "head",
+      base: "head"
+    };
+  
+    if ( !doc ) {
+      doc = new ActiveXObject("Msxml.DOMDocument");
+    } else {
+      doc = doc.ownerDocument || doc.getOwnerDocument && doc.getOwnerDocument() || doc;
+    }
+
+    var elems = [],
+      documentElement = doc.documentElement;// || doc.getDocumentElement && doc.getDocumentElement();
+    // If we're dealing with an empty document then we
+    // need to pre-populate it with the HTML document structure
+    if ( !documentElement && typeof doc.createElement !== 'undefined' ) (function(){
+      var html = doc.createElement("html");
+      var head = doc.createElement("head");
+      head.appendChild( doc.createElement("title") );
+      html.appendChild( head );
+      html.appendChild( doc.createElement("body") );
+      doc.appendChild( html );
+    })();
+
+    // Find all the unique elements
+    if ( typeof doc.getElementsByTagName !== 'undefined' )
+      for ( var i in one )
+        one[ i ] = doc.getElementsByTagName( i )[0];
+
+    // If we're working with a document, inject contents into
+    // the body element
+    var curParentNode = one.body;
+
+    HTMLParser( html, {
+      start: function( tagName, attrs, unary ) {
+        // If it's a pre-built element, then we can ignore
+        // its construction
+        if ( one[ tagName ] ) {
+          curParentNode = one[ tagName ];
+          return;
+        }
+      
+        var elem = doc.createElement( tagName );
+
+        for (var i = 0; i < attrs.length; i++) {
+          elem.setAttribute( attrs[ i ].name, attrs[ i ].value );
+        }
+
+        if ( structure[ tagName ] && typeof one[ structure[ tagName ] ] != "boolean" )
+          one[ structure[ tagName ] ].appendChild( elem );
+        
+        else if ( curParentNode && typeof curParentNode.appendChild !== 'undefined' )
+          curParentNode.appendChild( elem );
+          
+        if ( !unary ) {
+          elems.push( elem );
+          curParentNode = elem;
+        }
+      },
+      end: function( tag ) {
+        elems.length -= 1;
+        
+        // Init the new parentNode
+        curParentNode = elems[ elems.length - 1 ];
+      },
+      chars: function( text ) {
+        curParentNode.appendChild( doc.createTextNode( text ) );
+      },
+      comment: function( text ) {
+        // create comment node
+      }
+    });
+
+    return doc;
+  };
+
   function makeMap(str){
     var obj = {}, items = str.split(",");
     for ( var i = 0; i < items.length; i++ )
       obj[ items[i] ] = true;
     return obj;
   }
-
-  return {
-    parse: HTMLParser
-  };
-
 }

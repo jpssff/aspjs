@@ -69,10 +69,12 @@ function lib_jasmine() {
     }
   };
 
-  jasmine.setTimeout = jasmine.bindOriginal_(jasmine.getGlobal(), 'setTimeout');
-  jasmine.clearTimeout = jasmine.bindOriginal_(jasmine.getGlobal(), 'clearTimeout');
-  jasmine.setInterval = jasmine.bindOriginal_(jasmine.getGlobal(), 'setInterval');
-  jasmine.clearInterval = jasmine.bindOriginal_(jasmine.getGlobal(), 'clearInterval');
+  jasmine.setTimeout = function(cb, ms) {
+    cb();
+  };
+  jasmine.clearTimeout = function() {};
+  jasmine.setInterval = function() {};
+  jasmine.clearInterval = function() {};
 
   jasmine.MessageResult = function(values) {
     this.type = 'log';
@@ -467,7 +469,7 @@ function lib_jasmine() {
    * @param {String} desc description of this specification
    * @param {Function} func defines the preconditions and expectations of the spec
    */
-  var it = function(desc, func) {
+  it = function(desc, func) {
     return jasmine.getEnv().it(desc, func);
   };
 
@@ -479,7 +481,7 @@ function lib_jasmine() {
    * @param {String} desc description of this specification
    * @param {Function} func defines the preconditions and expectations of the spec
    */
-  var xit = function(desc, func) {
+  xit = function(desc, func) {
     return jasmine.getEnv().xit(desc, func);
   };
 
@@ -491,7 +493,7 @@ function lib_jasmine() {
    *
    * @param {Object} actual Actual value to test against and expected value
    */
-  var expect = function(actual) {
+  expect = function(actual) {
     return jasmine.getEnv().currentSpec.expect(actual);
   };
 
@@ -500,7 +502,7 @@ function lib_jasmine() {
    *
    * @param {Function} func Function that defines part of a jasmine spec.
    */
-  var runs = function(func) {
+  runs = function(func) {
     jasmine.getEnv().currentSpec.runs(func);
   };
 
@@ -510,7 +512,7 @@ function lib_jasmine() {
    * @deprecated Use waitsFor() instead
    * @param {Number} timeout milliseconds to wait
    */
-  var waits = function(timeout) {
+  waits = function(timeout) {
     jasmine.getEnv().currentSpec.waits(timeout);
   };
 
@@ -521,7 +523,7 @@ function lib_jasmine() {
    * @param {String} optional_timeoutMessage
    * @param {Number} optional_timeout
    */
-  var waitsFor = function(latchFunction, optional_timeoutMessage, optional_timeout) {
+  waitsFor = function(latchFunction, optional_timeoutMessage, optional_timeout) {
     jasmine.getEnv().currentSpec.waitsFor.apply(jasmine.getEnv().currentSpec, arguments);
   };
 
@@ -532,7 +534,7 @@ function lib_jasmine() {
    *
    * @param {Function} beforeEachFunction
    */
-  var beforeEach = function(beforeEachFunction) {
+  beforeEach = function(beforeEachFunction) {
     jasmine.getEnv().beforeEach(beforeEachFunction);
   };
 
@@ -543,7 +545,7 @@ function lib_jasmine() {
    *
    * @param {Function} afterEachFunction
    */
-  var afterEach = function(afterEachFunction) {
+  afterEach = function(afterEachFunction) {
     jasmine.getEnv().afterEach(afterEachFunction);
   };
 
@@ -562,7 +564,7 @@ function lib_jasmine() {
    * @param {String} description A string, usually the class under test.
    * @param {Function} specDefinitions function that defines several specs.
    */
-  var describe = function(description, specDefinitions) {
+  describe = function(description, specDefinitions) {
     return jasmine.getEnv().describe(description, specDefinitions);
   };
 
@@ -572,7 +574,7 @@ function lib_jasmine() {
    * @param {String} description A string, usually the class under test.
    * @param {Function} specDefinitions function that defines several specs.
    */
-  var xdescribe = function(description, specDefinitions) {
+  xdescribe = function(description, specDefinitions) {
     return jasmine.getEnv().xdescribe(description, specDefinitions);
   };
 
@@ -2388,40 +2390,6 @@ function lib_jasmine() {
     installed: null
   };
   jasmine.Clock.installed = jasmine.Clock.real;
-
-//else for IE support
-  jasmine.getGlobal().setTimeout = function(funcToCall, millis) {
-    if (jasmine.Clock.installed.setTimeout.apply) {
-      return jasmine.Clock.installed.setTimeout.apply(this, arguments);
-    } else {
-      return jasmine.Clock.installed.setTimeout(funcToCall, millis);
-    }
-  };
-
-  jasmine.getGlobal().setInterval = function(funcToCall, millis) {
-    if (jasmine.Clock.installed.setInterval.apply) {
-      return jasmine.Clock.installed.setInterval.apply(this, arguments);
-    } else {
-      return jasmine.Clock.installed.setInterval(funcToCall, millis);
-    }
-  };
-
-  jasmine.getGlobal().clearTimeout = function(timeoutKey) {
-    if (jasmine.Clock.installed.clearTimeout.apply) {
-      return jasmine.Clock.installed.clearTimeout.apply(this, arguments);
-    } else {
-      return jasmine.Clock.installed.clearTimeout(timeoutKey);
-    }
-  };
-
-  jasmine.getGlobal().clearInterval = function(timeoutKey) {
-    if (jasmine.Clock.installed.clearTimeout.apply) {
-      return jasmine.Clock.installed.clearInterval.apply(this, arguments);
-    } else {
-      return jasmine.Clock.installed.clearInterval(timeoutKey);
-    }
-  };
-
 
   jasmine.version_= {
     "major": 1,

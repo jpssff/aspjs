@@ -175,7 +175,7 @@ function lib_sizzle() {
 
       if ( hasDuplicate ) {
         for ( var i = 1; i < results.length; i++ ) {
-          if ( results[i].equals(results[ i - 1 ]) ) {
+          if ( results[i].getPath() === results[ i - 1 ].getPath() ) {
             results.splice( i--, 1 );
           }
         }
@@ -390,7 +390,7 @@ function lib_sizzle() {
             if ( elem ) {
               checkSet[i] = isPartStr ?
                 elem.parentNode() :
-                elem.parentNode().equals(part);
+                elem.parentNode().getPath() === part.getPath();
             }
           }
 
@@ -678,7 +678,7 @@ function lib_sizzle() {
           var not = match[3];
 
           for ( var j = 0, l = not.length; j < l; j++ ) {
-            if ( not[j].equals(elem) ) {
+            if ( not[j].getPath() == elem.getPath() ) {
               return false;
             }
           }
@@ -836,12 +836,12 @@ function lib_sizzle() {
       cur = aup;
 
     // The nodes are identical, we can exit early
-    if ( a.equals(b) ) {
+    if ( a.getPath() == b.getPath() ) {
       hasDuplicate = true;
       return 0;
 
     // If the nodes are siblings (or identical) we can do a quick check
-    } else if ( aup.equals(bup) ) {
+    } else if ( aup.getPath() == bup.getPath() ) {
       return siblingCheck( a, b );
 
     // If no parents were found then the nodes are disconnected
@@ -883,13 +883,14 @@ function lib_sizzle() {
   };
 
   siblingCheck = function( a, b, ret ) {
-    if ( a.equals(b) ) {
+    var path = b.getPath();
+    if ( a.getPath() == path ) {
       return ret;
     }
 
     var cur = a;
     while ( cur = cur.nextSibling() ) {
-      if ( cur.equals(b) ) {
+      if ( cur.getPath() == path ) {
         return -1;
       }
     }
@@ -952,7 +953,7 @@ function lib_sizzle() {
         while ( elem ) {
           if ( elem.nodeType() == 1 ) {
             if ( typeof cur !== "string" ) {
-              if ( elem.equals(cur) ) {
+              if ( elem.getPath() == cur.getPath() ) {
                 match = true;
                 break;
               }
@@ -972,11 +973,7 @@ function lib_sizzle() {
   }
 
   Sizzle.contains = function(parent, child) {
-    var a = parent.getElementsByTagName('*');
-    for (var i = 0; i < a.length; i++) {
-      if (a.equals(child)) return true;
-    }
-    return false;
+    return (child.getPath()).startsWith(parent.getPath() + '/')
   };
 
   var posProcess = function( selector, context ) {

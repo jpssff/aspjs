@@ -4,8 +4,22 @@
 <title>Test Suite</title>
 <link rel="stylesheet" type="text/css" href="/assets/test/suite.css" />
 <script type="text/javascript" src="/assets/scripts/jquery.js"></script>
+<script type="text/javascript" src="/assets/scripts/jquery.tmpl.js"></script>
 <script type="text/javascript" src="/assets/test/suite.js"></script>
+<script type="text/x-jquery-tmpl" id="tbl-tests">
+<table border="0" cellspacing="0" cellpadding="0">
+  {{each(i, test) tests}}
+  <tr id="row-${i}">
+    <td><span class="number">${i + 1}</span></td>
+    <td><div class="test-name"><a href="${test.url}">${test.name}</a></div></td>
+    <td><span class="result"></span></td>
+  </tr>
+  {{/each}}
+</table>
+</script>
 </head>
 <body>
+<h1>Test Suite</h1>
+<div id="content-pane"></div>
 </body>
 </html>

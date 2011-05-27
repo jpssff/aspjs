@@ -1,0 +1,56 @@
+html {
+	margin: 0;
+	padding: 0;
+	overflow-y: scroll;
+}
+body {
+	margin: 0;
+	padding: 20px;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+a {
+	color:inherit;
+	text-decoration:underline;
+}
+table, input, textarea, select {
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: inherit;
+}
+caption, th, td {
+	text-align: left;
+	vertical-align: top;
+	font-weight: normal;
+}
+
+#content-pane td {
+  padding: 2px 5px;
+}
+tr .result {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+tr.hidden {
+  visibility: collapse;
+}
+tr.alt {
+  background: #eee;
+}
+.response-text {
+  width: 210px;
+  margin: 0 0 0 auto;
+  padding: 0 4px 4px;
+}
+tr.in-progress .result {
+  background: url(../images/spinner-16.gif) center center no-repeat;
+}
+tr.success .result {
+  background: #009900 none;
+}
+tr.failure .result {
+  background: #cc0000 none;
+}
+
+
