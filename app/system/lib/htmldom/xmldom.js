@@ -1,10 +1,9 @@
 /*!
- * Copyright 2005 Google Inc. All Rights Reserved.
+ * XMLDOM
+ * A minimal XML DOM implementation that supports a subset of the W3C standard
  *
+ * Original Code: Copyright 2005 Google Inc. All Rights Reserved.
  * Original Author: Steffen Meschkat (mesch@google.com)
- *
- * An XML parse and a minimal DOM implementation that just supports the subset of the W3C DOM
- * that is used in the XSLT implementation.
  *
  */
 
@@ -31,7 +30,7 @@ function lib_xmldom() {
   // children are traversed; opt_post is invoked after they are
   // traversed. Traversal will not be continued if a callback function
   // returns boolean false.
-  function domTraverseElements(node, opt_pre, opt_post) {
+  function domTraverseElements(node, opt_pre, opt_post, opt_all) {
     var ret;
     if (opt_pre) {
       ret = opt_pre.call(null, node);
@@ -40,13 +39,11 @@ function lib_xmldom() {
       }
     }
     for (var c = node.firstChild; c; c = c.nextSibling) {
-      if (c.nodeType == DOM_ELEMENT_NODE) {
-        ret = domTraverseElements.call(null, c, opt_pre, opt_post);
+      if (c.nodeType == DOM_ELEMENT_NODE || opt_all) {
+        ret = domTraverseElements.call(null, c, opt_pre, opt_post, opt_all);
         if (typeof ret == 'boolean' && !ret) {
           return false;
         }
-      } else
-      if (c.nodeType == DOM_TEXT_NODE) {
       }
     }
     if (opt_post) {
@@ -314,12 +311,22 @@ function lib_xmldom() {
     return ret;
   };
 
-  XNode.prototype.traverseElements = function(opt_pre, opt_post) {
-    domTraverseElements(this, opt_pre, opt_post);
+  XNode.prototype.traverseElements = function(opt_pre, opt_post, opt_all) {
+    domTraverseElements(this, opt_pre, opt_post, opt_all);
   };
 
-  XNode.prototype.xml = function(emptyElements) {
-    var xml = [], empty = emptyElements || {};
+  XNode.prototype.text = function() {
+    var text = [];
+    domTraverseElements(this, function(node) {
+      if (node.nodeType == DOM_TEXT_NODE) {
+        text.push(node.nodeValue);
+      }
+    }, null, true);
+    return text.join('');
+  };
+
+  XNode.prototype.xml = function(emptyElements, noencElements) {
+    var xml = [], empty = emptyElements || {}, noenc = noencElements || {};
     domTraverseElements(this, function(node) {
       if (node.nodeType == DOM_ELEMENT_NODE) {
         var attribs = [];
@@ -327,10 +334,14 @@ function lib_xmldom() {
           var attr = node.attributes[i];
           attribs.push(' ' + attr.nodeName + '="' + xmlAttrEnc(attr.nodeValue) + '"');
         }
-        xml.push('<' + node.nodeName + attribs.join('') + (node.firstChild || !empty[nodeName] ? '' : '/') + '>');
+        xml.push('<' + node.nodeName + attribs.join('') + (node.firstChild || !empty[node.nodeName] ? '' : '/') + '>');
       } else
       if (node.nodeType == DOM_TEXT_NODE) {
-        xml.push(xmlEnc(node.nodeValue));
+        if (node.parentNode && noenc[node.parentNode.tagName]) {
+          xml.push(node.nodeValue);
+        } else {
+          xml.push(xmlEnc(node.nodeValue));
+        }
       } else
       if (node.nodeType == DOM_CDATA_SECTION_NODE) {
         xml.push('<![CDATA[' + node.nodeValue + ']]>');
@@ -340,11 +351,11 @@ function lib_xmldom() {
       }
     }, function(node) {
       if (node.nodeType == DOM_ELEMENT_NODE) {
-        if (node.firstChild || !empty[nodeName]) {
+        if (node.firstChild || !empty[node.nodeName]) {
           xml.push('</' + node.nodeName + '>');
         }
       }
-    });
+    }, true);
     return xml.join('');
   };
 

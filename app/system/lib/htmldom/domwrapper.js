@@ -4,6 +4,7 @@ function lib_domwrapper() {
 
   var emptyElements = {area: true, base: true, basefont: true, br: true, col: true, frame: true,
     hr: true, img: true, input: true, isindex: true, link: true, meta: true, param: true, embed: true};
+  var noencElements = {script: true, style: true};
 
   function parseHTML(html) {
     var doc = new xmldom.Document(), elems = [];
@@ -52,7 +53,11 @@ function lib_domwrapper() {
         curParentNode = elems[elems.length - 1];
       },
       chars: function(chars) {
-        curParentNode.appendChild(doc.createTextNode(htmlDec(chars)));
+        if (noencElements[curParentNode.tagName]) {
+          curParentNode.appendChild(doc.createTextNode(chars));
+        } else {
+          curParentNode.appendChild(doc.createTextNode(htmlDec(chars)));
+        }
       }
     });
     return doc;
@@ -90,10 +95,27 @@ function lib_domwrapper() {
         curParentNode = elems[elems.length - 1];
       },
       chars: function(chars) {
-        curParentNode.appendChild(doc.createTextNode(htmlDec(chars)));
+        if (noencElements[curParentNode.tagName]) {
+          curParentNode.appendChild(doc.createTextNode(chars));
+        } else {
+          curParentNode.appendChild(doc.createTextNode(htmlDec(chars)));
+        }
       }
     });
     return doc;
+  }
+
+  function wrapNodes(nodes) {
+    if (nodes instanceof xmldom.Node) {
+      return new HtmlNode(nodes);
+    }
+    if (nodes instanceof Array) {
+      var arr = new Array(nodes.length);
+      forEach(nodes, function(i, node) {
+        arr[i] = new HtmlNode(node);
+      });
+      return arr;
+    }
   }
   
   function getTagPosition(node) {
@@ -155,13 +177,13 @@ function lib_domwrapper() {
      * Selection Functions
      */
     getElementById: function(id) {
-      return this._xmlNode.getElementById(id);
+      return wrapNodes(this._xmlNode.getElementById(id));
     },
     getElementsByTagName: function(name) {
-      return this._xmlNode.getElementsByTagName(name);
+      return wrapNodes(this._xmlNode.getElementsByTagName(name));
     },
     getElementsByAttr: function(name, val) {
-      return this._xmlNode.getElementsByAttr(name, val);
+      return wrapNodes(this._xmlNode.getElementsByAttr(name, val));
     },
     getElementsByName: function(val) {
       return this.getElementsByAttr('name', val);
@@ -206,7 +228,7 @@ function lib_domwrapper() {
       return html.join('');
     },
     outerHTML: function() {
-      return this._xmlNode.xml(emptyElements);
+      return this._xmlNode.xml(emptyElements, noencElements);
     }
   };
 

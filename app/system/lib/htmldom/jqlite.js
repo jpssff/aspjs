@@ -415,9 +415,7 @@ function lib_jqlite() {
 
         if ( array != null ) {
           // The window, strings (and functions) also have 'length'
-          // The extra typeof function check is to prevent crashes
-          // in Safari 2 (See: #3039)
-          if ( array.length == null || typeof array === "string" || jQuery.isFunction(array) || (typeof array !== "function" && array.setInterval) ) {
+          if ( array.length == null || typeof array === "string" || jQuery.isFunction(array) ) {
             push.call( ret, array );
           } else {
             jQuery.merge( ret, array );
@@ -578,99 +576,6 @@ function lib_jqlite() {
       usemap: "useMap",
       frameborder: "frameBorder"
     };
-
-    //JQUERY QUEUE
-
-    jQuery.extend({
-      queue: function( elem, type, data ) {
-        if ( !elem ) {
-          return;
-        }
-
-        type = (type || "fx") + "queue";
-        var q = jQuery.data( elem, type );
-
-        // Speed up dequeue by getting out quickly if this is just a lookup
-        if ( !data ) {
-          return q || [];
-        }
-
-        if ( !q || jQuery.isArray(data) ) {
-          q = jQuery.data( elem, type, jQuery.makeArray(data) );
-
-        } else {
-          q.push( data );
-        }
-
-        return q;
-      },
-
-      dequeue: function( elem, type ) {
-        type = type || "fx";
-
-        var queue = jQuery.queue( elem, type ), fn = queue.shift();
-
-        // If the fx queue is dequeued, always remove the progress sentinel
-        if ( fn === "inprogress" ) {
-          fn = queue.shift();
-        }
-
-        if ( fn ) {
-          // Add a progress sentinel to prevent the fx queue from being
-          // automatically dequeued
-          if ( type === "fx" ) {
-            queue.unshift("inprogress");
-          }
-
-          fn.call(elem, function() {
-            jQuery.dequeue(elem, type);
-          });
-        }
-      }
-    });
-
-    jQuery.fn.extend({
-      queue: function( type, data ) {
-        if ( typeof type !== "string" ) {
-          data = type;
-          type = "fx";
-        }
-
-        if ( data === undefined ) {
-          return jQuery.queue( this[0], type );
-        }
-        return this.each(function( i, elem ) {
-          var queue = jQuery.queue( this, type, data );
-
-          if ( type === "fx" && queue[0] !== "inprogress" ) {
-            jQuery.dequeue( this, type );
-          }
-        });
-      },
-      dequeue: function( type ) {
-        return this.each(function() {
-          jQuery.dequeue( this, type );
-        });
-      },
-
-      // Based off of the plugin by Clint Helfers, with permission.
-      // http://blindsignals.com/index.php/2009/07/jquery-delay/
-      delay: function( time, type ) {
-        time = jQuery.fx ? jQuery.fx.speeds[time] || time : time;
-        type = type || "fx";
-
-        return this.queue( type, function() {
-          var elem = this;
-          setTimeout(function() {
-            jQuery.dequeue( elem, type );
-          }, time );
-        });
-      },
-
-      clearQueue: function( type ) {
-        return this.queue( type || "fx", [] );
-      }
-    });
 
     //JQUERY ATTRIBUTES
 
@@ -851,12 +756,6 @@ function lib_jqlite() {
               return values;
             }
 
-            // Handle the case where in Webkit "" is returned instead of "on" if a value isn't specified
-            if ( rradiocheck.test( elem.type ) && !jQuery.support.checkOn ) {
-              return elem.getAttribute("value") === null ? "on" : elem.value;
-            }
-
-
             // Everything else, we just grab the value
             return (elem.value || "").replace(rreturn, "");
 
@@ -927,40 +826,19 @@ function lib_jqlite() {
           return jQuery(elem)[name](value);
         }
 
-        var notxml = elem.nodeType !== 1 || !jQuery.isXMLDoc( elem ),
-          // Whether we are setting (or getting)
-          set = value !== undefined;
+        var set = value !== undefined;
 
         // Try to normalize/fix the name
-        name = notxml && jQuery.props[ name ] || name;
+        name = jQuery.props[ name ] || name;
 
         // Only do all the following if this is a node (faster for style)
         if ( elem.nodeType === 1 ) {
           // These attributes require special treatment
           var special = rspecialurl.test( name );
 
-          // Safari mis-reports the default selected property of an option
-          // Accessing the parent's selectedIndex property fixes it
-          if ( name === "selected" && !jQuery.support.optSelected ) {
-            var parent = elem.parentNode;
-            if ( parent ) {
-              parent.selectedIndex;
-
-              // Make sure that it also works with optgroups, see #5701
-              if ( parent.parentNode ) {
-                parent.parentNode.selectedIndex;
-              }
-            }
-          }
-
           // If applicable, access the attribute via the DOM 0 way
-          if ( name in elem && notxml && !special ) {
+          if ( name in elem && !special ) {
             if ( set ) {
-              // We can't allow the type property to be changed (since it causes problems in IE)
-              if ( name === "type" && rtype.test( elem.nodeName ) && elem.parentNode ) {
-                jQuery.error( "type property can't be changed" );
-              }
-
               elem[ name ] = value;
             }
 
@@ -969,27 +847,7 @@ function lib_jqlite() {
               return elem.getAttributeNode( name ).nodeValue;
             }
 
-            // elem.tabIndex doesn't always return the correct value when it hasn't been explicitly set
-            // http://fluidproject.org/blog/2008/01/09/getting-setting-and-removing-tabindex-values-with-javascript/
-            if ( name === "tabIndex" ) {
-              var attributeNode = elem.getAttributeNode( "tabIndex" );
-
-              return attributeNode && attributeNode.specified ?
-                attributeNode.value :
-                rfocusable.test( elem.nodeName ) || rclickable.test( elem.nodeName ) && elem.href ?
-                  0 :
-                  undefined;
-            }
-
             return elem[ name ];
-          }
-
-          if ( !jQuery.support.style && notxml && name === "style" ) {
-            if ( set ) {
-              elem.style.cssText = "" + value;
-            }
-
-            return elem.style.cssText;
           }
 
           if ( set ) {
@@ -997,18 +855,12 @@ function lib_jqlite() {
             elem.setAttribute( name, "" + value );
           }
 
-          var attr = !jQuery.support.hrefNormalized && notxml && special ?
-              // Some attributes require a special call on IE
-              elem.getAttribute( name, 2 ) :
-              elem.getAttribute( name );
+          var attr = elem.getAttribute( name );
 
           // Non-existent attributes return null, we normalize to undefined
           return attr === null ? undefined : attr;
         }
 
-        // elem is actually elem.style ... set the style
-        // Using attr for specific style information is now deprecated. Use style instead.
-        return jQuery.style( elem, name, value );
       }
     });
 
@@ -1018,9 +870,7 @@ function lib_jqlite() {
     jQuery.expr = Sizzle.selectors;
     jQuery.expr[":"] = jQuery.expr.filters;
     jQuery.unique = Sizzle.uniqueSort;
-    jQuery.text = getText;
-    jQuery.isXMLDoc = isXML;
-    jQuery.contains = contains;
+    jQuery.contains = Sizzle.contains;
 
     //JQUERY TRAVERSING
 
@@ -1327,11 +1177,6 @@ function lib_jqlite() {
     wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
     wrapMap.th = wrapMap.td;
 
-    // IE can't serialize <link> and <script> tags normally
-    if ( !jQuery.support.htmlSerialize ) {
-      wrapMap._default = [ 1, "div<div>", "</div>" ];
-    }
-
     jQuery.fn.extend({
       text: function( text ) {
         if ( jQuery.isFunction(text) ) {
@@ -1345,7 +1190,7 @@ function lib_jqlite() {
           return this.empty().append( (this[0] && this[0].ownerDocument || document).createTextNode( text ) );
         }
 
-        return jQuery.text( this );
+        return Sizzle.getText(this);
       },
 
       wrapAll: function( html ) {
@@ -1454,11 +1299,6 @@ function lib_jqlite() {
       remove: function( selector, keepData ) {
         for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
           if ( !selector || jQuery.filter( selector, [ elem ] ).length ) {
-            if ( !keepData && elem.nodeType === 1 ) {
-              jQuery.cleanData( elem.getElementsByTagName("*") );
-              jQuery.cleanData( [ elem ] );
-            }
-
             if ( elem.parentNode ) {
                elem.parentNode.removeChild( elem );
             }
@@ -1470,11 +1310,6 @@ function lib_jqlite() {
 
       empty: function() {
         for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-          // Remove element nodes and prevent memory leaks
-          if ( elem.nodeType === 1 ) {
-            jQuery.cleanData( elem.getElementsByTagName("*") );
-          }
-
           // Remove any remaining nodes
           while ( elem.firstChild ) {
             elem.removeChild( elem.firstChild );
@@ -1484,39 +1319,11 @@ function lib_jqlite() {
         return this;
       },
 
-      clone: function( events ) {
+      clone: function() {
         // Do the clone
         var ret = this.map(function() {
-          if ( !jQuery.support.noCloneEvent && !jQuery.isXMLDoc(this) ) {
-            // IE copies events bound via attachEvent when
-            // using cloneNode. Calling detachEvent on the
-            // clone will also remove the events from the orignal
-            // In order to get around this, we use innerHTML.
-            // Unfortunately, this means some modifications to
-            // attributes in IE that are actually only stored
-            // as properties will not be copied (such as the
-            // the name attribute on an input).
-            var html = this.outerHTML, ownerDocument = this.ownerDocument;
-            if ( !html ) {
-              var div = ownerDocument.createElement("div");
-              div.appendChild( this.cloneNode(true) );
-              html = div.innerHTML;
-            }
-
-            return jQuery.clean([html.replace(rinlinejQuery, "")
-              // Handle the case in IE 8 where action=/test/> self-closes a tag
-              .replace(/=([^="'>\s]+\/)>/g, '="$1">')
-              .replace(rleadingWhitespace, "")], ownerDocument)[0];
-          } else {
-            return this.cloneNode(true);
-          }
+          return this.cloneNode(true);
         });
-
-        // Copy the events from the original to the clone
-        if ( events === true ) {
-          cloneCopyEvent( this, ret );
-          cloneCopyEvent( this.find("*"), ret.find("*") );
-        }
 
         // Return the cloned set
         return ret;
@@ -1525,29 +1332,8 @@ function lib_jqlite() {
       html: function( value ) {
         if ( value === undefined ) {
           return this[0] && this[0].nodeType === 1 ?
-            this[0].innerHTML.replace(rinlinejQuery, "") :
+            this[0].innerHTML().replace(rinlinejQuery, "") :
             null;
-
-        // See if we can take a shortcut and just use innerHTML
-        } else if ( typeof value === "string" && !rnocache.test( value ) &&
-          (jQuery.support.leadingWhitespace || !rleadingWhitespace.test( value )) &&
-          !wrapMap[ (rtagName.exec( value ) || ["", ""])[1].toLowerCase() ] ) {
-
-          value = value.replace(rxhtmlTag, fcloseTag);
-
-          try {
-            for ( var i = 0, l = this.length; i < l; i++ ) {
-              // Remove element nodes and prevent memory leaks
-              if ( this[i].nodeType === 1 ) {
-                jQuery.cleanData( this[i].getElementsByTagName("*") );
-                this[i].innerHTML = value;
-              }
-            }
-
-          // If using innerHTML throws an exception, use the fallback method
-          } catch(e) {
-            this.empty().append( value );
-          }
 
         } else if ( jQuery.isFunction( value ) ) {
           this.each(function(i){
@@ -1602,13 +1388,6 @@ function lib_jqlite() {
       domManip: function( args, table, callback ) {
         var results, first, value = args[0], scripts = [], fragment, parent;
 
-        // We can't cloneNode fragments that contain checked, in WebKit
-        if ( !jQuery.support.checkClone && arguments.length === 3 && typeof value === "string" && rchecked.test( value ) ) {
-          return this.each(function() {
-            jQuery(this).domManip( args, table, callback, true );
-          });
-        }
-
         if ( jQuery.isFunction(value) ) {
           return this.each(function(i) {
             var self = jQuery(this);
@@ -1621,7 +1400,7 @@ function lib_jqlite() {
           parent = value && value.parentNode;
 
           // If we're in a fragment, just use that instead of building a new one
-          if ( jQuery.support.parentNode && parent && parent.nodeType === 11 && parent.childNodes.length === this.length ) {
+          if ( parent && parent.nodeType === 11 && parent.childNodes.length === this.length ) {
             results = { fragment: parent };
 
           } else {
@@ -1667,39 +1446,13 @@ function lib_jqlite() {
       }
     });
 
-    function cloneCopyEvent(orig, ret) {
-      var i = 0;
-
-      ret.each(function() {
-        if ( this.nodeName !== (orig[i] && orig[i].nodeName) ) {
-          return;
-        }
-
-        var oldData = jQuery.data( orig[i++] ), curData = jQuery.data( this, oldData ), events = oldData && oldData.events;
-
-        if ( events ) {
-          delete curData.handle;
-          curData.events = {};
-
-          for ( var type in events ) {
-            for ( var handler in events[ type ] ) {
-              jQuery.event.add( this, type, events[ type ][ handler ], events[ type ][ handler ].data );
-            }
-          }
-        }
-      });
-    }
-
     function buildFragment( args, nodes, scripts ) {
       var fragment, cacheable, cacheresults,
         doc = (nodes && nodes[0] ? nodes[0].ownerDocument || nodes[0] : document);
 
       // Only cache "small" (1/2 KB) strings that are associated with the main document
-      // Cloning options loses the selected state, so don't cache them
-      // IE 6 doesn't like it when you put <object> or <embed> elements in a fragment
-      // Also, WebKit does not clone 'checked' attributes on cloneNode, so don't cache
       if ( args.length === 1 && typeof args[0] === "string" && args[0].length < 512 && doc === document &&
-        !rnocache.test( args[0] ) && (jQuery.support.checkClone || !rchecked.test( args[0] )) ) {
+        !rnocache.test( args[0] ) ) {
 
         cacheable = true;
         cacheresults = jQuery.fragments[ args[0] ];
@@ -1712,7 +1465,6 @@ function lib_jqlite() {
 
       if ( !fragment ) {
         fragment = doc.createDocumentFragment();
-        jQuery.clean( args, doc, fragment, scripts );
       }
 
       if ( cacheable ) {
@@ -1749,136 +1501,6 @@ function lib_jqlite() {
           return this.pushStack( ret, name, insert.selector );
         }
       };
-    });
-
-    jQuery.extend({
-      clean: function( elems, context, fragment, scripts ) {
-        context = context || document;
-
-        // !context.createElement fails in IE with an error but returns typeof 'object'
-        if ( typeof context.createElement === "undefined" ) {
-          context = context.ownerDocument || context[0] && context[0].ownerDocument || document;
-        }
-
-        var ret = [];
-
-        for ( var i = 0, elem; (elem = elems[i]) != null; i++ ) {
-          if ( typeof elem === "number" ) {
-            elem += "";
-          }
-
-          if ( !elem ) {
-            continue;
-          }
-
-          // Convert html string into DOM nodes
-          if ( typeof elem === "string" && !rhtml.test( elem ) ) {
-            elem = context.createTextNode( elem );
-
-          } else if ( typeof elem === "string" ) {
-            // Fix "XHTML"-style tags in all browsers
-            elem = elem.replace(rxhtmlTag, fcloseTag);
-
-            // Trim whitespace, otherwise indexOf won't work as expected
-            var tag = (rtagName.exec( elem ) || ["", ""])[1].toLowerCase(),
-              wrap = wrapMap[ tag ] || wrapMap._default,
-              depth = wrap[0],
-              div = context.createElement("div");
-
-            // Go to html and back, then peel off extra wrappers
-            div.innerHTML = wrap[1] + elem + wrap[2];
-
-            // Move to the right depth
-            while ( depth-- ) {
-              div = div.lastChild;
-            }
-
-            // Remove IE's autoinserted <tbody> from table fragments
-            if ( !jQuery.support.tbody ) {
-
-              // String was a <table>, *may* have spurious <tbody>
-              var hasBody = rtbody.test(elem),
-                tbody = tag === "table" && !hasBody ?
-                  div.firstChild && div.firstChild.childNodes :
-
-                  // String was a bare <thead> or <tfoot>
-                  wrap[1] === "<table>" && !hasBody ?
-                    div.childNodes :
-                    [];
-
-              for ( var j = tbody.length - 1; j >= 0 ; --j ) {
-                if ( jQuery.nodeName( tbody[ j ], "tbody" ) && !tbody[ j ].childNodes.length ) {
-                  tbody[ j ].parentNode.removeChild( tbody[ j ] );
-                }
-              }
-
-            }
-
-            // IE completely kills leading whitespace when innerHTML is used
-            if ( !jQuery.support.leadingWhitespace && rleadingWhitespace.test( elem ) ) {
-              div.insertBefore( context.createTextNode( rleadingWhitespace.exec(elem)[0] ), div.firstChild );
-            }
-
-            elem = div.childNodes;
-          }
-
-          if ( elem.nodeType ) {
-            ret.push( elem );
-          } else {
-            ret = jQuery.merge( ret, elem );
-          }
-        }
-
-        if ( fragment ) {
-          for ( var i = 0; ret[i]; i++ ) {
-            if ( scripts && jQuery.nodeName( ret[i], "script" ) && (!ret[i].type || ret[i].type.toLowerCase() === "text/javascript") ) {
-              scripts.push( ret[i].parentNode ? ret[i].parentNode.removeChild( ret[i] ) : ret[i] );
-
-            } else {
-              if ( ret[i].nodeType === 1 ) {
-                ret.splice.apply( ret, [i + 1, 0].concat(jQuery.makeArray(ret[i].getElementsByTagName("script"))) );
-              }
-              fragment.appendChild( ret[i] );
-            }
-          }
-        }
-
-        return ret;
-      },
-
-      cleanData: function( elems ) {
-        var data, id, cache = jQuery.cache,
-          special = jQuery.event.special,
-          deleteExpando = jQuery.support.deleteExpando;
-
-        for ( var i = 0, elem; (elem = elems[i]) != null; i++ ) {
-          id = elem[ jQuery.expando ];
-
-          if ( id ) {
-            data = cache[ id ];
-
-            if ( data.events ) {
-              for ( var type in data.events ) {
-                if ( special[ type ] ) {
-                  jQuery.event.remove( elem, type );
-
-                } else {
-                  removeEvent( elem, type, data.handle );
-                }
-              }
-            }
-
-            if ( deleteExpando ) {
-              delete elem[ jQuery.expando ];
-
-            } else if ( elem.removeAttribute ) {
-              elem.removeAttribute( jQuery.expando );
-            }
-
-            delete cache[ id ];
-          }
-        }
-      }
     });
 
     return jQuery;

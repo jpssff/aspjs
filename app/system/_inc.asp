@@ -23,3 +23,4 @@
 <script runat="server" language="javascript" src="lib/htmldom/htmlparser.js"></script>
 <script runat="server" language="javascript" src="lib/htmldom/jqlite.js"></script>
 <script runat="server" language="javascript" src="lib/htmldom/sizzle.js"></script>
+<script runat="server" language="javascript" src="lib/htmldom/xmldom.js"></script>
