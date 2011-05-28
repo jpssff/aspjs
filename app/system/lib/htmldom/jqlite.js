@@ -2,7 +2,7 @@
  * jQuery "lite"
  *
  * jqlite is a striped-down version of jQuery ported to work with a server-side document
- * object model (dom) for manipulating HTML documents in a convenient and familiar way.
+ * object model for manipulating HTML documents in a convenient and familiar way.
  *
  * Depends on htmlparser, xmldom, domwrapper, and sizzle
  *
@@ -21,7 +21,7 @@ function lib_jqlite() {
    *
    */
   function new_jQuery(document) {
-  
+
     var jQuery = function( selector, context ) {
         return new jQuery.fn.init( selector, context );
       },
@@ -61,13 +61,13 @@ function lib_jqlite() {
         }
 
         // The body element only exists once, optimize finding it
-        if ( selector === "body" && !context ) {
-          this.context = document;
-          this[0] = document.body;
-          this.selector = "body";
-          this.length = 1;
-          return this;
-        }
+        //if ( selector === "body" && !context ) {
+        //  this.context = document;
+        //  this[0] = document.getElementsByTagName('body')[0];
+        //  this.selector = "body";
+        //  this.length = 1;
+        //  return this;
+        //}
 
         // Handle HTML strings
         if ( typeof selector === "string" ) {
@@ -79,10 +79,9 @@ function lib_jqlite() {
 
             // HANDLE: $(html) -> $(array)
             if ( match[1] ) {
-              doc = (context ? context.ownerDocument || context : document);
+              doc = (context ? context.ownerDocument() || context : document);
 
-              // If a single string is passed in and it's a single tag
-              // just do a createElement and skip the rest
+              // If a single string is passed in and it's a single tag just do a createElement
               ret = rsingleTag.exec( selector );
 
               if ( ret ) {
@@ -139,10 +138,6 @@ function lib_jqlite() {
             return jQuery( context ).find( selector );
           }
 
-        // HANDLE: $(function)
-        // Shortcut for document ready
-        } else if ( jQuery.isFunction( selector ) ) {
-          return rootjQuery.ready( selector );
         }
 
         if (selector.selector !== undefined) {
@@ -314,9 +309,6 @@ function lib_jqlite() {
     };
 
     jQuery.extend({
-      // See test/unit/core.js for details concerning isFunction.
-      // Since version 1.3, DOM methods and functions like alert
-      // aren't supported. They return false on IE (#2968).
       isFunction: function( obj ) {
         return toString.call(obj) === "[object Function]";
       },
@@ -588,22 +580,19 @@ function lib_jqlite() {
 
         if ( value && typeof value === "string" ) {
           var classNames = (value || "").split( rspace );
-
           for ( var i = 0, l = this.length; i < l; i++ ) {
             var elem = this[i];
-
             if ( elem.nodeType() === 1 ) {
-              if ( !elem.className ) {
-                elem.className = value;
-
+              if ( !elem.getAttribute('class') ) {
+                elem.setAttribute('class', value);
               } else {
-                var className = " " + elem.className + " ", setClass = elem.className;
+                var className = " " + elem.getAttribute('class') + " ", setClass = elem.getAttribute('class');
                 for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
                   if ( className.indexOf( " " + classNames[c] + " " ) < 0 ) {
                     setClass += " " + classNames[c];
                   }
                 }
-                elem.className = jQuery.trim( setClass );
+                elem.setAttribute('class', jQuery.trim( setClass ));
               }
             }
           }
@@ -622,20 +611,17 @@ function lib_jqlite() {
 
         if ( (value && typeof value === "string") || value === undefined ) {
           var classNames = (value || "").split(rspace);
-
           for ( var i = 0, l = this.length; i < l; i++ ) {
             var elem = this[i];
-
-            if ( elem.nodeType() === 1 && elem.className ) {
+            if ( elem.nodeType() === 1 && elem.getAttribute('class') ) {
               if ( value ) {
-                var className = (" " + elem.className + " ").replace(rclass, " ");
+                var className = (" " + elem.getAttribute('class') + " ").replace(rclass, " ");
                 for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
                   className = className.replace(" " + classNames[c] + " ", " ");
                 }
-                elem.className = jQuery.trim( className );
-
+                elem.setAttribute('class', jQuery.trim( className ));
               } else {
-                elem.className = "";
+                elem.setAttribute('class', '');
               }
             }
           }
@@ -662,19 +648,19 @@ function lib_jqlite() {
               classNames = value.split( rspace );
 
             while ( (className = classNames[ i++ ]) ) {
-              // check each className given, space seperated list
+              // check each className given, space separated list
               state = isBool ? state : !self.hasClass( className );
               self[ state ? "addClass" : "removeClass" ]( className );
             }
 
           } else if ( type === "undefined" || type === "boolean" ) {
-            if ( this.className ) {
+            if ( this.getAttribute('class') ) {
               // store className if set
-              jQuery.data( this, "__className__", this.className );
+              this.setAttribute('__class__', this.getAttribute('class'));
             }
 
             // toggle whole className
-            this.className = this.className || value === false ? "" : jQuery.data( this, "__className__" ) || "";
+            this.setAttribute('class', this.getAttribute('class') || value === false ? "" : this.getAttribute('__class__') || "")
           }
         });
       },
@@ -682,7 +668,7 @@ function lib_jqlite() {
       hasClass: function( selector ) {
         var className = " " + selector + " ";
         for ( var i = 0, l = this.length; i < l; i++ ) {
-          if ( (" " + this[i].className + " ").replace(rclass, " ").indexOf( className ) > -1 ) {
+          if ( (" " + this[i].getAttribute('class') + " ").replace(rclass, " ").indexOf( className ) > -1 ) {
             return true;
           }
         }
@@ -918,7 +904,7 @@ function lib_jqlite() {
               }
             }
 
-            while ( cur && cur.ownerDocument && cur !== context ) {
+            while ( cur && cur.ownerDocument() && cur !== context ) {
               for ( selector in matches ) {
                 match = matches[selector];
 
@@ -938,7 +924,7 @@ function lib_jqlite() {
           jQuery( selectors, context || this.context ) : null;
 
         return this.map(function( i, cur ) {
-          while ( cur && cur.ownerDocument && cur !== context ) {
+          while ( cur && cur.ownerDocument() && cur !== context ) {
             if ( pos ? pos.index(cur) > -1 : jQuery(cur).is(selectors) ) {
               return cur;
             }
@@ -1095,21 +1081,7 @@ function lib_jqlite() {
 
     //JQUERY MANIPULATION
 
-    var rnocache = /<script|<object|<embed|<option|<style/i,
-      wrapMap = {
-        option: [ 1, "<select multiple='multiple'>", "</select>" ],
-        legend: [ 1, "<fieldset>", "</fieldset>" ],
-        thead: [ 1, "<table>", "</table>" ],
-        tr: [ 2, "<table><tbody>", "</tbody></table>" ],
-        td: [ 3, "<table><tbody><tr>", "</tr></tbody></table>" ],
-        col: [ 2, "<table><tbody></tbody><colgroup>", "</colgroup></table>" ],
-        area: [ 1, "<map>", "</map>" ],
-        _default: [ 0, "", "" ]
-      };
-
-    wrapMap.optgroup = wrapMap.option;
-    wrapMap.tbody = wrapMap.tfoot = wrapMap.colgroup = wrapMap.caption = wrapMap.thead;
-    wrapMap.th = wrapMap.td;
+    var rhtml = /<|&#?\w+;/;
 
     jQuery.fn.extend({
       text: function( text ) {
@@ -1121,7 +1093,7 @@ function lib_jqlite() {
         }
 
         if ( typeof text !== "object" && text !== undefined ) {
-          return this.empty().append( (this[0] && this[0].ownerDocument || document).createTextNode( text ) );
+          return this.empty().append( (this[0] && this[0].ownerDocument() || document).createTextNode( text ) );
         }
 
         return Sizzle.getText(this);
@@ -1136,7 +1108,7 @@ function lib_jqlite() {
 
         if ( this[0] ) {
           // The elements to wrap the target around
-          var wrap = jQuery( html, this[0].ownerDocument ).eq(0).clone(true);
+          var wrap = jQuery( html, this[0].ownerDocument() ).eq(0).clone(true);
 
           if ( this[0].parentNode() ) {
             wrap.insertBefore( this[0] );
@@ -1289,6 +1261,13 @@ function lib_jqlite() {
         return this;
       },
 
+      toHTML: function() {
+        if (this[0] && this[0].nodeType() === 1) {
+          return this[0].outerHTML();
+        }
+        return null;
+      },
+
       replaceWith: function( value ) {
         if ( this[0] && this[0].parentNode() ) {
           // Make sure that the elements are removed from the DOM before they are inserted
@@ -1325,7 +1304,7 @@ function lib_jqlite() {
       },
 
       domManip: function( args, table, callback ) {
-        var results, first, value = args[0], scripts = [], fragment, parent;
+        var results, first, value = args[0], fragment, parent;
 
         if ( jQuery.isFunction(value) ) {
           return this.each(function(i) {
@@ -1336,14 +1315,14 @@ function lib_jqlite() {
         }
 
         if ( this[0] ) {
-          parent = value && value.parentNode();
+          parent = value && value.parentNode && value.parentNode();
 
           // If we're in a fragment, just use that instead of building a new one
           if ( parent && parent.nodeType() === 11 && parent.childNodes().length === this.length ) {
             results = { fragment: parent };
 
           } else {
-            results = buildFragment( args, this, scripts );
+            results = buildFragment( args, this );
           }
 
           fragment = results.fragment;
@@ -1355,22 +1334,10 @@ function lib_jqlite() {
           }
 
           if ( first ) {
-            table = table && jQuery.nodeName( first, "tr" );
-
             for ( var i = 0, l = this.length; i < l; i++ ) {
-              callback.call(
-                table ?
-                  root(this[i], first) :
-                  this[i],
-                i > 0 || results.cacheable || this.length > 1  ?
-                  fragment.cloneNode(true) :
-                  fragment
-              );
+              callback.call(this[i],
+                i > 0 || results.cacheable || this.length > 1  ? fragment.cloneNode(true) : fragment);
             }
-          }
-
-          if ( scripts.length ) {
-            jQuery.each( scripts, evalScript );
           }
         }
 
@@ -1379,31 +1346,47 @@ function lib_jqlite() {
         function root( elem, cur ) {
           return jQuery.nodeName(elem, "table") ?
             (elem.getElementsByTagName("tbody")[0] ||
-            elem.appendChild(elem.ownerDocument.createElement("tbody"))) :
+            elem.appendChild(elem.ownerDocument().createElement("tbody"))) :
             elem;
         }
       }
     });
 
-    function buildFragment( args, nodes, scripts ) {
+    function buildFragment( args, nodes ) {
       var fragment, cacheable, cacheresults,
-        doc = (nodes && nodes[0] ? nodes[0].ownerDocument || nodes[0] : document);
+        doc = (nodes && nodes[0] ? nodes[0].ownerDocument() || nodes[0] : document);
 
-      // Only cache "small" (1/2 KB) strings that are associated with the main document
-      if ( args.length === 1 && typeof args[0] === "string" && args[0].length < 512 && doc === document &&
-        !rnocache.test( args[0] ) ) {
-
+      // Only cache strings less than 512 chars that are associated with the main document
+      if (args.length == 1 && typeof args[0] == "string" && args[0].length < 512 && doc === document) {
         cacheable = true;
         cacheresults = jQuery.fragments[ args[0] ];
-        if ( cacheresults ) {
-          if ( cacheresults !== 1 ) {
-            fragment = cacheresults;
-          }
+        if ( cacheresults && cacheresults !== 1 ) {
+          fragment = cacheresults;
         }
       }
 
       if ( !fragment ) {
         fragment = doc.createDocumentFragment();
+        for ( var i = 0, elem; (elem = args[i]) != null; i++ ) {
+          if ( typeof elem === "number" ) {
+            elem += "";
+          }
+          if ( !elem ) {
+            continue;
+          }
+          if ( typeof elem === "string" && !rhtml.test( elem ) ) {
+            elem = doc.createTextNode( elem );
+          } else
+          if ( typeof elem === "string" ) {
+            fragment.appendHTML(elem);
+          } else
+          if ( elem.nodeType ) {
+            fragment.appendChild(elem);
+          } else {
+            //TODO: Look into merge
+            fragment = jQuery.merge( fragment, elem );
+          }
+        }
       }
 
       if ( cacheable ) {
@@ -1445,7 +1428,7 @@ function lib_jqlite() {
     return jQuery;
 
   }
-  
+
   return {
     create: function(html) {
 	  var dom = lib('domwrapper'), doc = new dom.HtmlDoc(html);

@@ -62,7 +62,6 @@ function lib_xmldom() {
     s = s.replace(/</g, '&lt;');
     return s;
   }
-
   function xmlAttrEnc(value) {
     var s = value + '';
     s = s.replace(/&/g, '&amp;');
@@ -71,8 +70,7 @@ function lib_xmldom() {
     return s;
   }
 
-  // Our W3C DOM Node implementation. Note we call it XNode because we
-  // can't define the identifier Node.
+  // Our W3C DOM Node implementation. We call it XNode to avoid conflicts.
   function XNode(type, name, opt_value, opt_owner) {
     this.attributes = [];
     this.childNodes = [];
@@ -256,6 +254,15 @@ function lib_xmldom() {
     for (var i = 0; i < this.attributes.length; ++i) {
       if (this.attributes[i].nodeName == name) {
         return this.attributes[i].nodeValue;
+      }
+    }
+    return null;
+  };
+
+  XNode.prototype.hasAttribute = function(name) {
+    for (var i = 0; i < this.attributes.length; ++i) {
+      if (this.attributes[i].nodeName == name) {
+        return true;
       }
     }
     return null;

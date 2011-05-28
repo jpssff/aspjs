@@ -2,9 +2,14 @@ function lib_domwrapper() {
 
   var htmlparser = lib('htmlparser'), xmldom = lib('xmldom');
 
+  var RE_DOCTYPE = /<!DOCTYPE(\s+([\w-]+|"[^"]*"))*>/;
+
   var emptyElements = {area: true, base: true, basefont: true, br: true, col: true, frame: true,
     hr: true, img: true, input: true, isindex: true, link: true, meta: true, param: true, embed: true};
   var noencElements = {script: true, style: true};
+  var nodeTypeNames = [0, 'ELEMENT_NODE', 'ATTRIBUTE_NODE', 'TEXT_NODE', 'CDATA_SECTION_NODE',
+    'ENTITY_REFERENCE_NODE', 'ENTITY_NODE', 'PROCESSING_INSTRUCTION_NODE', 'COMMENT_NODE',
+    'DOCUMENT_NODE', 'DOCUMENT_TYPE_NODE', 'DOCUMENT_FRAGMENT_NODE', 'NOTATION_NODE'];
 
   function parseHTML(html) {
     var doc = new xmldom.Document(), elems = [];
@@ -24,6 +29,10 @@ function lib_domwrapper() {
     one.html.appendChild(one.head);
     one.html.appendChild(one.body);
     doc.appendChild(one.html);
+    //If there is a DOCTYPE element, save and remove it
+    html = html.replace(RE_DOCTYPE, function(str) {
+      return (doc.doctype = str) && '';
+    });
     // If we're working with a document, inject contents into the body element
     var curParentNode = one.body;
     htmlparser.parse(html, {
@@ -49,6 +58,7 @@ function lib_domwrapper() {
         }
       },
       end: function(tag) {
+        if (!elems.length) return;
         elems.length -= 1;
         curParentNode = elems[elems.length - 1];
       },
@@ -58,6 +68,9 @@ function lib_domwrapper() {
         } else {
           curParentNode.appendChild(doc.createTextNode(htmlDec(chars)));
         }
+      },
+      comment: function(text) {
+        curParentNode.appendChild(doc.createComment(text));
       }
     });
     return doc;
@@ -70,6 +83,9 @@ function lib_domwrapper() {
       link: "head",
       base: "head"
     };
+    html = html.replace(RE_DOCTYPE, function(str) {
+      return (doc.doctype = str) && '';
+    });
     var curParentNode = node;
     htmlparser.parse(html, {
       start: function(tag, attrs, unary) {
@@ -91,6 +107,7 @@ function lib_domwrapper() {
         }
       },
       end: function(tag) {
+        if (!elems.length) return;
         elems.length -= 1;
         curParentNode = elems[elems.length - 1];
       },
@@ -134,34 +151,21 @@ function lib_domwrapper() {
     this._xmlNode = node;
   }
   HtmlNode.prototype = {
-    /*!
-     * Traversal Functions
-     */
     ownerDocument: function() {
       return new HtmlDoc(this._xmlNode.ownerDocument);
     },
-    firstChild: function() {
-      var node = this._xmlNode.firstChild;
-      return node ? new HtmlNode(node) : null;
-    },
-    parentNode: function() {
-      var node = this._xmlNode.parentNode;
-      return node ? new HtmlNode(node) : null;
-    },
     childNodes: function() {
-      var arr = [], all = this._xmlNode.childNodes;
-      for (var i = 0; i < all.length; i++) {
-        arr[i] = new HtmlNode(all[i]);
-      }
+      var arr = [];
+      forEach(this._xmlNode.childNodes, function(i, node) {
+        arr.push(new HtmlNode(node));
+      });
       return arr;
     },
-    previousSibling: function() {
-      var node = this._xmlNode.previousSibling;
-      return node ? new HtmlNode(node) : null;
+    nodeTypeName: function() {
+      return nodeTypeNames[this._xmlNode.nodeType];
     },
-    nextSibling: function() {
-      var node = this._xmlNode.nextSibling;
-      return node ? new HtmlNode(node) : null;
+    getElementsByName: function(val) {
+      return this.getElementsByAttr('name', val);
     },
     equals: function(otherHtmlNode) {
       return (this._xmlNode === otherHtmlNode._xmlNode);
@@ -173,49 +177,6 @@ function lib_domwrapper() {
       }
       return path.join('/');
     },
-    /*!
-     * Selection Functions
-     */
-    getElementById: function(id) {
-      return wrapNodes(this._xmlNode.getElementById(id));
-    },
-    getElementsByTagName: function(name) {
-      return wrapNodes(this._xmlNode.getElementsByTagName(name));
-    },
-    getElementsByAttr: function(name, val) {
-      return wrapNodes(this._xmlNode.getElementsByAttr(name, val));
-    },
-    getElementsByName: function(val) {
-      return this.getElementsByAttr('name', val);
-    },
-    /*!
-     * Attribute Functions
-     */
-    nodeName: function() {
-      return this._xmlNode.nodeName;
-    },
-    nodeType: function() {
-      return this._xmlNode.nodeType;
-    },
-    nodeValue: function() {
-      return this._xmlNode.nodeValue;
-    },
-    getAttribute: function(name) {
-      return this._xmlNode.getAttribute(name);
-    },
-    hasAttribute: function(name) {
-      return this._xmlNode.getAttribute(name) !== null;
-    },
-    setAttribute: function(name, val) {
-      this._xmlNode.setAttribute(name, val);
-    },
-    getAttributeNode: function(name) {
-      var val = this._xmlNode.getAttribute(name);
-      return (val === null) ? {} : {nodeName: name, nodeValue: val};
-    },
-    /*!
-     * Content Functions
-     */
     appendHTML: function(html) {
       var node = this._xmlNode;
       appendHTML(node, html);
@@ -229,8 +190,57 @@ function lib_domwrapper() {
     },
     outerHTML: function() {
       return this._xmlNode.xml(emptyElements, noencElements);
+    },
+    toJSON: function() {
+      var node = this._xmlNode, desc = {nodeType: this.nodeTypeName(), nodeName: node.nodeName};
+      if (~[3, 4, 8].indexOf(node.nodeType)) desc.nodeValue = node.nodeValue;
+      desc.childNodes = node.childNodes.length;
+      return {HtmlNode: desc};
     }
   };
+  //Getter Methods
+  forEach('nodeName nodeType nodeValue'.w(),
+    function(i, name) {
+      HtmlNode.prototype[name] = function() {
+        return this._xmlNode[name];
+      };
+    });
+  //Selection Methods
+  forEach('getElementById getElementsByTagName getElementsByAttr'.w(),
+    function(i, name) {
+      HtmlNode.prototype[name] = function() {
+        var node = this._xmlNode;
+        return wrapNodes(node[name].apply(node, arguments));
+      };
+    });
+  //Traversal Methods
+  forEach('parentNode firstChild lastChild previousSibling nextSibling'.w(),
+    function(i, name) {
+      HtmlNode.prototype[name] = function() {
+        var node = this._xmlNode[name];
+        return node ? new HtmlNode(node) : null;
+      };
+    });
+  //Manipulation Methods
+  forEach('appendChild replaceChild insertBefore removeChild'.w(),
+    function(i, name) {
+      HtmlNode.prototype[name] = function() {
+        var node = this._xmlNode,
+        args = toArray(arguments).map(function(el) {
+          return el._xmlNode;
+        });
+        node[name].apply(node, args);
+      };
+    });
+  //Attribute Methods
+  forEach('hasAttributes setAttribute getAttribute hasAttribute removeAttribute'.w(),
+    function(i, name) {
+      HtmlNode.prototype[name] = function() {
+        var node = this._xmlNode;
+        return node[name].apply(node, arguments);
+      };
+    });
+
 
   function HtmlDoc(data) {
     if (!(this instanceof HtmlDoc)) {
@@ -240,17 +250,19 @@ function lib_domwrapper() {
       this._xmlDoc = data;
     } else {
       this._xmlDoc = parseHTML(data);
-      this._docType = this._xmlDoc.docType || '<!DOCTYPE html>';
+      if (!this._xmlDoc.doctype) {
+        this._xmlDoc.doctype = '<!DOCTYPE html>';
+      }
     }
     this._xmlNode = this._xmlDoc.documentElement;
   }
   HtmlDoc.prototype = Object.create(HtmlNode.prototype);
   Object.append(HtmlDoc.prototype, {
-    docType: function(str) {
+    doctype: function(str) {
       if (arguments.length) {
-        this._docType = str;
+        this._xmlDoc.doctype = str;
       }
-      return this._docType;
+      return this._xmlDoc.doctype;
     },
     equals: function(otherHtmlDoc) {
       return (this._xmlDoc === otherHtmlDoc._xmlDoc);
@@ -258,13 +270,28 @@ function lib_domwrapper() {
     nodeType: function() {
       return this._xmlDoc.nodeType;
     },
+    ownerDocument: function() {
+      return null;
+    },
     outerHTML: function() {
       var html = new HtmlNode(this._xmlNode).outerHTML();
-      if (this._docType) {
-        html = this._docType + html;
+      if (this._xmlDoc.doctype) {
+        html = this._xmlDoc.doctype + html;
       }
       return html;
+    },
+    toJSON: function() {
+      var doc = this._xmlDoc, desc = {nodeType: 'DOCUMENT_NODE', nodeName: doc.nodeName};
+      desc.documentElement = doc.documentElement ? doc.documentElement.nodeName : null;
+      return {HtmlDoc: desc};
     }
+  });
+  var list = 'createElement createDocumentFragment createTextNode createAttribute createComment createCDATASection'.w();
+  list.each(function(i, name) {
+    HtmlDoc.prototype[name] = function() {
+      var doc = this._xmlDoc;
+      return new HtmlNode(doc[name].apply(doc, arguments));
+    };
   });
 
   return {
