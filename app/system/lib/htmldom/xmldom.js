@@ -126,6 +126,20 @@ function lib_xmldom() {
     }
   };
 
+  XNode.prototype.cloneNode = function(deep) {
+    var oldNode = this, type = oldNode.nodeType, newNode;
+    newNode = XNode.create(type, oldNode.nodeName, oldNode.nodeValue, oldNode.ownerDocument);
+    for (var i = 0; i < oldNode.attributes.length; i++) {
+      newNode.attributes.push(oldNode.attributes[i].cloneNode());
+    }
+    if (deep) {
+      for (var c = oldNode.firstChild; c; c = c.nextSibling) {
+        newNode.appendChild(c.cloneNode(deep));
+      }
+    }
+    return newNode;
+  };
+
   XNode.prototype.appendChild = function(node) {
     // firstChild
     if (this.childNodes.length == 0) {

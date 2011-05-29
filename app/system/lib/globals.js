@@ -349,13 +349,13 @@ function lib_globals() {
     return String.prototype.replace.call(this, new RegExp(RegExp.escape(a), 'ig'), b);
   };
   String.prototype.trimLeft = function() {
-    return String.prototype.replace.call(this, /^\w*/, '');
+    return String.prototype.replace.call(this, /^\s*/, '');
   };
   String.prototype.trimRight = function() {
-    return String.prototype.replace.call(this, /\w*$/, '');
+    return String.prototype.replace.call(this, /\s*$/, '');
   };
   String.prototype.trim = function() {
-    return String.prototype.replace.call(this, /^\s*(\S*(\s+\S+)*)\s*$/ , '$1');
+    return String.prototype.replace.call(this, /^\s+|\s+$/g, '');
   };
   String.prototype.padLeft = function(n, s) {
     var r = String(this), len = r.length;

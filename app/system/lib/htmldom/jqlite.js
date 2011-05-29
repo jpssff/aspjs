@@ -1,8 +1,8 @@
 /*!
  * jQuery "lite"
  *
- * jqlite is a striped-down version of jQuery ported to work with a server-side document
- * object model for manipulating HTML documents in a convenient and familiar way.
+ * jqlite is a striped-down version of jQuery modified to work with a server-side document
+ * object model. This library makes manipulating HTML documents convenient and familiar.
  *
  * Depends on htmlparser, xmldom, domwrapper, and sizzle
  *
@@ -22,93 +22,98 @@ function lib_jqlite() {
    */
   function new_jQuery(document) {
 
-    var jQuery = function( selector, context ) {
-        return new jQuery.fn.init( selector, context );
-      },
-      // A central reference to the root jQuery(document)
-      rootjQuery,
-      // A simple way to check for HTML strings or ID strings (both of which we optimize for)
-      quickExpr = /^[^<]*(<[\w\W]+>)[^>]*$|^#([\w-]+)$/,
-      // Is it a simple selector
-      isSimple = /^.[^:#\[\.,]*$/,
-      // Check if a string has a non-whitespace character in it
-      rnotwhite = /\S/,
-      // Used for trimming whitespace
-      rtrim = /^(\s|\u00A0)+|(\s|\u00A0)+$/g,
-      // Match a standalone tag
-      rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>)?$/,
-      // Save a reference to some core methods
-      toString = Object.prototype.toString,
-      hasOwnProperty = Object.prototype.hasOwnProperty,
-      push = Array.prototype.push,
-      slice = Array.prototype.slice,
-      indexOf = Array.prototype.indexOf;
+    function jQuery(selector, context) {
+      return new jQuery.fn.init(selector, context);
+    }
+
+    //Sizzle Selector Engine
+    var Sizzle = jQuery.find = lib('sizzle');
+    jQuery.expr = Sizzle.selectors;
+    jQuery.expr[':'] = jQuery.expr.filters;
+    jQuery.unique = Sizzle.uniqueSort;
+    jQuery.contains = Sizzle.contains;
+
+    var rootjQuery, //jQuery(document)
+        undefined,
+        // A simple way to check for HTML strings or ID strings
+        quickExpr = /^[^<]*(<[\w\W]+>)[^>]*$|^#([\w-]+)$/,
+        // Is it a simple selector
+        isSimple = /^.[^:#\[\.,]*$/,
+        // Does string contain HTML
+        rhtml = /<|&#?\w+;/,
+        // Used for trimming whitespace
+        rtrim = /^(\s|\u00A0)+|(\s|\u00A0)+$/g,
+        // Match a standalone tag
+        rsingleTag = /^<(\w+)\s*\/?>(?:<\/\1>)?$/,
+        // Save a reference to some core methods
+        toString = Object.prototype.toString,
+        hasOwnProperty = Object.prototype.hasOwnProperty,
+        push = Array.prototype.push,
+        slice = Array.prototype.slice,
+        rspace = /\s+/,
+        rradiocheck = /radio|checkbox/,
+        runtil = /Until$/,
+        rparentsprev = /^(?:parents|prevUntil|prevAll)/,
+        // Note: This RegExp should be improved, or likely pulled from Sizzle
+        rmultiselector = /,/;
+
 
     jQuery.fn = jQuery.prototype = {
-      init: function( selector, context ) {
+      init: function(selector, context) {
         var match, elem, ret, doc;
 
-        // Handle $(""), $(null), or $(undefined)
-        if ( !selector ) {
+        // Handle $(''), $(null), or $(undefined)
+        if (!selector) {
           return this;
         }
 
         // Handle $(DOMElement)
-        if ( selector.nodeType ) {
+        if (selector.nodeType) {
           this.context = this[0] = selector;
           this.length = 1;
           return this;
         }
 
-        // The body element only exists once, optimize finding it
-        //if ( selector === "body" && !context ) {
-        //  this.context = document;
-        //  this[0] = document.getElementsByTagName('body')[0];
-        //  this.selector = "body";
-        //  this.length = 1;
-        //  return this;
-        //}
-
         // Handle HTML strings
-        if ( typeof selector === "string" ) {
+        if (typeof selector === 'string') {
           // Are we dealing with HTML string or an ID?
-          match = quickExpr.exec( selector );
+          match = quickExpr.exec(selector);
 
           // Verify a match, and that no context was specified for #id
-          if ( match && (match[1] || !context) ) {
+          if (match && (match[1] || !context)) {
 
             // HANDLE: $(html) -> $(array)
-            if ( match[1] ) {
+            if (match[1]) {
               doc = (context ? context.ownerDocument() || context : document);
 
               // If a single string is passed in and it's a single tag just do a createElement
-              ret = rsingleTag.exec( selector );
+              ret = rsingleTag.exec(selector);
 
-              if ( ret ) {
-                if ( jQuery.isPlainObject( context ) ) {
-                  selector = [ document.createElement( ret[1] ) ];
-                  jQuery.fn.attr.call( selector, context, true );
+              if (ret) {
+                if (jQuery.isPlainObject(context)) {
+                  selector = [document.createElement(ret[1])];
+                  jQuery.fn.attr.call(selector, context, true);
 
                 } else {
-                  selector = [ doc.createElement( ret[1] ) ];
+                  selector = [doc.createElement(ret[1])];
                 }
 
               } else {
-                ret = buildFragment( [ match[1] ], [ doc ] );
+                ret = buildFragment([match[1]], [doc]);
                 selector = (ret.cacheable ? ret.fragment.cloneNode(true) : ret.fragment).childNodes();
               }
 
-              return jQuery.merge( this, selector );
+              return jQuery.merge(this, selector);
 
-            // HANDLE: $("#id")
+              // HANDLE: $('#id')
             } else {
-              elem = document.getElementById( match[2] );
+              elem = document.getElementById(match[2]);
 
-              if ( elem ) {
+              if (elem) {
                 // Handle the case where IE and Opera return items
                 // by name instead of ID
-                if ( elem.id !== match[2] ) {
-                  return rootjQuery.find( selector );
+                if (elem.id !== match[2]) {
+                  return rootjQuery.find(selector);
                 }
 
                 // Otherwise, we inject the element directly into the jQuery object
@@ -121,21 +126,22 @@ function lib_jqlite() {
               return this;
             }
 
-          // HANDLE: $("TAG")
-          } else if ( !context && /^\w+$/.test( selector ) ) {
+          } else
+          // HANDLE: $('TAG')
+          if (!context && /^\w+$/.test(selector)) {
             this.selector = selector;
             this.context = document;
-            selector = document.getElementsByTagName( selector );
-            return jQuery.merge( this, selector );
+            selector = document.getElementsByTagName(selector);
+            return jQuery.merge(this, selector);
 
+          } else
           // HANDLE: $(expr, $(...))
-          } else if ( !context || context.jquery ) {
-            return (context || rootjQuery).find( selector );
+          if (!context || context.jquery) {
+            return (context || rootjQuery).find(selector);
 
-          // HANDLE: $(expr, context)
-          // (which is just equivalent to: $(context).find(expr)
+            // HANDLE: $(expr, context) which is just equivalent to: $(context).find(expr)
           } else {
-            return jQuery( context ).find( selector );
+            return jQuery(context).find(selector);
           }
 
         }
@@ -145,14 +151,14 @@ function lib_jqlite() {
           this.context = selector.context;
         }
 
-        return jQuery.makeArray( selector, this );
+        return jQuery.makeArray(selector, this);
       },
 
       // Start with an empty selector
-      selector: "",
+      selector: '',
 
       // The current version of jQuery being used
-      jquery: "1.4.2",
+      jquery: '1.4.2',
 
       // The default length of a jQuery object is 0
       length: 0,
@@ -163,32 +169,32 @@ function lib_jqlite() {
       },
 
       toArray: function() {
-        return slice.call( this, 0 );
+        return slice.call(this, 0);
       },
 
       // Get the Nth element in the matched element set OR
       // Get the whole matched element set as a clean array
-      get: function( num ) {
+      get: function(num) {
         return num == null ?
 
-          // Return a 'clean' array
-          this.toArray() :
+        // Return a 'clean' array
+        this.toArray() :
 
-          // Return just the object
-          ( num < 0 ? this.slice(num)[ 0 ] : this[ num ] );
+        // Return just the object
+        (num < 0 ? this.slice(num)[0] : this[num]);
       },
 
       // Take an array of elements and push it onto the stack
       // (returning the new matched element set)
-      pushStack: function( elems, name, selector ) {
+      pushStack: function(elems, name, selector) {
         // Build a new jQuery matched element set
         var ret = jQuery();
 
-        if ( jQuery.isArray( elems ) ) {
-          push.apply( ret, elems );
+        if (jQuery.isArray(elems)) {
+          push.apply(ret, elems);
 
         } else {
-          jQuery.merge( ret, elems );
+          jQuery.merge(ret, elems);
         }
 
         // Add the old object onto the stack (as a reference)
@@ -196,10 +202,11 @@ function lib_jqlite() {
 
         ret.context = this.context;
 
-        if ( name === "find" ) {
-          ret.selector = this.selector + (this.selector ? " " : "") + selector;
-        } else if ( name ) {
-          ret.selector = this.selector + "." + name + "(" + selector + ")";
+        if (name === 'find') {
+          ret.selector = this.selector + (this.selector ? ' ' : '') + selector;
+        } else
+        if (name) {
+          ret.selector = this.selector + '.' + name + '(' + selector + ')';
         }
 
         // Return the newly-formed element set
@@ -209,32 +216,29 @@ function lib_jqlite() {
       // Execute a callback for every element in the matched set.
       // (You can seed the arguments with an array of args, but this is
       // only used internally.)
-      each: function( callback, args ) {
-        return jQuery.each( this, callback, args );
+      each: function(callback, args) {
+        return jQuery.each(this, callback, args);
       },
 
-      eq: function( i ) {
-        return i === -1 ?
-          this.slice( i ) :
-          this.slice( i, +i + 1 );
+      eq: function(i) {
+        return i === -1 ? this.slice(i) : this.slice(i, +i + 1);
       },
 
       first: function() {
-        return this.eq( 0 );
+        return this.eq(0);
       },
 
       last: function() {
-        return this.eq( -1 );
+        return this.eq(-1);
       },
 
       slice: function() {
-        return this.pushStack( slice.apply( this, arguments ),
-          "slice", slice.call(arguments).join(",") );
+        return this.pushStack(slice.apply(this, arguments), 'slice', slice.call(arguments).join(','));
       },
 
-      map: function( callback ) {
-        return this.pushStack( jQuery.map(this, function( elem, i ) {
-          return callback.call( elem, i, elem );
+      map: function(callback) {
+        return this.pushStack(jQuery.map(this, function(elem, i) {
+          return callback.call(elem, i, elem);
         }));
       },
 
@@ -254,10 +258,14 @@ function lib_jqlite() {
 
     jQuery.extend = jQuery.fn.extend = function() {
       // copy reference to target object
-      var target = arguments[0] || {}, i = 1, length = arguments.length, deep = false, options, name, src, copy;
+      var target = arguments[0] || {},
+          i = 1,
+          length = arguments.length,
+          deep = false,
+          options, name, src, copy;
 
       // Handle a deep copy situation
-      if ( typeof target === "boolean" ) {
+      if (typeof target === 'boolean') {
         deep = target;
         target = arguments[1] || {};
         // skip the boolean and the target
@@ -265,40 +273,40 @@ function lib_jqlite() {
       }
 
       // Handle case when target is a string or something (possible in deep copy)
-      if ( typeof target !== "object" && !jQuery.isFunction(target) ) {
+      if (typeof target !== 'object' && !jQuery.isFunction(target)) {
         target = {};
       }
 
       // extend jQuery itself if only one argument is passed
-      if ( length === i ) {
+      if (length === i) {
         target = this;
         --i;
       }
 
-      for ( ; i < length; i++ ) {
+      for (; i < length; i++) {
         // Only deal with non-null/undefined values
-        if ( (options = arguments[ i ]) != null ) {
+        if ((options = arguments[i]) != null) {
           // Extend the base object
-          for ( name in options ) {
-            src = target[ name ];
-            copy = options[ name ];
+          for (name in options) {
+            src = target[name];
+            copy = options[name];
 
             // Prevent never-ending loop
-            if ( target === copy ) {
+            if (target === copy) {
               continue;
             }
 
             // Recurse if we're merging object literal values or arrays
-            if ( deep && copy && ( jQuery.isPlainObject(copy) || jQuery.isArray(copy) ) ) {
-              var clone = src && ( jQuery.isPlainObject(src) || jQuery.isArray(src) ) ? src
-                : jQuery.isArray(copy) ? [] : {};
+            if (deep && copy && (jQuery.isPlainObject(copy) || jQuery.isArray(copy))) {
+              var clone = src && (jQuery.isPlainObject(src) || jQuery.isArray(src)) ? src : jQuery.isArray(copy) ? [] : {};
 
               // Never move original objects, clone them
-              target[ name ] = jQuery.extend( deep, clone, copy );
+              target[name] = jQuery.extend(deep, clone, copy);
 
-            // Don't bring in undefined values
-            } else if ( copy !== undefined ) {
-              target[ name ] = copy;
+              // Don't bring in undefined values
+            } else
+            if (copy !== undefined) {
+              target[name] = copy;
             }
           }
         }
@@ -309,110 +317,109 @@ function lib_jqlite() {
     };
 
     jQuery.extend({
-      isFunction: function( obj ) {
-        return toString.call(obj) === "[object Function]";
+      isFunction: function(obj) {
+        return toString.call(obj) === '[object Function]';
       },
 
-      isArray: function( obj ) {
-        return toString.call(obj) === "[object Array]";
+      isArray: function(obj) {
+        return toString.call(obj) === '[object Array]';
       },
 
-      isPlainObject: function( obj ) {
-        if ( !obj || toString.call(obj) !== "[object Object]" || obj.nodeType ) {
+      isPlainObject: function(obj) {
+        if (!obj || toString.call(obj) !== '[object Object]' || obj.nodeType) {
           return false;
         }
 
         // Own properties are enumerated firstly, so to speed up,
         // if last one is own, then all properties are own.
-
         var key;
-        for ( key in obj ) {}
+        for (key in obj) {}
 
-        return key === undefined || hasOwnProperty.call( obj, key );
+        return key === undefined || hasOwnProperty.call(obj, key);
       },
 
-      isEmptyObject: function( obj ) {
-        for ( var name in obj ) {
+      isEmptyObject: function(obj) {
+        for (var name in obj) {
           return false;
         }
         return true;
       },
 
-      error: function( msg ) {
+      error: function(msg) {
         throw msg;
       },
 
       noop: function() {},
 
-      nodeName: function( elem, name ) {
+      nodeName: function(elem, name) {
         return elem.nodeName && elem.nodeName().toUpperCase() === name.toUpperCase();
       },
 
       // args is for internal usage only
-      each: function( object, callback, args ) {
+      each: function(object, callback, args) {
         var name, i = 0,
-          length = object.length,
-          isObj = length === undefined || jQuery.isFunction(object);
+            length = object.length,
+            isObj = length === undefined || jQuery.isFunction(object);
 
-        if ( args ) {
-          if ( isObj ) {
-            for ( name in object ) {
-              if ( callback.apply( object[ name ], args ) === false ) {
+        if (args) {
+          if (isObj) {
+            for (name in object) {
+              if (callback.apply(object[name], args) === false) {
                 break;
               }
             }
           } else {
-            for ( ; i < length; ) {
-              if ( callback.apply( object[ i++ ], args ) === false ) {
+            for (; i < length;) {
+              if (callback.apply(object[i++], args) === false) {
                 break;
               }
             }
           }
 
-        // A special, fast, case for the most common use of each
+          // A special, fast, case for the most common use of each
         } else {
-          if ( isObj ) {
-            for ( name in object ) {
-              if ( callback.call( object[ name ], name, object[ name ] ) === false ) {
+          if (isObj) {
+            for (name in object) {
+              if (callback.call(object[name], name, object[name]) === false) {
                 break;
               }
             }
           } else {
-            for ( var value = object[0];
-              i < length && callback.call( value, i, value ) !== false; value = object[++i] ) {}
+            for (var value = object[0];
+            i < length && callback.call(value, i, value) !== false; value = object[++i]) {}
           }
         }
 
         return object;
       },
 
-      trim: function( text ) {
-        return (text || "").replace( rtrim, "" );
+      trim: function(text) {
+        return (text || '').replace(rtrim, '');
       },
 
       // results is for internal usage only
-      makeArray: function( array, results ) {
+      makeArray: function(array, results) {
         var ret = results || [];
 
-        if ( array != null ) {
+        if (array != null) {
           // The window, strings (and functions) also have 'length'
-          if ( array.length == null || typeof array === "string" || jQuery.isFunction(array) ) {
-            push.call( ret, array );
+          if (array.length == null || typeof array === 'string' || jQuery.isFunction(array)) {
+            push.call(ret, array);
           } else {
-            jQuery.merge( ret, array );
+            jQuery.merge(ret, array);
           }
         }
 
         return ret;
       },
 
-      inArray: function( elem, array ) {
-        if ( array.indexOf ) {
-          return array.indexOf( elem );
+      inArray: function(elem, array) {
+        if (array.indexOf) {
+          return array.indexOf(elem);
         }
 
-        for ( var i = 0, length = array.length; i < length; i++ ) {
-          if ( array[ i ] === elem ) {
+        for (var i = 0, length = array.length; i < length; i++) {
+          if (array[i] === elem) {
             return i;
           }
         }
@@ -420,17 +427,18 @@ function lib_jqlite() {
         return -1;
       },
 
-      merge: function( first, second ) {
-        var i = first.length, j = 0;
+      merge: function(first, second) {
+        var i = first.length,
+            j = 0;
 
-        if ( typeof second.length === "number" ) {
-          for ( var l = second.length; j < l; j++ ) {
-            first[ i++ ] = second[ j ];
+        if (typeof second.length === 'number') {
+          for (var l = second.length; j < l; j++) {
+            first[i++] = second[j];
           }
 
         } else {
-          while ( second[j] !== undefined ) {
-            first[ i++ ] = second[ j++ ];
+          while (second[j] !== undefined) {
+            first[i++] = second[j++];
           }
         }
 
@@ -439,14 +447,14 @@ function lib_jqlite() {
         return first;
       },
 
-      grep: function( elems, callback, inv ) {
+      grep: function(elems, callback, inv) {
         var ret = [];
 
         // Go through the array, only saving the items
         // that pass the validator function
-        for ( var i = 0, length = elems.length; i < length; i++ ) {
-          if ( !inv !== !callback( elems[ i ], i ) ) {
-            ret.push( elems[ i ] );
+        for (var i = 0, length = elems.length; i < length; i++) {
+          if (!inv !== !callback(elems[i], i)) {
+            ret.push(elems[i]);
           }
         }
 
@@ -454,46 +462,48 @@ function lib_jqlite() {
       },
 
       // arg is for internal usage only
-      map: function( elems, callback, arg ) {
-        var ret = [], value;
+      map: function(elems, callback, arg) {
+        var ret = [],
+            value;
 
         // Go through the array, translating each of the items to their
         // new value (or values).
-        for ( var i = 0, length = elems.length; i < length; i++ ) {
-          value = callback( elems[ i ], i, arg );
+        for (var i = 0, length = elems.length; i < length; i++) {
+          value = callback(elems[i], i, arg);
 
-          if ( value != null ) {
-            ret[ ret.length ] = value;
+          if (value != null) {
+            ret[ret.length] = value;
           }
         }
 
-        return ret.concat.apply( [], ret );
+        return ret.concat.apply([], ret);
       },
 
       // A global GUID counter for objects
       guid: 1,
 
-      proxy: function( fn, proxy, thisObject ) {
-        if ( arguments.length === 2 ) {
-          if ( typeof proxy === "string" ) {
+      proxy: function(fn, proxy, thisObject) {
+        if (arguments.length === 2) {
+          if (typeof proxy === 'string') {
             thisObject = fn;
-            fn = thisObject[ proxy ];
+            fn = thisObject[proxy];
             proxy = undefined;
 
-          } else if ( proxy && !jQuery.isFunction( proxy ) ) {
+          } else
+          if (proxy && !jQuery.isFunction(proxy)) {
             thisObject = proxy;
             proxy = undefined;
           }
         }
 
-        if ( !proxy && fn ) {
+        if (!proxy && fn) {
           proxy = function() {
-            return fn.apply( thisObject || this, arguments );
+            return fn.apply(thisObject || this, arguments);
           };
         }
 
         // Set the guid of unique handler to the same of original handler, so it can be removed
-        if ( fn ) {
+        if (fn) {
           proxy.guid = fn.guid = fn.guid || proxy.guid || jQuery.guid++;
         }
 
@@ -503,11 +513,6 @@ function lib_jqlite() {
 
     });
 
-    if ( indexOf ) {
-      jQuery.inArray = function( elem, array ) {
-        return indexOf.call( array, elem );
-      };
-    }
 
     // All jQuery objects should point back to these
     rootjQuery = jQuery(document);
@@ -518,31 +523,33 @@ function lib_jqlite() {
 
     // Mutifunctional method to get and set values to a collection
     // The value/s can be optionally by executed if its a function
-    function access( elems, key, value, exec, fn, pass ) {
+
+
+    function access(elems, key, value, exec, fn, pass) {
       var length = elems.length;
 
       // Setting many attributes
-      if ( typeof key === "object" ) {
-        for ( var k in key ) {
-          access( elems, k, key[k], exec, fn, value );
+      if (typeof key === 'object') {
+        for (var k in key) {
+          access(elems, k, key[k], exec, fn, value);
         }
         return elems;
       }
 
       // Setting one attribute
-      if ( value !== undefined ) {
+      if (value !== undefined) {
         // Optionally, function values get executed if exec is true
         exec = !pass && exec && jQuery.isFunction(value);
 
-        for ( var i = 0; i < length; i++ ) {
-          fn( elems[i], key, exec ? value.call( elems[i], i, fn( elems[i], key ) ) : value, pass );
+        for (var i = 0; i < length; i++) {
+          fn(elems[i], key, exec ? value.call(elems[i], i, fn(elems[i], key)) : value, pass);
         }
 
         return elems;
       }
 
       // Getting an attribute
-      return length ? fn( elems[0], key ) : undefined;
+      return length ? fn(elems[0], key) : undefined;
     }
 
     function now() {
@@ -550,49 +557,45 @@ function lib_jqlite() {
     }
 
     //JQUERY ATTRIBUTES
-
-    var rclass = /[\n\t]/g,
-      rspace = /\s+/,
-      rreturn = /\r/g,
-      rradiocheck = /radio|checkbox/;
-
     jQuery.fn.extend({
-      attr: function( name, value ) {
-        return access( this, name, value, true, jQuery.attr );
+      attr: function(name, value) {
+        return access(this, name, value, true, jQuery.attr);
       },
 
-      removeAttr: function( name, fn ) {
-        return this.each(function(){
-          jQuery.attr( this, name, "" );
-          if ( this.nodeType() === 1 ) {
-            this.removeAttribute( name );
+      removeAttr: function(name, fn) {
+        return this.each(function() {
+          jQuery.attr(this, name, '');
+          if (this.nodeType() === 1) {
+            this.removeAttribute(name);
           }
         });
       },
 
-      addClass: function( value ) {
-        if ( jQuery.isFunction(value) ) {
+      addClass: function(value) {
+        if (jQuery.isFunction(value)) {
           return this.each(function(i) {
             var self = jQuery(this);
-            self.addClass( value.call(this, i, self.attr("class")) );
+            self.addClass(value.call(this, i, self.attr('class')));
           });
         }
 
-        if ( value && typeof value === "string" ) {
-          var classNames = (value || "").split( rspace );
-          for ( var i = 0, l = this.length; i < l; i++ ) {
+        if (value && typeof value === 'string') {
+          var classNames = (value || '').split(rspace);
+          for (var i = 0, l = this.length; i < l; i++) {
             var elem = this[i];
-            if ( elem.nodeType() === 1 ) {
-              if ( !elem.getAttribute('class') ) {
+            if (elem.nodeType() === 1) {
+              if (!elem.getAttribute('class')) {
                 elem.setAttribute('class', value);
               } else {
-                var className = " " + elem.getAttribute('class') + " ", setClass = elem.getAttribute('class');
-                for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
-                  if ( className.indexOf( " " + classNames[c] + " " ) < 0 ) {
-                    setClass += " " + classNames[c];
+                var className = ' ' + elem.getAttribute('class') + ' ',
+                    setClass = elem.getAttribute('class');
+                for (var c = 0, cl = classNames.length; c < cl; c++) {
+                  if (className.indexOf(' ' + classNames[c] + ' ') < 0) {
+                    setClass += ' ' + classNames[c];
                   }
                 }
-                elem.setAttribute('class', jQuery.trim( setClass ));
+
+                elem.setAttribute('class', jQuery.trim(setClass));
               }
             }
           }
@@ -601,25 +604,25 @@ function lib_jqlite() {
         return this;
       },
 
-      removeClass: function( value ) {
-        if ( jQuery.isFunction(value) ) {
+      removeClass: function(value) {
+        if (jQuery.isFunction(value)) {
           return this.each(function(i) {
             var self = jQuery(this);
-            self.removeClass( value.call(this, i, self.attr("class")) );
+            self.removeClass(value.call(this, i, self.attr('class')));
           });
         }
 
-        if ( (value && typeof value === "string") || value === undefined ) {
-          var classNames = (value || "").split(rspace);
-          for ( var i = 0, l = this.length; i < l; i++ ) {
+        if ((value && typeof value === 'string') || value === undefined) {
+          var classNames = (value || '').split(rspace);
+          for (var i = 0, l = this.length; i < l; i++) {
             var elem = this[i];
-            if ( elem.nodeType() === 1 && elem.getAttribute('class') ) {
-              if ( value ) {
-                var className = (" " + elem.getAttribute('class') + " ").replace(rclass, " ");
-                for ( var c = 0, cl = classNames.length; c < cl; c++ ) {
-                  className = className.replace(" " + classNames[c] + " ", " ");
+            if (elem.nodeType() === 1 && elem.getAttribute('class')) {
+              if (value) {
+                var className = (' ' + elem.getAttribute('class') + ' ');
+                for (var c = 0, cl = classNames.length; c < cl; c++) {
+                  className = className.replace(' ' + classNames[c] + ' ', ' ');
                 }
-                elem.setAttribute('class', jQuery.trim( className ));
+                elem.setAttribute('class', jQuery.trim(className));
               } else {
                 elem.setAttribute('class', '');
               }
@@ -630,45 +633,48 @@ function lib_jqlite() {
         return this;
       },
 
-      toggleClass: function( value, stateVal ) {
-        var type = typeof value, isBool = typeof stateVal === "boolean";
+      toggleClass: function(value, stateVal) {
+        var type = typeof value,
+            isBool = typeof stateVal === 'boolean';
 
-        if ( jQuery.isFunction( value ) ) {
+        if (jQuery.isFunction(value)) {
           return this.each(function(i) {
             var self = jQuery(this);
-            self.toggleClass( value.call(this, i, self.attr("class"), stateVal), stateVal );
+            self.toggleClass(value.call(this, i, self.attr('class'), stateVal), stateVal);
           });
         }
 
         return this.each(function() {
-          if ( type === "string" ) {
+          if (type === 'string') {
             // toggle individual class names
-            var className, i = 0, self = jQuery(this),
-              state = stateVal,
-              classNames = value.split( rspace );
+            var className, i = 0,
+                self = jQuery(this),
+                state = stateVal,
+                classNames = value.split(rspace);
 
-            while ( (className = classNames[ i++ ]) ) {
+            while ((className = classNames[i++])) {
               // check each className given, space separated list
-              state = isBool ? state : !self.hasClass( className );
-              self[ state ? "addClass" : "removeClass" ]( className );
+              state = isBool ? state : !self.hasClass(className);
+              self[state ? 'addClass' : 'removeClass'](className);
             }
 
-          } else if ( type === "undefined" || type === "boolean" ) {
-            if ( this.getAttribute('class') ) {
+          } else
+          if (type === 'undefined' || type === 'boolean') {
+            if (this.getAttribute('class')) {
               // store className if set
               this.setAttribute('__class__', this.getAttribute('class'));
             }
 
             // toggle whole className
-            this.setAttribute('class', this.getAttribute('class') || value === false ? "" : this.getAttribute('__class__') || "")
+            this.setAttribute('class', this.getAttribute('class') || value === false ? '' : this.getAttribute('__class__') || '')
           }
         });
       },
 
-      hasClass: function( selector ) {
-        var className = " " + selector + " ";
-        for ( var i = 0, l = this.length; i < l; i++ ) {
-          if ( (" " + this[i].getAttribute('class') + " ").replace(rclass, " ").indexOf( className ) > -1 ) {
+      hasClass: function(selector) {
+        var className = ' ' + selector + ' ';
+        for (var i = 0, l = this.length; i < l; i++) {
+          if ((' ' + this[i].getAttribute('class') + ' ').indexOf(className) > -1) {
             return true;
           }
         }
@@ -676,50 +682,30 @@ function lib_jqlite() {
         return false;
       },
 
-      val: function( value ) {
-        if ( value === undefined ) {
+      val: function(value) {
+        if (value === undefined) {
           var elem = this[0];
 
-          if ( elem ) {
-            if ( jQuery.nodeName( elem, "option" ) ) {
-              return (elem.attributes.value || {}).specified ? elem.value : elem.text;
+          if (elem) {
+            if (jQuery.nodeName(elem, 'option')) {
+              return elem.hasAttribute('value') ? elem.getAttribute('value') || '' : jQuery(elem).text();
             }
 
-            // We need to handle select boxes special
-            if ( jQuery.nodeName( elem, "select" ) ) {
-              var index = elem.selectedIndex,
-                values = [],
-                options = elem.options,
-                one = elem.type === "select-one";
-
-              // Nothing was selected
-              if ( index < 0 ) {
-                return null;
+            // Select Boxes
+            if (jQuery.nodeName(elem, 'select')) {
+              var opts = jQuery('option:selected', elem);
+              if (!elem.hasAttribute('multiple') || opts.length == 1) {
+                return jQuery(opts).val()
               }
-
-              // Loop through all the selected options
-              for ( var i = one ? index : 0, max = one ? index + 1 : options.length; i < max; i++ ) {
-                var option = options[ i ];
-
-                if ( option.selected ) {
-                  // Get the specifc value for the option
-                  value = jQuery(option).val();
-
-                  // We don't need an array for one selects
-                  if ( one ) {
-                    return value;
-                  }
-
-                  // Multi-Selects return an array
-                  values.push( value );
-                }
+              if (opts.length > 1) {
+                return opts.map(function(el) {
+                  return jQuery(el).val();
+                });
               }
-
-              return values;
             }
 
             // Everything else, we just grab the value
-            return (elem.value || "").replace(rreturn, "");
+            return elem.getAttribute('value') || '';
 
           }
 
@@ -730,37 +716,33 @@ function lib_jqlite() {
 
         return this.each(function(i) {
           var self = jQuery(this), val = value;
-
-          if ( this.nodeType() !== 1 ) {
+          if (this.nodeType() !== 1) {
             return;
           }
-
-          if ( isFunction ) {
+          if (isFunction) {
             val = value.call(this, i, self.val());
           }
-
-          // Typecast each time if the value is a Function and the appended
-          // value is therefore different each time.
-          if ( typeof val === "number" ) {
-            val += "";
+          if (typeof val === 'number') {
+            val += '';
           }
-
-          if ( jQuery.isArray(val) && rradiocheck.test( this.type ) ) {
-            this.checked = jQuery.inArray( self.val(), val ) >= 0;
-
-          } else if ( jQuery.nodeName( this, "select" ) ) {
-            var values = jQuery.makeArray(val);
-
-            jQuery( "option", this ).each(function() {
-              this.selected = jQuery.inArray( jQuery(this).val(), values ) >= 0;
-            });
-
-            if ( !values.length ) {
-              this.selectedIndex = -1;
+          if (jQuery.isArray(val) && rradiocheck.test(this.getAttribute('type'))) {
+            if (jQuery.inArray(self.val(), val)) {
+              this.setAttribute('checked', 'checked');
+            } else {
+              this.removeAttribute('checked');
             }
-
+          } else
+          if (jQuery.nodeName(this, 'select')) {
+            var values = jQuery.makeArray(val);
+            jQuery('option', this).each(function() {
+              if (jQuery.inArray(jQuery(this).val(), values)) {
+                this.setAttribute('selected', 'selected');
+              } else {
+                this.removeAttribute('selected');
+              }
+            });
           } else {
-            this.value = val;
+            this.setAttribute('value', val);
           }
         });
       }
@@ -773,24 +755,24 @@ function lib_jqlite() {
         text: true
       },
 
-      attr: function( elem, name, value, pass ) {
+      attr: function(elem, name, value, pass) {
         // don't set attributes on text and comment nodes
-        if ( !elem || elem.nodeType() === 3 || elem.nodeType() === 8 ) {
+        if (!elem || elem.nodeType() === 3 || elem.nodeType() === 8) {
           return undefined;
         }
 
-        if ( pass && name in jQuery.attrFn ) {
+        if (pass && name in jQuery.attrFn) {
           return jQuery(elem)[name](value);
         }
 
         var set = value !== undefined;
 
         // Only do all the following if this is a node
-        if ( elem.nodeType() === 1 ) {
-          if ( set ) {
-            elem.setAttribute( name, "" + value );
+        if (elem.nodeType() === 1) {
+          if (set) {
+            elem.setAttribute(name, '' + value);
           }
-          var attr = elem.getAttribute( name );
+          var attr = elem.getAttribute(name);
           // Non-existent attributes return null, we normalize to undefined
           return attr === null ? undefined : attr;
         }
@@ -798,63 +780,52 @@ function lib_jqlite() {
       }
     });
 
-    //JQUERY SELECTOR (SIZZLE)
-
-    var Sizzle = jQuery.find = lib('sizzle');
-    jQuery.expr = Sizzle.selectors;
-    jQuery.expr[":"] = jQuery.expr.filters;
-    jQuery.unique = Sizzle.uniqueSort;
-    jQuery.contains = Sizzle.contains;
-
     //JQUERY TRAVERSING
-
-    var runtil = /Until$/,
-      rparentsprev = /^(?:parents|prevUntil|prevAll)/,
-      // Note: This RegExp should be improved, or likely pulled from Sizzle
-      rmultiselector = /,/;
-
     // Implement the identical functionality for filter and not
-    var winnow = function( elements, qualifier, keep ) {
-      if ( jQuery.isFunction( qualifier ) ) {
-        return jQuery.grep(elements, function( elem, i ) {
-          return !!qualifier.call( elem, i, elem ) === keep;
+    function winnow(elements, qualifier, keep) {
+      if (jQuery.isFunction(qualifier)) {
+        return jQuery.grep(elements, function(elem, i) {
+          return !!qualifier.call(elem, i, elem) === keep;
         });
 
-      } else if ( qualifier.nodeType ) {
-        return jQuery.grep(elements, function( elem, i ) {
+      } else
+      if (qualifier.nodeType) {
+        return jQuery.grep(elements, function(elem, i) {
           return (elem === qualifier) === keep;
         });
 
-      } else if ( typeof qualifier === "string" ) {
-        var filtered = jQuery.grep(elements, function( elem ) {
+      } else
+      if (typeof qualifier === 'string') {
+        var filtered = jQuery.grep(elements, function(elem) {
           return elem.nodeType() === 1;
         });
 
-        if ( isSimple.test( qualifier ) ) {
+        if (isSimple.test(qualifier)) {
           return jQuery.filter(qualifier, filtered, !keep);
         } else {
-          qualifier = jQuery.filter( qualifier, filtered );
+          qualifier = jQuery.filter(qualifier, filtered);
         }
       }
 
-      return jQuery.grep(elements, function( elem, i ) {
-        return (jQuery.inArray( elem, qualifier ) >= 0) === keep;
+      return jQuery.grep(elements, function(elem, i) {
+        return (jQuery.inArray(elem, qualifier) >= 0) === keep;
       });
-    };
+    }
 
     jQuery.fn.extend({
-      find: function( selector ) {
-        var ret = this.pushStack( "", "find", selector ), length = 0;
+      find: function(selector) {
+        var ret = this.pushStack('', 'find', selector),
+            length = 0;
 
-        for ( var i = 0, l = this.length; i < l; i++ ) {
+        for (var i = 0, l = this.length; i < l; i++) {
           length = ret.length;
-          jQuery.find( selector, this[i], ret );
+          jQuery.find(selector, this[i], ret);
 
-          if ( i > 0 ) {
+          if (i > 0) {
             // Make sure that the results are unique
-            for ( var n = length; n < ret.length; n++ ) {
-              for ( var r = 0; r < length; r++ ) {
-                if ( ret[r] === ret[n] ) {
+            for (var n = length; n < ret.length; n++) {
+              for (var r = 0; r < length; r++) {
+                if (ret[r] === ret[n]) {
                   ret.splice(n--, 1);
                   break;
                 }
@@ -866,50 +837,54 @@ function lib_jqlite() {
         return ret;
       },
 
-      has: function( target ) {
-        var targets = jQuery( target );
+      has: function(target) {
+        var targets = jQuery(target);
         return this.filter(function() {
-          for ( var i = 0, l = targets.length; i < l; i++ ) {
-            if ( jQuery.contains( this, targets[i] ) ) {
+          for (var i = 0, l = targets.length; i < l; i++) {
+            if (jQuery.contains(this, targets[i])) {
               return true;
             }
           }
         });
       },
 
-      not: function( selector ) {
-        return this.pushStack( winnow(this, selector, false), "not", selector);
+      not: function(selector) {
+        return this.pushStack(winnow(this, selector, false), 'not', selector);
       },
 
-      filter: function( selector ) {
-        return this.pushStack( winnow(this, selector, true), "filter", selector );
+      filter: function(selector) {
+        return this.pushStack(winnow(this, selector, true), 'filter', selector);
       },
 
-      is: function( selector ) {
-        return !!selector && jQuery.filter( selector, this ).length > 0;
+      is: function(selector) {
+        return !!selector && jQuery.filter(selector, this).length > 0;
       },
 
-      closest: function( selectors, context ) {
-        if ( jQuery.isArray( selectors ) ) {
-          var ret = [], cur = this[0], match, matches = {}, selector;
+      closest: function(selectors, context) {
+        if (jQuery.isArray(selectors)) {
+          var ret = [],
+              cur = this[0],
+              match, matches = {},
+              selector;
 
-          if ( cur && selectors.length ) {
-            for ( var i = 0, l = selectors.length; i < l; i++ ) {
+          if (cur && selectors.length) {
+            for (var i = 0, l = selectors.length; i < l; i++) {
               selector = selectors[i];
 
-              if ( !matches[selector] ) {
-                matches[selector] = jQuery.expr.match.POS.test( selector ) ?
-                  jQuery( selector, context || this.context ) :
-                  selector;
+              if (!matches[selector]) {
+                matches[selector] = jQuery.expr.match.POS.test(selector) ? jQuery(selector, context || this.context) : selector;
               }
             }
 
-            while ( cur && cur.ownerDocument() && cur !== context ) {
-              for ( selector in matches ) {
+            while (cur && cur.ownerDocument() && cur !== context) {
+              for (selector in matches) {
                 match = matches[selector];
 
-                if ( match.jquery ? match.index(cur) > -1 : jQuery(cur).is(match) ) {
-                  ret.push({ selector: selector, elem: cur });
+                if (match.jquery ? match.index(cur) > -1 : jQuery(cur).is(match)) {
+                  ret.push({
+                    selector: selector,
+                    elem: cur
+                  });
                   delete matches[selector];
                 }
               }
@@ -920,12 +895,11 @@ function lib_jqlite() {
           return ret;
         }
 
-        var pos = jQuery.expr.match.POS.test( selectors ) ?
-          jQuery( selectors, context || this.context ) : null;
+        var pos = jQuery.expr.match.POS.test(selectors) ? jQuery(selectors, context || this.context) : null;
 
-        return this.map(function( i, cur ) {
-          while ( cur && cur.ownerDocument() && cur !== context ) {
-            if ( pos ? pos.index(cur) > -1 : jQuery(cur).is(selectors) ) {
+        return this.map(function(i, cur) {
+          while (cur && cur.ownerDocument() && cur !== context) {
+            if (pos ? pos.index(cur) > -1 : jQuery(cur).is(selectors)) {
               return cur;
             }
             cur = cur.parentNode();
@@ -936,129 +910,126 @@ function lib_jqlite() {
 
       // Determine the position of an element within
       // the matched set of elements
-      index: function( elem ) {
-        if ( !elem || typeof elem === "string" ) {
-          return jQuery.inArray( this[0],
-            // If it receives a string, the selector is used
-            // If it receives nothing, the siblings are used
-            elem ? jQuery( elem ) : this.parent().children() );
+      index: function(elem) {
+        if (!elem || typeof elem === 'string') {
+          return jQuery.inArray(this[0],
+          // If it receives a string, the selector is used
+          // If it receives nothing, the siblings are used
+          elem ? jQuery(elem) : this.parent().children());
         }
         // Locate the position of the desired element
         return jQuery.inArray(
-          // If it receives a jQuery object, the first element is used
-          elem.jquery ? elem[0] : elem, this );
+        // If it receives a jQuery object, the first element is used
+        elem.jquery ? elem[0] : elem, this);
       },
 
-      add: function( selector, context ) {
-        var set = typeof selector === "string" ?
-            jQuery( selector, context || this.context ) :
-            jQuery.makeArray( selector ),
-          all = jQuery.merge( this.get(), set );
+      add: function(selector, context) {
+        var set = typeof selector === 'string' ? jQuery(selector, context || this.context) : jQuery.makeArray(selector),
+            all = jQuery.merge(this.get(), set);
 
-        return this.pushStack( isDisconnected( set[0] ) || isDisconnected( all[0] ) ?
-          all :
-          jQuery.unique( all ) );
+        return this.pushStack(isDisconnected(set[0]) || isDisconnected(all[0]) ? all : jQuery.unique(all));
       },
 
       andSelf: function() {
-        return this.add( this.prevObject );
+        return this.add(this.prevObject);
       }
     });
 
     // A painfully simple check to see if an element is disconnected
     // from a document (should be improved, where feasible).
-    function isDisconnected( node ) {
+
+
+    function isDisconnected(node) {
       return !node || !node.parentNode() || node.parentNode().nodeType() === 11;
     }
 
     jQuery.each({
-      parent: function( elem ) {
+      parent: function(elem) {
         var parent = elem.parentNode();
         return parent && parent.nodeType() !== 11 ? parent : null;
       },
-      parents: function( elem ) {
-        return jQuery.dir( elem, "parentNode" );
+      parents: function(elem) {
+        return jQuery.dir(elem, 'parentNode');
       },
-      parentsUntil: function( elem, i, until ) {
-        return jQuery.dir( elem, "parentNode", until );
+      parentsUntil: function(elem, i, until) {
+        return jQuery.dir(elem, 'parentNode', until);
       },
-      next: function( elem ) {
-        return jQuery.nth( elem, 2, "nextSibling" );
+      next: function(elem) {
+        return jQuery.nth(elem, 2, 'nextSibling');
       },
-      prev: function( elem ) {
-        return jQuery.nth( elem, 2, "previousSibling" );
+      prev: function(elem) {
+        return jQuery.nth(elem, 2, 'previousSibling');
       },
-      nextAll: function( elem ) {
-        return jQuery.dir( elem, "nextSibling" );
+      nextAll: function(elem) {
+        return jQuery.dir(elem, 'nextSibling');
       },
-      prevAll: function( elem ) {
-        return jQuery.dir( elem, "previousSibling" );
+      prevAll: function(elem) {
+        return jQuery.dir(elem, 'previousSibling');
       },
-      nextUntil: function( elem, i, until ) {
-        return jQuery.dir( elem, "nextSibling", until );
+      nextUntil: function(elem, i, until) {
+        return jQuery.dir(elem, 'nextSibling', until);
       },
-      prevUntil: function( elem, i, until ) {
-        return jQuery.dir( elem, "previousSibling", until );
+      prevUntil: function(elem, i, until) {
+        return jQuery.dir(elem, 'previousSibling', until);
       },
-      siblings: function( elem ) {
-        return jQuery.sibling( elem.parentNode().firstChild(), elem );
+      siblings: function(elem) {
+        return jQuery.sibling(elem.parentNode().firstChild(), elem);
       },
-      children: function( elem ) {
-        return jQuery.sibling( elem.firstChild() );
+      children: function(elem) {
+        return jQuery.sibling(elem.firstChild());
       },
-      contents: function( elem ) {
-        return jQuery.nodeName( elem, "iframe" ) ?
-          elem.contentDocument || elem.contentWindow.document :
-          jQuery.makeArray( elem.childNodes() );
+      contents: function(elem) {
+        return jQuery.makeArray(elem.childNodes());
       }
-    }, function( name, fn ) {
-      jQuery.fn[ name ] = function( until, selector ) {
-        var ret = jQuery.map( this, fn, until );
+    }, function(name, fn) {
+      jQuery.fn[name] = function(until, selector) {
+        var ret = jQuery.map(this, fn, until);
 
-        if ( !runtil.test( name ) ) {
+        if (!runtil.test(name)) {
           selector = until;
         }
 
-        if ( selector && typeof selector === "string" ) {
-          ret = jQuery.filter( selector, ret );
+        if (selector && typeof selector === 'string') {
+          ret = jQuery.filter(selector, ret);
         }
 
-        ret = this.length > 1 ? jQuery.unique( ret ) : ret;
+        ret = this.length > 1 ? jQuery.unique(ret) : ret;
 
-        if ( (this.length > 1 || rmultiselector.test( selector )) && rparentsprev.test( name ) ) {
+        if ((this.length > 1 || rmultiselector.test(selector)) && rparentsprev.test(name)) {
           ret = ret.reverse();
         }
 
-        return this.pushStack( ret, name, slice.call(arguments).join(",") );
+        return this.pushStack(ret, name, slice.call(arguments).join(','));
       };
     });
 
     jQuery.extend({
-      filter: function( expr, elems, not ) {
-        if ( not ) {
-          expr = ":not(" + expr + ")";
+      filter: function(expr, elems, not) {
+        if (not) {
+          expr = ':not(' + expr + ')';
         }
 
         return jQuery.find.matches(expr, elems);
       },
 
-      dir: function( elem, dir, until ) {
-        var matched = [], cur = elem[dir];
-        while ( cur && cur.nodeType() !== 9 && (until === undefined || cur.nodeType() !== 1 || !jQuery( cur ).is( until )) ) {
-          if ( cur.nodeType() === 1 ) {
-            matched.push( cur );
+      dir: function(elem, dir, until) {
+        var matched = [],
+            cur = elem[dir];
+        while (cur && cur.nodeType() !== 9 && (until === undefined || cur.nodeType() !== 1 || !jQuery(cur).is(until))) {
+          if (cur.nodeType() === 1) {
+            matched.push(cur);
           }
           cur = cur[dir];
         }
         return matched;
       },
 
-      nth: function( cur, result, dir, elem ) {
+      nth: function(cur, result, dir, elem) {
         result = result || 1;
         var num = 0;
 
-        for ( ; cur; cur = cur[dir] ) {
-          if ( cur.nodeType() === 1 && ++num === result ) {
+        for (; cur; cur = cur[dir]) {
+          if (cur.nodeType() === 1 && ++num === result) {
             break;
           }
         }
@@ -1066,12 +1037,12 @@ function lib_jqlite() {
         return cur;
       },
 
-      sibling: function( n, elem ) {
+      sibling: function(n, elem) {
         var r = [];
 
-        for ( ; n; n = n.nextSibling ) {
-          if ( n.nodeType() === 1 && n !== elem ) {
-            r.push( n );
+        for (; n; n = n.nextSibling) {
+          if (n.nodeType() === 1 && n !== elem) {
+            r.push(n);
           }
         }
 
@@ -1080,44 +1051,41 @@ function lib_jqlite() {
     });
 
     //JQUERY MANIPULATION
-
-    var rhtml = /<|&#?\w+;/;
-
     jQuery.fn.extend({
-      text: function( text ) {
-        if ( jQuery.isFunction(text) ) {
+      text: function(text) {
+        if (jQuery.isFunction(text)) {
           return this.each(function(i) {
             var self = jQuery(this);
-            self.text( text.call(this, i, self.text()) );
+            self.text(text.call(this, i, self.text()));
           });
         }
 
-        if ( typeof text !== "object" && text !== undefined ) {
-          return this.empty().append( (this[0] && this[0].ownerDocument() || document).createTextNode( text ) );
+        if (typeof text !== 'object' && text !== undefined) {
+          return this.empty().append((this[0] && this[0].ownerDocument() || document).createTextNode(text));
         }
 
         return Sizzle.getText(this);
       },
 
-      wrapAll: function( html ) {
-        if ( jQuery.isFunction( html ) ) {
+      wrapAll: function(html) {
+        if (jQuery.isFunction(html)) {
           return this.each(function(i) {
-            jQuery(this).wrapAll( html.call(this, i) );
+            jQuery(this).wrapAll(html.call(this, i));
           });
         }
 
-        if ( this[0] ) {
+        if (this[0]) {
           // The elements to wrap the target around
-          var wrap = jQuery( html, this[0].ownerDocument() ).eq(0).clone(true);
+          var wrap = jQuery(html, this[0].ownerDocument()).eq(0).clone(true);
 
-          if ( this[0].parentNode() ) {
-            wrap.insertBefore( this[0] );
+          if (this[0].parentNode()) {
+            wrap.insertBefore(this[0]);
           }
 
           wrap.map(function() {
             var elem = this;
 
-            while ( elem.firstChild() && elem.firstChild().nodeType() === 1 ) {
+            while (elem.firstChild() && elem.firstChild().nodeType() === 1) {
               elem = elem.firstChild();
             }
 
@@ -1128,85 +1096,89 @@ function lib_jqlite() {
         return this;
       },
 
-      wrapInner: function( html ) {
-        if ( jQuery.isFunction( html ) ) {
+      wrapInner: function(html) {
+        if (jQuery.isFunction(html)) {
           return this.each(function(i) {
-            jQuery(this).wrapInner( html.call(this, i) );
+            jQuery(this).wrapInner(html.call(this, i));
           });
         }
 
         return this.each(function() {
-          var self = jQuery( this ), contents = self.contents();
+          var self = jQuery(this),
+              contents = self.contents();
 
-          if ( contents.length ) {
-            contents.wrapAll( html );
+          if (contents.length) {
+            contents.wrapAll(html);
 
           } else {
-            self.append( html );
+            self.append(html);
           }
         });
       },
 
-      wrap: function( html ) {
+      wrap: function(html) {
         return this.each(function() {
-          jQuery( this ).wrapAll( html );
+          jQuery(this).wrapAll(html);
         });
       },
 
       unwrap: function() {
         return this.parent().each(function() {
-          if ( !jQuery.nodeName( this, "body" ) ) {
-            jQuery( this ).replaceWith( this.childNodes() );
+          if (!jQuery.nodeName(this, 'body')) {
+            jQuery(this).replaceWith(this.childNodes());
           }
         }).end();
       },
 
       append: function() {
-        return this.domManip(arguments, true, function( elem ) {
-          if ( this.nodeType() === 1 ) {
-            this.appendChild( elem );
+        return this.domManip(arguments, true, function(elem) {
+          if (this.nodeType() === 1) {
+            this.appendChild(elem);
           }
         });
       },
 
       prepend: function() {
-        return this.domManip(arguments, true, function( elem ) {
-          if ( this.nodeType() === 1 ) {
-            this.insertBefore( elem, this.firstChild() );
+        return this.domManip(arguments, true, function(elem) {
+          if (this.nodeType() === 1) {
+            this.insertBefore(elem, this.firstChild());
           }
         });
       },
 
       before: function() {
-        if ( this[0] && this[0].parentNode() ) {
-          return this.domManip(arguments, false, function( elem ) {
-            this.parentNode().insertBefore( elem, this );
+        if (this[0] && this[0].parentNode()) {
+          return this.domManip(arguments, false, function(elem) {
+            this.parentNode().insertBefore(elem, this);
           });
-        } else if ( arguments.length ) {
+        } else
+        if (arguments.length) {
           var set = jQuery(arguments[0]);
-          set.push.apply( set, this.toArray() );
-          return this.pushStack( set, "before", arguments );
+          set.push.apply(set, this.toArray());
+          return this.pushStack(set, 'before', arguments);
         }
       },
 
       after: function() {
-        if ( this[0] && this[0].parentNode() ) {
-          return this.domManip(arguments, false, function( elem ) {
-            this.parentNode().insertBefore( elem, this.nextSibling );
+        if (this[0] && this[0].parentNode()) {
+          return this.domManip(arguments, false, function(elem) {
+            this.parentNode().insertBefore(elem, this.nextSibling);
           });
-        } else if ( arguments.length ) {
-          var set = this.pushStack( this, "after", arguments );
-          set.push.apply( set, jQuery(arguments[0]).toArray() );
+        } else
+        if (arguments.length) {
+          var set = this.pushStack(this, 'after', arguments);
+          set.push.apply(set, jQuery(arguments[0]).toArray());
           return set;
         }
       },
 
       // keepData is for internal use only--do not document
-      remove: function( selector, keepData ) {
-        for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
-          if ( !selector || jQuery.filter( selector, [ elem ] ).length ) {
-            if ( elem.parentNode() ) {
-               elem.parentNode().removeChild( elem );
+      remove: function(selector, keepData) {
+        for (var i = 0, elem;
+        (elem = this[i]) != null; i++) {
+          if (!selector || jQuery.filter(selector, [elem]).length) {
+            if (elem.parentNode()) {
+              elem.parentNode().removeChild(elem);
             }
           }
         }
@@ -1215,10 +1187,11 @@ function lib_jqlite() {
       },
 
       empty: function() {
-        for ( var i = 0, elem; (elem = this[i]) != null; i++ ) {
+        for (var i = 0, elem;
+        (elem = this[i]) != null; i++) {
           // Remove any remaining nodes
-          while ( elem.firstChild() ) {
-            elem.removeChild( elem.firstChild() );
+          while (elem.firstChild()) {
+            elem.removeChild(elem.firstChild());
           }
         }
 
@@ -1235,8 +1208,8 @@ function lib_jqlite() {
         return ret;
       },
 
-      html: function( value ) {
-        if ( value === undefined ) {
+      html: function(value) {
+        if (value === undefined) {
           if (this[0]) {
             if (this[0].nodeType() === 9) {
               return this[0].outerHTML();
@@ -1246,16 +1219,18 @@ function lib_jqlite() {
             }
           }
           return null;
-        } else if ( jQuery.isFunction( value ) ) {
-          this.each(function(i){
-            var self = jQuery(this), old = self.html();
-            self.empty().append(function(){
-              return value.call( this, i, old );
+        } else
+        if (jQuery.isFunction(value)) {
+          this.each(function(i) {
+            var self = jQuery(this),
+                old = self.html();
+            self.empty().append(function() {
+              return value.call(this, i, old);
             });
           });
 
         } else {
-          this.empty().append( value );
+          this.empty().append(value);
         }
 
         return this;
@@ -1268,159 +1243,160 @@ function lib_jqlite() {
         return null;
       },
 
-      replaceWith: function( value ) {
-        if ( this[0] && this[0].parentNode() ) {
+      replaceWith: function(value) {
+        if (this[0] && this[0].parentNode()) {
           // Make sure that the elements are removed from the DOM before they are inserted
           // this can help fix replacing a parent with child elements
-          if ( jQuery.isFunction( value ) ) {
+          if (jQuery.isFunction(value)) {
             return this.each(function(i) {
-              var self = jQuery(this), old = self.html();
-              self.replaceWith( value.call( this, i, old ) );
+              var self = jQuery(this),
+                  old = self.html();
+              self.replaceWith(value.call(this, i, old));
             });
           }
 
-          if ( typeof value !== "string" ) {
+          if (typeof value !== 'string') {
             value = jQuery(value).detach();
           }
 
           return this.each(function() {
-            var next = this.nextSibling, parent = this.parentNode();
+            var next = this.nextSibling,
+                parent = this.parentNode();
 
             jQuery(this).remove();
 
-            if ( next ) {
-              jQuery(next).before( value );
+            if (next) {
+              jQuery(next).before(value);
             } else {
-              jQuery(parent).append( value );
+              jQuery(parent).append(value);
             }
           });
         } else {
-          return this.pushStack( jQuery(jQuery.isFunction(value) ? value() : value), "replaceWith", value );
+          return this.pushStack(jQuery(jQuery.isFunction(value) ? value() : value), 'replaceWith', value);
         }
       },
 
-      detach: function( selector ) {
-        return this.remove( selector, true );
+      detach: function(selector) {
+        return this.remove(selector, true);
       },
 
-      domManip: function( args, table, callback ) {
-        var results, first, value = args[0], fragment, parent;
+      domManip: function(args, table, callback) {
+        var results, first, value = args[0],
+            fragment, parent;
 
-        if ( jQuery.isFunction(value) ) {
+        if (jQuery.isFunction(value)) {
           return this.each(function(i) {
             var self = jQuery(this);
             args[0] = value.call(this, i, table ? self.html() : undefined);
-            self.domManip( args, table, callback );
+            self.domManip(args, table, callback);
           });
         }
 
-        if ( this[0] ) {
+        if (this[0]) {
           parent = value && value.parentNode && value.parentNode();
 
           // If we're in a fragment, just use that instead of building a new one
-          if ( parent && parent.nodeType() === 11 && parent.childNodes().length === this.length ) {
-            results = { fragment: parent };
+          if (parent && parent.nodeType() === 11 && parent.childNodes().length === this.length) {
+            results = {
+              fragment: parent
+            };
 
           } else {
-            results = buildFragment( args, this );
+            results = buildFragment(args, this);
           }
 
           fragment = results.fragment;
 
-          if ( fragment.childNodes().length === 1 ) {
+          if (fragment.childNodes().length === 1) {
             first = fragment = fragment.firstChild();
           } else {
             first = fragment.firstChild();
           }
 
-          if ( first ) {
-            for ( var i = 0, l = this.length; i < l; i++ ) {
-              callback.call(this[i],
-                i > 0 || results.cacheable || this.length > 1  ? fragment.cloneNode(true) : fragment);
+          if (first) {
+            for (var i = 0, l = this.length; i < l; i++) {
+              callback.call(this[i], i > 0 || results.cacheable || this.length > 1 ? fragment.cloneNode(true) : fragment);
             }
           }
         }
 
         return this;
-
-        function root( elem, cur ) {
-          return jQuery.nodeName(elem, "table") ?
-            (elem.getElementsByTagName("tbody")[0] ||
-            elem.appendChild(elem.ownerDocument().createElement("tbody"))) :
-            elem;
-        }
       }
     });
 
-    function buildFragment( args, nodes ) {
-      var fragment, cacheable, cacheresults,
-        doc = (nodes && nodes[0] ? nodes[0].ownerDocument() || nodes[0] : document);
+    function buildFragment(args, nodes) {
+      var fragment, cacheable, cacheresults, doc = (nodes && nodes[0] ? nodes[0].ownerDocument() || nodes[0] : document);
 
       // Only cache strings less than 512 chars that are associated with the main document
-      if (args.length == 1 && typeof args[0] == "string" && args[0].length < 512 && doc === document) {
+      if (args.length == 1 && typeof args[0] == 'string' && args[0].length < 512 && doc === document) {
         cacheable = true;
-        cacheresults = jQuery.fragments[ args[0] ];
-        if ( cacheresults && cacheresults !== 1 ) {
+        cacheresults = jQuery.fragments[args[0]];
+        if (cacheresults && cacheresults !== 1) {
           fragment = cacheresults;
         }
       }
 
-      if ( !fragment ) {
+      if (!fragment) {
         fragment = doc.createDocumentFragment();
-        for ( var i = 0, elem; (elem = args[i]) != null; i++ ) {
-          if ( typeof elem === "number" ) {
-            elem += "";
+        for (var i = 0, elem;
+        (elem = args[i]) != null; i++) {
+          if (typeof elem === 'number') {
+            elem += '';
           }
-          if ( !elem ) {
+          if (!elem) {
             continue;
           }
-          if ( typeof elem === "string" && !rhtml.test( elem ) ) {
-            elem = doc.createTextNode( elem );
+          if (typeof elem === 'string' && !rhtml.test(elem)) {
+            elem = doc.createTextNode(elem);
           } else
-          if ( typeof elem === "string" ) {
+          if (typeof elem === 'string') {
             fragment.appendHTML(elem);
           } else
-          if ( elem.nodeType ) {
+          if (elem.nodeType) {
             fragment.appendChild(elem);
           } else {
             //TODO: Look into merge
-            fragment = jQuery.merge( fragment, elem );
+            fragment = jQuery.merge(fragment, elem);
           }
         }
       }
 
-      if ( cacheable ) {
-        jQuery.fragments[ args[0] ] = cacheresults ? fragment : 1;
+      if (cacheable) {
+        jQuery.fragments[args[0]] = cacheresults ? fragment : 1;
       }
 
-      return { fragment: fragment, cacheable: cacheable };
+      return {
+        fragment: fragment,
+        cacheable: cacheable
+      };
     }
 
     jQuery.fragments = {};
 
     jQuery.each({
-      appendTo: "append",
-      prependTo: "prepend",
-      insertBefore: "before",
-      insertAfter: "after",
-      replaceAll: "replaceWith"
-    }, function( name, original ) {
-      jQuery.fn[ name ] = function( selector ) {
-        var ret = [], insert = jQuery( selector ),
-          parent = this.length === 1 && this[0].parentNode();
+      appendTo: 'append',
+      prependTo: 'prepend',
+      insertBefore: 'before',
+      insertAfter: 'after',
+      replaceAll: 'replaceWith'
+    }, function(name, original) {
+      jQuery.fn[name] = function(selector) {
+        var ret = [],
+            insert = jQuery(selector),
+            parent = this.length === 1 && this[0].parentNode();
 
-        if ( parent && parent.nodeType() === 11 && parent.childNodes().length === 1 && insert.length === 1 ) {
-          insert[ original ]( this[0] );
+        if (parent && parent.nodeType() === 11 && parent.childNodes().length === 1 && insert.length === 1) {
+          insert[original](this[0]);
           return this;
 
         } else {
-          for ( var i = 0, l = insert.length; i < l; i++ ) {
+          for (var i = 0, l = insert.length; i < l; i++) {
             var elems = (i > 0 ? this.clone(true) : this).get();
-            jQuery.fn[ original ].apply( jQuery(insert[i]), elems );
-            ret = ret.concat( elems );
+            jQuery.fn[original].apply(jQuery(insert[i]), elems);
+            ret = ret.concat(elems);
           }
 
-          return this.pushStack( ret, name, insert.selector );
+          return this.pushStack(ret, name, insert.selector);
         }
       };
     });
@@ -1431,9 +1407,9 @@ function lib_jqlite() {
 
   return {
     create: function(html) {
-	  var dom = lib('domwrapper'), doc = new dom.HtmlDoc(html);
-	  return new_jQuery(doc);
-	}
+      var dom = lib('domwrapper'), doc = new dom.HtmlDoc(html);
+      return new_jQuery(doc);
+    }
   };
 
 }
