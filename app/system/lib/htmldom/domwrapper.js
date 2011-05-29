@@ -198,22 +198,22 @@ function lib_domwrapper() {
       return {HtmlNode: desc};
     }
   };
-  //Getter Methods
+  //Properties returning primitive value
   forEach('nodeName nodeType nodeValue'.w(),
     function(i, name) {
       HtmlNode.prototype[name] = function() {
         return this._xmlNode[name];
       };
     });
-  //Selection Methods
-  forEach('getElementById getElementsByTagName getElementsByAttr'.w(),
+  //Methods returning one or more Node
+  forEach('cloneNode getElementById getElementsByTagName getElementsByAttr'.w(),
     function(i, name) {
       HtmlNode.prototype[name] = function() {
         var node = this._xmlNode;
         return wrapNodes(node[name].apply(node, arguments));
       };
     });
-  //Traversal Methods
+  //Properties returning single Node
   forEach('parentNode firstChild lastChild previousSibling nextSibling'.w(),
     function(i, name) {
       HtmlNode.prototype[name] = function() {
@@ -221,7 +221,7 @@ function lib_domwrapper() {
         return node ? new HtmlNode(node) : null;
       };
     });
-  //Manipulation Methods
+  //Methods accepting one or more Node as argument
   forEach('appendChild replaceChild insertBefore removeChild'.w(),
     function(i, name) {
       HtmlNode.prototype[name] = function() {
@@ -232,7 +232,7 @@ function lib_domwrapper() {
         node[name].apply(node, args);
       };
     });
-  //Attribute Methods
+  //Other Methods
   forEach('hasAttributes setAttribute getAttribute hasAttribute removeAttribute'.w(),
     function(i, name) {
       HtmlNode.prototype[name] = function() {

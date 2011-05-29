@@ -19,6 +19,23 @@ function forEach(o, fn) {
 }
 
 /**
+ * Function to output a stack trace
+ *
+ */
+function stackTrace(fn) {
+  if (!fn) fn = arguments.caller.callee;
+  var list = [];
+  while (fn && list.length < 10 /* && !list.exists(fn)*/) {
+    list.push(fn);
+    fn = fn.caller;
+  }
+  list = list.map(function(fn) {
+    return '' + fn;
+  });
+  res.die(list.length + '\r\n' + list.join('\r\n\r\n'));
+}
+
+/**
  * Get a member of an object or set it if it doesn't exist
  * This basically replaces lines like:
  * # val = obj.prop || (obj.prop = default_val);
@@ -529,6 +546,7 @@ function lib_globals() {
  */
 if (typeof exports != 'undefined') {
   exports.forEach = forEach;
+  exports.stackTrace = stackTrace;
   exports.getset = getset;
   exports.fngetset = fngetset;
 }
