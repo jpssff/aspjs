@@ -15,7 +15,7 @@
 dispatch({
   "/test": {
     "controller": "test",
-    "inc": "jasmine.js"
+    "inc": "qunit.js"
   },
   "/": "main"
 });

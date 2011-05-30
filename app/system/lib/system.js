@@ -9,7 +9,9 @@ function lib_system(sys) {
   /*
    * Private Variables
    */
-  var vars = {files: {}, dirs: {}}, util = lib('util');
+  var vars = {files: {}, dirs: {}}
+    , util = lib('util')
+    , fspath = server.mappath('/') + '\\';
   
   
   /*
@@ -17,8 +19,7 @@ function lib_system(sys) {
    */
   sys.server = server.vars('server');
   sys.platform = server.vars('platform');
-  sys.apppath = server.mappath(__approot) + '\\';
-  
+
   
   /*
    * Path Resolution Functions
@@ -31,22 +32,21 @@ function lib_system(sys) {
    */
   sys.path = function(s) {
     var p = String(s);
-    p = p.replaceHead(__approot,'');
-    p = p.replaceHead('/','');
-    return path.join(__approot, p);
+    p = p.replaceHead('~/', '');
+    return p.startsWith('/') ? p : path.join(__approot, p);
   }
   
   /*
-   * This function translates a path into a physical location (with
-   * backslashes) and should be used last (after sys.path and
-   * path.join) and only inside this library. Everything outside this
-   * class should use app relative paths (/app/data/files/blah.txt).
+   * This function translates a path into a physical location (with backslashes).
+   * It should be used last (after sys.path and path.join) and only inside this
+   * library or libraries that directly access the filesystem. Everything else
+   * should use app relative paths (~/data/file.txt or /assets/file.html).
    * 
-   * You never have to call both sys.path() and sys.mappath()
+   * You never have to call both sys.path() and sys.mappath() since
    * they do mutually exclusive things.
    */
   sys.mappath = function(s) {
-    return sys.apppath + sys.path(s).replaceHead(__approot,'').replaceAll('/','\\');
+    return fspath + sys.path(s).replaceHead('/', '').replaceAll('/', '\\');
   }
   
   /*
@@ -59,9 +59,9 @@ function lib_system(sys) {
       if (s) a.push(s);
     });
     var p = a.join('/');
-    p = p.replaceAll('//','/');
-    p = p.replaceAll('/./','/');
-    p = p.replace(/[^\/]+\/\.\.\//g,'');
+    p = p.replaceAll('//', '/');
+    p = p.replaceAll('/./', '/');
+    p = p.replace(/[^\/]+\/\.\.\//g, '');
     p = p.replaceTail('/','');
     return p;
   };
@@ -94,7 +94,7 @@ function lib_system(sys) {
     if (!logfile) logfile = 'default';
     var date = Date.format(Date.now(),'{yyyy}-{mm}-{dd} {HH}:{nn}:{ss}',true)
       , data = args
-      , p = path('data/logs/' + logfile.replaceTail('.log','') + '.log');
+      , p = path('~/data/logs/' + logfile.replaceTail('.log','') + '.log');
     var json = lib('json');
     forEach(data, function(i, line){
       data[i] = (isPrimitive(line)) ? String(line) : json.stringify(line);
@@ -114,7 +114,7 @@ function lib_system(sys) {
   var fs = sys.fs = {}, path = sys.path, mappath = sys.mappath;
    
   fs.escape = function(filename) {
-    return String(filename).replace(/[^\w\d!@#$()_\-+={}[],;'~]/g,function(char){
+    return String(filename).replace(/[^\w\d!@#$()_\-+={}[],;']/g,function(char){
       return encodeURIComponent(char);
     });
   };

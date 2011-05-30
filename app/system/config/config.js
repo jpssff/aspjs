@@ -35,7 +35,7 @@ function lib_syscfg() {
     
     //File Store
     filestore: {
-      location: 'data/files',
+      location: '~/data/files',
       database: 'filestore'
     },
     

@@ -194,7 +194,7 @@ function lib_msaccess() {
   }
   
   function fn_open(name,fn_init) {
-    var file = 'data/db/' + fs.escape(name) + '.db';
+    var file = '~/data/db/' + fs.escape(name) + '.db';
     var conn = new Connection(name,file);
     if (conn.isNew && fn_init) {
       fn_init(conn);

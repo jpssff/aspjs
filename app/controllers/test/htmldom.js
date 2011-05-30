@@ -12,13 +12,4 @@ bind('ready', function() {
     res.die(arr.map(function(el){ return el.outerHTML(); }));
   });
 
-  app('/test/jqlite', function() {
-    var jq = lib('jqlite');
-    var $ = jq.create('<p class=a>Hello <b>World');
-    $('body p').addClass('b').append('<div id="three"/><div id="four"></div>');
-    $('body').append('<p id=two>Another Paragraph</p>');
-    $('title').text('Bits & Bobs');
-    res.die($.toHTML());
-  });
-
 });

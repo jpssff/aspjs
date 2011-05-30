@@ -36,6 +36,28 @@ function stackTrace(fn) {
 }
 
 /**
+ * Set a global variable.
+ * 
+ * @param n
+ * @param [val]
+ */
+function setGlobal(n, val) {
+	var args = toArray(arguments);
+	if (args.length == 2) {
+    if ((/^[a-z_$][0-9a-z_$]*$/i).test(n)) {
+      eval(n + " = val");
+    }
+		return val;
+	} else {
+		var items = args[0] || {};
+    forEach(items, function(n, val) {
+      setGlobal(n, val);
+    });
+		return args[0];
+	}
+}
+
+/**
  * Get a member of an object or set it if it doesn't exist
  * This basically replaces lines like:
  * # val = obj.prop || (obj.prop = default_val);
@@ -233,7 +255,15 @@ function lib_globals() {
     });
     return a;
   };
-  Object.vartype = function(obj) {
+  /**
+   * @param obj
+   * @param [list]
+   */
+  Object.vartype = function(obj, list) {
+    if (list) {
+      list = (list instanceof Array) ? list : String(list).w();
+      return list.exists(Object.vartype(obj));
+    }
     var type = (obj === null) ? 'null' : typeof obj;
     if (obj instanceof Object) {
       return Object.prototype.toString.call(obj).slice(8, -1).toLowerCase();
