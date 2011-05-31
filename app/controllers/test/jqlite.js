@@ -18,8 +18,6 @@ bind('ready', function() {
       , jQuery = jq.create(html)
       , $ = jQuery;
 
-    res.die($.toHTML());
-
     module("core");
     test("Basic requirements", function() {
       expect(4);
