@@ -34,12 +34,10 @@ function lib_domwrapper() {
         curParentNode = elems[elems.length - 1];
       },
       chars: function(text) {
-        if (!curParentNode) return;
-        curParentNode.appendChild(doc.createTextNode(text));
+        (curParentNode || node).appendChild(doc.createTextNode(text));
       },
       cdata: function(text) {
-        if (!curParentNode) return;
-        curParentNode.appendChild(doc.createCDATASection(text));
+        (curParentNode || node).appendChild(doc.createCDATASection(text));
       },
       doctype: function(doctype, params) {
         if (!doc.doctype) {
@@ -47,8 +45,7 @@ function lib_domwrapper() {
         }
       },
       comment: function(text) {
-        if (!curParentNode) return;
-        curParentNode.appendChild(doc.createComment(text));
+        (curParentNode || node).appendChild(doc.createComment(text));
       }
     });
     //res.die(out.join('\n'));
