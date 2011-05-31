@@ -83,7 +83,7 @@ function lib_jqlite() {
 
             // HANDLE: $(html) -> $(array)
             if (match[1]) {
-              doc = (context ? context.ownerDocument() || context : document);
+              doc = (context ? (context.ownerDocument ? context.ownerDocument() : context) : document);
 
               // If a single string is passed in and it's a single tag just do a createElement
               ret = rsingleTag.exec(selector);
@@ -877,7 +877,7 @@ function lib_jqlite() {
               }
             }
 
-            while (cur && cur.ownerDocument() && cur !== context) {
+            while (cur && cur.ownerDocument && cur.ownerDocument() && cur !== context) {
               for (selector in matches) {
                 match = matches[selector];
 
@@ -899,7 +899,7 @@ function lib_jqlite() {
         var pos = jQuery.expr.match.POS.test(selectors) ? jQuery(selectors, context || this.context) : null;
 
         return this.map(function(i, cur) {
-          while (cur && cur.ownerDocument() && cur !== context) {
+          while (cur && cur.ownerDocument && cur.ownerDocument() && cur !== context) {
             if (pos ? pos.index(cur) > -1 : jQuery(cur).is(selectors)) {
               return cur;
             }
@@ -1062,7 +1062,7 @@ function lib_jqlite() {
         }
 
         if (typeof text !== 'object' && text !== undefined) {
-          return this.empty().append((this[0] && this[0].ownerDocument() || document).createTextNode(text));
+          return this.empty().append((this[0] && this[0].ownerDocument && this[0].ownerDocument() || document).createTextNode(text));
         }
 
         return Sizzle.getText(this);
@@ -1407,8 +1407,9 @@ function lib_jqlite() {
 
   return {
     create: function(html) {
-      var dom = lib('domwrapper'), doc = new dom.HtmlDoc(html);
-      return new_jQuery(doc);
+      var dom = lib('domwrapper'), doc = new dom.HtmlDoc(html), jQuery = new_jQuery(doc);
+      jQuery._doc = doc;
+      return jQuery;
     }
   };
 

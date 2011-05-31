@@ -974,7 +974,7 @@ function lib_sizzle() {
   Sizzle.contains = function(parent, child) {
     var a = parent.getElementsByTagName('*');
     for (var i = 0; i < a.length; i++) {
-      if (a.equals(child)) return true;
+      if (a[i].equals(child)) return true;
     }
     return false;
   };

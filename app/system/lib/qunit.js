@@ -11,27 +11,21 @@ function lib_qunit() {
 
   var JSON = lib('json');
 
-  var defined = {
-    setTimeout: false,
-    sessionStorage: (function() {
-      try {
-        return !!sessionStorage.getItem;
-      } catch (e) {
-        return false;
-      }
-    })()
+  var config = {
+    stats: {all: 0, bad: 0},
+    throwEx: true,
+    noglobals: false,
+    notrycatch: false
   };
 
-  var testId = 0;
-
-  var Test = function(name, testName, expected, testEnvironmentArg, async, callback) {
-      this.name = name;
-      this.testName = testName;
-      this.expected = expected;
-      this.testEnvironmentArg = testEnvironmentArg;
-      this.callback = callback;
-      this.assertions = [];
-      };
+  function Test(name, testName, expected, testEnvironmentArg, async, callback) {
+    this.name = name;
+    this.testName = testName;
+    this.expected = expected;
+    this.testEnvironmentArg = testEnvironmentArg;
+    this.callback = callback;
+    this.assertions = [];
+  }
   Test.prototype = {
     init: function() {
     },
@@ -70,7 +64,8 @@ function lib_qunit() {
       QUnit.current_testEnvironment = this.testEnvironment;
       try {
         this.testEnvironment.setup.call(this.testEnvironment);
-      } catch (e) {
+      } catch(e) {
+        if (config.throwEx) throw e;
         QUnit.ok(false, "Setup failed on " + this.testName + ": " + e.message);
       }
     },
@@ -82,16 +77,18 @@ function lib_qunit() {
       }
       try {
         this.callback.call(this.testEnvironment);
-      } catch (e) {
-        fail("Test " + this.testName + " died, exception and test follows", e, this.callback);
-        QUnit.ok(false, "Died on test #" + (this.assertions.length + 1) + ": " + e.message + " - " + JSON.stringify(e));
+      } catch(e) {
+        if (config.throwEx) throw e;
+        fail(this.testName, e, this.callback);
+        QUnit.ok(false, "Died on test #" + (this.assertions.length + 1) + ": " + e.message);
       }
     },
 
     teardown: function() {
       try {
         this.testEnvironment.teardown.call(this.testEnvironment);
-      } catch (e) {
+      } catch(e) {
+        if (config.throwEx) throw e;
         QUnit.ok(false, "Teardown failed on " + this.testName + ": " + e.message);
       }
     },
@@ -176,16 +173,17 @@ function lib_qunit() {
      * @example ok( "asdfasdf".length > 5, "There must be at least 5 chars" );
      */
     ok: function(a, msg) {
-      a = !! a;
-      var details = {
-        result: a,
-        message: msg
-      };
-      QUnit.log(details);
-      config.current.assertions.push({
-        result: a,
-        message: msg
-      });
+      QUnit.push(!!a, null, null, msg, false);
+      //var r = !! a;
+      //var details = {
+      //  result: r,
+      //  message: msg
+      //};
+      //QUnit.log(details);
+      //config.current.assertions.push({
+      //  result: r,
+      //  message: msg
+      //});
     },
 
     /**
@@ -201,7 +199,13 @@ function lib_qunit() {
      * @param String message (optional)
      */
     equal: function(actual, expected, message) {
-      QUnit.push(expected == actual, actual, expected, message);
+      var isEq;
+      if (expected instanceof Object && typeof expected.equals == 'function') {
+        isEq = expected.equals(actual);
+      } else {
+        isEq = expected == actual;
+      }
+      QUnit.push(isEq, actual, expected, message);
     },
 
     notEqual: function(actual, expected, message) {
@@ -234,7 +238,7 @@ function lib_qunit() {
 
       try {
         block();
-      } catch (e) {
+      } catch(e) {
         actual = e;
       }
 
@@ -265,15 +269,6 @@ function lib_qunit() {
   QUnit.equals = QUnit.equal;
   QUnit.same = QUnit.deepEqual;
 
-  // Maintain internal state
-  var config = {
-    stats: {all: 0, bad: 0},
-    // by default, run previously failed tests first (useful in with "Hide passed tests" checked)
-    reorder: true,
-    noglobals: false,
-    notrycatch: false
-  };
-
   // Expose the API as global variables
   //module, test, expect, ok, equal, notEqual, deepEqual, notDeepEqual, strictEqual, notStrictEqual,
   // raises, [equals], [same]
@@ -282,6 +277,7 @@ function lib_qunit() {
   // define these after exposing globals to keep them in these QUnit namespace only
   extend(QUnit, {
     config: config,
+    results: [],
 
     // Initialize the configuration options
     init: function() {
@@ -331,6 +327,7 @@ function lib_qunit() {
     },
 
     push: function(result, actual, expected, message) {
+      message = message || (result ? "okay" : "failed");
       var details = {
         result: result,
         message: message,
@@ -338,65 +335,55 @@ function lib_qunit() {
         expected: expected
       };
 
-      message = message || (result ? "okay" : "failed");
-      expected = JSON.stringify(expected);
-      actual = JSON.stringify(actual);
-      var output = message + '' + expected + '';
-      if (actual != expected) {
-        output += 'Result: ' + actual + '';
-      }
-
       QUnit.log(details);
+
+      var output = ['Assertion Failure: ' + message];
+      if (actual !== null || expected !== null) {
+        output.push(' * Actual: ' + JSON.stringify(actual));
+        output.push(' * Expected: ' + JSON.stringify(expected));
+      }
+      //QUnit.log(output.join('\r\n'));
 
       config.current.assertions.push({
         result: !! result,
-        message: output
+        message: output.join('\r\n')
       });
-    },
-
-    url: function(params) {
-      params = extend({}, params);
-      var querystring = "?", key;
-      forEach(params, function(key, param) {
-        querystring += encodeURIComponent(key) + "=" + encodeURIComponent(param) + "&";
-      });
-      return req.url('path') + querystring.slice(0, -1);
     },
 
     // Logging callbacks; all receive a single argument with the listed properties
-    begin: function() {},
-    // done: { failed, passed, total, runtime }
-    done: function() {},
     // log: { result, actual, expected, message }
-    log: function() {},
+    log: function(p) {
+      if (!p.result) {
+        this.results.push('Assertion Failure: ' + p.message);
+      }
+    },
     // testStart: { name }
-    testStart: function() {},
+    testStart: function(p) {
+      this.results.push('Begin Test: ' + p.name);
+    },
     // testDone: { name, failed, passed, total }
-    testDone: function() {},
+    testDone: function(p) {
+      if (p.passed == p.total) {
+        this.results.push('Test Successful: ' + p.passed + ' / ' + p.total + ' Assertions Passed');
+      } else {
+        this.results.push('Test Results: ' + p.passed + ' / ' + p.total + ' Assertions Passed; ' + p.failed + ' Failed.');
+      }
+      this.results.push('');
+    },
     // moduleStart: { name }
-    moduleStart: function() {},
+    moduleStart: function(p) {
+      this.results.push('Module "' + p.name + '"');
+    },
     // moduleDone: { name, failed, passed, total }
-    moduleDone: function() {}
-  });
+    moduleDone: function(p) {
+      this.results.push('');
+    },
 
-  function done() {
-    // Log the last module results
-    if (config.currentModule) {
-      QUnit.moduleDone({
-        name: config.currentModule,
-        failed: config.moduleStats.bad,
-        passed: config.moduleStats.all - config.moduleStats.bad,
-        total: config.moduleStats.all
-      });
+    getTestResults: function(format) {
+      return this.results.join('\r\n');
     }
-    var runtime = +new Date - config.started, passed = config.stats.all - config.stats.bad;
-    QUnit.done({
-      failed: config.stats.bad,
-      passed: passed,
-      total: config.stats.all,
-      runtime: runtime
-    });
-  }
+
+  });
 
   function validTest(name) {
     var filter = config.filter, run = false;
@@ -416,25 +403,8 @@ function lib_qunit() {
     return run;
   }
 
-  // returns a new Array with the elements that are in a but not in b
-  function diff(a, b) {
-    var result = a.slice();
-    for (var i = 0; i < result.length; i++) {
-      for (var j = 0; j < b.length; j++) {
-        if (result[i] === b[j]) {
-          result.splice(i, 1);
-          i--;
-          break;
-        }
-      }
-    }
-    return result;
-  }
-
-  function fail(message, exception, callback) {
-    //console.error(message);
-    //console.error(exception);
-    //console.warn(callback.toString());
+  function fail(testName, ex, callback) {
+    res.die("Test " + this.testName + " died with exception: " + ex.message);
   }
 
   function extend(a, b) {
