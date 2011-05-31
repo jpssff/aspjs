@@ -13,9 +13,12 @@ bind('ready', function() {
 
   app('/test/jqlite', function() {
 
-    var output = []
-      , jQuery = jq.create(sys.fs.readTextFile('~/system/data/test/jqlite.html'))
+    var html = sys.fs.readTextFile('~/system/data/test/jqlite.html')
+      , output = []
+      , jQuery = jq.create(html)
       , $ = jQuery;
+
+    res.die($.toHTML());
 
     module("core");
     test("Basic requirements", function() {

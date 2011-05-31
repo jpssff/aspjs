@@ -346,16 +346,20 @@ function lib_xmldom() {
     return text.join('');
   };
 
+  XNode.prototype.attribsToXML = function() {
+    var attribs = [];
+    for (var i = 0; i < this.attributes.length; ++i) {
+      var attr = this.attributes[i];
+      attribs.push(' ' + attr.nodeName + '="' + xmlAttrEnc(attr.nodeValue) + '"');
+    }
+    return attribs.join('');
+  };
+
   XNode.prototype.xml = function(emptyElements, noencElements) {
     var xml = [], empty = emptyElements || {}, noenc = noencElements || {};
     domTraverseElements(this, function(node) {
       if (node.nodeType == DOM_ELEMENT_NODE) {
-        var attribs = [];
-        for (var i = 0; i < node.attributes.length; ++i) {
-          var attr = node.attributes[i];
-          attribs.push(' ' + attr.nodeName + '="' + xmlAttrEnc(attr.nodeValue) + '"');
-        }
-        xml.push('<' + node.nodeName + attribs.join('') + (node.firstChild || !empty[node.nodeName] ? '' : '/') + '>');
+        xml.push('<' + node.nodeName + node.attribsToXML() + (node.firstChild || !empty[node.nodeName] ? '' : '/') + '>');
       } else
       if (node.nodeType == DOM_TEXT_NODE) {
         if (node.parentNode && noenc[node.parentNode.tagName]) {
