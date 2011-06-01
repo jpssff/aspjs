@@ -19,9 +19,7 @@ function lib_domwrapper() {
         for (var i = 0; i < attrs.length; i++) {
           elem.setAttribute(attrs[i].name, attrs[i].value);
         }
-        if (curParentNode) {
-          curParentNode.appendChild(elem);
-        }
+        (curParentNode || node).appendChild(elem);
         if (!unary) {
           elems.push(elem);
           curParentNode = elem;
@@ -147,12 +145,20 @@ function lib_domwrapper() {
       var node = this._xmlNode;
       appendHTML(node, html);
     },
-    innerHTML: function() {
-      var html = [], children = this.childNodes();
-      for (var i = 0; i < children.length; i++) {
-        html.push(children[i].outerHTML());
+    innerHTML: function(html) {
+      var children = this.childNodes();
+      if (arguments.length == 1) {
+        for (var i = 0; i < children.length; i++) {
+          this.removeChild(children[i]);
+        }
+        return this.appendHTML(html);
+      } else {
+        html = [];
+        for (var i = 0; i < children.length; i++) {
+          html.push(children[i].outerHTML());
+        }
+        return html.join('');
       }
-      return html.join('');
     },
     outerHTML: function() {
       return this._xmlNode.xml(EL_EMPTY, EL_NOENC);

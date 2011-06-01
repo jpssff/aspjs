@@ -1014,13 +1014,12 @@ function lib_jqlite() {
       },
 
       dir: function(elem, dir, until) {
-        var matched = [],
-            cur = elem[dir];
+        var matched = [], cur = elem[dir]();
         while (cur && cur.nodeType() !== 9 && (until === undefined || cur.nodeType() !== 1 || !jQuery(cur).is(until))) {
           if (cur.nodeType() == 1) {
             matched.push(cur);
           }
-          cur = cur[dir];
+          cur = cur[dir]();
         }
         return matched;
       },
@@ -1029,7 +1028,7 @@ function lib_jqlite() {
         result = result || 1;
         var num = 0;
 
-        for (; cur; cur = cur[dir]) {
+        for (; cur; cur = cur[dir]()) {
           if (cur.nodeType() == 1 && ++num === result) {
             break;
           }
@@ -1041,7 +1040,7 @@ function lib_jqlite() {
       sibling: function(n, elem) {
         var r = [];
 
-        for (; n; n = n.nextSibling) {
+        for (; n; n = n.nextSibling()) {
           if (n.nodeType() == 1 && n !== elem) {
             r.push(n);
           }
@@ -1163,7 +1162,7 @@ function lib_jqlite() {
       after: function() {
         if (this[0] && this[0].parentNode()) {
           return this.domManip(arguments, false, function(elem) {
-            this.parentNode().insertBefore(elem, this.nextSibling);
+            this.parentNode().insertBefore(elem, this.nextSibling());
           });
         } else
         if (arguments.length) {
@@ -1238,10 +1237,11 @@ function lib_jqlite() {
       },
 
       toHTML: function() {
-        if (this[0] && this[0].nodeType() == 1) {
-          return this[0].outerHTML();
-        }
-        return null;
+        var html = [];
+        this.each(function() {
+          html.push(this.outerHTML());
+        });
+        return html.length ? html.join('\r\n') : null;
       },
 
       replaceWith: function(value) {
@@ -1250,8 +1250,7 @@ function lib_jqlite() {
           // this can help fix replacing a parent with child elements
           if (jQuery.isFunction(value)) {
             return this.each(function(i) {
-              var self = jQuery(this),
-                  old = self.html();
+              var self = jQuery(this), old = self.html();
               self.replaceWith(value.call(this, i, old));
             });
           }
@@ -1261,11 +1260,8 @@ function lib_jqlite() {
           }
 
           return this.each(function() {
-            var next = this.nextSibling,
-                parent = this.parentNode();
-
+            var next = this.nextSibling(), parent = this.parentNode();
             jQuery(this).remove();
-
             if (next) {
               jQuery(next).before(value);
             } else {

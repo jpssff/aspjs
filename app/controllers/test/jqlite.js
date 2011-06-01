@@ -9,11 +9,8 @@ bind('ready', function() {
     });
   }
   function t(a, b, c) {
-    var f = jQuery(b).get(), s = "";
-    for ( var i = 0; i < f.length; i++ ) {
-      s += (s && ",") + '"' + f[i].id + '"';
-    }
-    same(f, q.apply(q,c), a + " (" + b + ")");
+    var f = jQuery(b).get();
+    same(f, q.apply(q, c), a + " (" + b + ")");
   }
 
   //app('/test/jqlite', function() {
@@ -459,6 +456,148 @@ bind('ready', function() {
       t( "Checking sort order", "h2, h1", ["qunit-header", "qunit-banner", "qunit-userAgent"] );
       t( "Checking sort order", "h2:first, h1:first", ["qunit-header", "qunit-banner"] );
       t( "Checking sort order", "p, p a", ["firstp", "simon1", "ap", "google", "groups", "anchor1", "mark", "sndp", "en", "yahoo", "sap", "anchor2", "simon", "first"] );
+    });
+
+    test("broken", function() {
+      expect(8);
+      function broken(name, selector) {
+        try {
+          jQuery(selector);
+          ok( false, name + ": " + selector );
+        } catch(e){
+          ok(  typeof e === "string" && e.indexOf("Syntax error") >= 0, name + ": " + selector );
+        }
+      }
+      broken( "Broken Selector", "[", [] );
+      broken( "Broken Selector", "(", [] );
+      broken( "Broken Selector", "{", [] );
+      broken( "Broken Selector", "<", [] );
+      broken( "Broken Selector", "()", [] );
+      broken( "Broken Selector", "<>", [] );
+      broken( "Broken Selector", "{}", [] );
+      broken( "Doesn't exist", ":visble", [] );
+    });
+
+    test("id", function() {
+      expect(28);
+      t( "ID Selector", "#body", ["body"] );
+      t( "ID Selector w/ Element", "body#body", ["body"] );
+      t( "ID Selector w/ Element", "ul#first", [] );
+      t( "ID selector with existing ID descendant", "#firstp #simon1", ["simon1"] );
+      t( "ID selector with non-existant descendant", "#firstp #foobar", [] );
+      t( "ID selector using UTF8", "#台北Táiběi", ["台北Táiběi"] );
+      t( "Multiple ID selectors using UTF8", "#台北Táiběi, #台北", ["台北Táiběi","台北"] );
+      t( "Descendant ID selector using UTF8", "div #台北", ["台北"] );
+      t( "Child ID selector using UTF8", "form > #台北", ["台北"] );
+      t( "Escaped ID", "#foo\\:bar", ["foo:bar"] );
+      t( "Escaped ID", "#test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
+      t( "Descendant escaped ID", "div #foo\\:bar", ["foo:bar"] );
+      t( "Descendant escaped ID", "div #test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
+      t( "Child escaped ID", "form > #foo\\:bar", ["foo:bar"] );
+      t( "Child escaped ID", "form > #test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
+      t( "ID Selector, child ID present", "#form > #radio1", ["radio1"] ); // bug #267
+      t( "ID Selector, not an ancestor ID", "#form #first", [] );
+      t( "ID Selector, not a child ID", "#form > #option1a", [] );
+      t( "All Children of ID", "#foo > *", ["sndp", "en", "sap"] );
+      t( "All Children of ID with no children", "#firstUL > *", [] );
+      var a = jQuery('<div><a name="tName1">tName1 A</a><a name="tName2">tName2 A</a><div id="tName1">tName1 Div</div></div>').appendTo('#main');
+      equals( jQuery("#tName1")[0].getAttribute('id'), 'tName1', "ID selector with same value for a name attribute" );
+      equals( jQuery("#tName2").length, 0, "ID selector non-existing but name attribute on an A tag" );
+      a.remove();
+      t( "ID Selector on Form with an input that has a name of 'id'", "#lengthtest", ["lengthtest"] );
+      t( "ID selector with non-existant ancestor", "#asdfasdf #foobar", [] ); // bug #986
+      same( jQuery("body").find("div#form").get(), [], "ID selector within the context of another element" );
+      t( "Underscore ID", "#types_all", ["types_all"] );
+      t( "Dash ID", "#fx-queue", ["fx-queue"] );
+      t( "ID with weird characters in it", "#name\\+value", ["name+value"] );
+    });
+
+    test("class", function() {
+      expect(22);
+      t( "Class Selector", ".blog", ["mark","simon"] );
+      t( "Class Selector", ".GROUPS", ["groups"] );
+      t( "Class Selector", ".blog.link", ["simon"] );
+      t( "Class Selector w/ Element", "a.blog", ["mark","simon"] );
+      t( "Parent Class Selector", "p .blog", ["mark","simon"] );
+      same( jQuery(".blog", document.getElementsByTagName("p")).get(), q("mark", "simon"), "Finding elements with a context." );
+      same( jQuery(".blog", "p").get(), q("mark", "simon"), "Finding elements with a context." );
+      same( jQuery(".blog", jQuery("p")).get(), q("mark", "simon"), "Finding elements with a context." );
+      same( jQuery("p").find(".blog").get(), q("mark", "simon"), "Finding elements with a context." );
+      t( "Class selector using UTF8", ".台北Táiběi", ["utf8class1"] );
+      t( "Class selector using UTF8", ".台北Táiběi.台北", ["utf8class1"] );
+      t( "Class selector using UTF8", ".台北Táiběi, .台北", ["utf8class1","utf8class2"] );
+      t( "Descendant class selector using UTF8", "div .台北Táiběi", ["utf8class1"] );
+      t( "Child class selector using UTF8", "form > .台北Táiběi", ["utf8class1"] );
+      t( "Escaped Class", ".foo\\:bar", ["foo:bar"] );
+      t( "Escaped Class", ".test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
+      t( "Descendant scaped Class", "div .foo\\:bar", ["foo:bar"] );
+      t( "Descendant scaped Class", "div .test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
+      t( "Child escaped Class", "form > .foo\\:bar", ["foo:bar"] );
+      t( "Child escaped Class", "form > .test\\.foo\\[5\\]bar", ["test.foo[5]bar"] );
+      var div = document.createElement("div");
+      div.innerHTML("<div class='test e'></div><div class='test'></div>");
+      same( jQuery(".e", div).get(), [ div.firstChild() ], "Finding a second class." );
+      div.lastChild().setAttribute('class', "e");
+      same( jQuery(".e", div).get(), [ div.firstChild(), div.lastChild() ], "Finding a modified class." );
+    });
+
+    test("name", function() {
+      expect(14);
+      t( "Name selector", "input[name=action]", ["text1"] );
+      t( "Name selector with single quotes", "input[name='action']", ["text1"] );
+      t( "Name selector with double quotes", 'input[name="action"]', ["text1"] );
+      t( "Name selector non-input", "[name=test]", ["length", "fx-queue"] );
+      t( "Name selector non-input", "[name=div]", ["fadein"] );
+      t( "Name selector non-input", "*[name=iframe]", ["iframe"] );
+      t( "Name selector for grouped input", "input[name='types[]']", ["types_all", "types_anime", "types_movie"] )
+      same( jQuery("#form").find("input[name=action]").get(), q("text1"), "Name selector within the context of another element" );
+      same( jQuery("#form").find("input[name='foo[bar]']").get(), q("hidden2"), "Name selector for grouped form element within the context of another element" );
+      var a = jQuery('<div><a id="tName1ID" name="tName1">tName1 A</a><a id="tName2ID" name="tName2">tName2 A</a><div id="tName1">tName1 Div</div></div>').appendTo('#main').children();
+      equals( a.length, 3, "Make sure the right number of elements were inserted." );
+      equals( a[1].getAttribute('id'), "tName2ID", "Make sure the right number of elements were inserted." );
+      t( "Find elements that have similar IDs", "[name=tName1]", ["tName1ID"] );
+      t( "Find elements that have similar IDs", "[name=tName2]", ["tName2ID"] );
+      t( "Find elements that have similar IDs", "#tName2ID", ["tName2ID"] );
+      a.remove();
+    });
+    
+    test("multiple", function() {
+      expect(4);
+      t( "Comma Support", "h2, p", ["qunit-banner","qunit-userAgent","firstp","ap","sndp","en","sap","first"]);
+      t( "Comma Support", "h2 , p", ["qunit-banner","qunit-userAgent","firstp","ap","sndp","en","sap","first"]);
+      t( "Comma Support", "h2 , p", ["qunit-banner","qunit-userAgent","firstp","ap","sndp","en","sap","first"]);
+      t( "Comma Support", "h2,p", ["qunit-banner","qunit-userAgent","firstp","ap","sndp","en","sap","first"]);
+    });
+    
+    test("child and adjacent", function() {
+      expect(27);
+      t( "Child", "p > a", ["simon1","google","groups","mark","yahoo","simon"] );
+      t( "Child", "p> a", ["simon1","google","groups","mark","yahoo","simon"] );
+      t( "Child", "p >a", ["simon1","google","groups","mark","yahoo","simon"] );
+      t( "Child", "p>a", ["simon1","google","groups","mark","yahoo","simon"] );
+      t( "Child w/ Class", "p > a.blog", ["mark","simon"] );
+      t( "All Children", "code > *", ["anchor1","anchor2"] );
+      t( "All Grandchildren", "p > * > *", ["anchor1","anchor2"] );
+      t( "Adjacent", "a + a", ["groups"] );
+      t( "Adjacent", "a +a", ["groups"] );
+      t( "Adjacent", "a+ a", ["groups"] );
+      t( "Adjacent", "a+a", ["groups"] );
+      t( "Adjacent", "p + p", ["ap","en","sap"] );
+      t( "Adjacent", "p#firstp + p", ["ap"] );
+      t( "Adjacent", "p[lang=en] + p", ["sap"] );
+      t( "Adjacent", "a.GROUPS + code + a", ["mark"] );
+      t( "Comma, Child, and Adjacent", "a + a, code > a", ["groups","anchor1","anchor2"] );
+      t( "Element Preceded By", "p ~ div", ["foo", "moretests","tabindex-tests", "liveHandlerOrder", "siblingTest"] );
+      t( "Element Preceded By", "#first ~ div", ["moretests","tabindex-tests", "liveHandlerOrder", "siblingTest"] );
+      t( "Element Preceded By", "#groups ~ a", ["mark"] );
+      t( "Element Preceded By", "#length ~ input", ["idTest"] );
+      t( "Element Preceded By", "#siblingfirst ~ em", ["siblingnext"] );
+      t( "Verify deep class selector", "div.blah > p > a", [] );
+      t( "No element deep selector", "div.foo > span > a", [] );
+      same( jQuery("> :first", document.getElementById("nothiddendiv")).get(), q("nothiddendivchild"), "Verify child context positional selctor" );
+      same( jQuery("> :eq(0)", document.getElementById("nothiddendiv")).get(), q("nothiddendivchild"), "Verify child context positional selctor" );
+      same( jQuery("> *:first", document.getElementById("nothiddendiv")).get(), q("nothiddendivchild"), "Verify child context positional selctor" );
+      t( "Non-existant ancestors", ".fototab > .thumbnails > a", [] );
     });
 
 
