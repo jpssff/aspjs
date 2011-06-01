@@ -8,6 +8,13 @@ bind('ready', function() {
       return doc.getElementById(el)
     });
   }
+  function t(a, b, c) {
+    var f = jQuery(b).get(), s = "";
+    for ( var i = 0; i < f.length; i++ ) {
+      s += (s && ",") + '"' + f[i].id + '"';
+    }
+    same(f, q.apply(q,c), a + " (" + b + ")");
+  }
 
   //app('/test/jqlite', function() {
   //  var jq = lib('jqlite');
@@ -17,6 +24,22 @@ bind('ready', function() {
   //  $('title').text('Bits & Bobs');
   //  res.die($.toHTML());
   //});
+
+  app('/test/sizzle', function() {
+    var dom = lib('domwrapper'), sizzle = lib('sizzle');
+    //var doc = new dom.HtmlDoc('<p class=a name=one><b>Hello</b> <b>World');
+    var html = '<p id="ap">Here are some links in a normal paragraph: <a id="google" href="http://www.google.com/" title="Google!">Google</a>,' +
+    '<a id="groups" href="http://groups.google.com/" class="GROUPS">Google Groups (Link)</a>. ' +
+    'This link has <code><a href="http://smin" id="anchor1">class="blog"</a></code>: ' +
+    '<a href="http://diveintomark.org/" class="blog" hreflang="en" id="mark">diveintomark</a></p>';
+    var doc = new dom.HtmlDoc(html), body = doc.getElementsByTagName('body')[0];
+    var $ = jq.create(html);
+    res.die($('#ap > a').length);
+    //body.appendHTML('<p id=two>Another Paragraph</p>');
+    //var arr = doc.getElementsByTagName('p');
+    var arr = sizzle('p > a', body);
+    res.die(arr.map(function(el){ return el.outerHTML(); }).join('\r\n'));
+  });
 
   app('/test/jqlite/run', function() {
 
@@ -200,6 +223,244 @@ bind('ready', function() {
       ok( jQuery("<div></div>")[0], "Create a div with closing tag." );
       ok( jQuery("<table></table>")[0], "Create a table with closing tag." );
     });
+    
+    test("jQuery('html', context)", function() {
+      expect(1);
+      var $div = jQuery("<div/>")[0];
+      var $span = jQuery("<span/>", $div);
+      equals($span.length, 1, "Verify a span created with a div context works, #1763");
+    });
+
+    test("end()", function() {
+      expect(3);
+      equals( 'Yahoo', jQuery('#yahoo').parent().end().text(), 'Check for end' );
+      ok( jQuery('#yahoo').end(), 'Check for end with nothing to end' );
+      var x = jQuery('#yahoo');
+      x.parent();
+      equals( 'Yahoo', jQuery('#yahoo').text(), 'Check for non-destructive behaviour' );
+    });
+
+    test("wrapped set functions", function() {
+      expect(28);
+      equals( jQuery("p").length, 6, "$(el).length" );
+      equals( jQuery("p").size(), 6, "$(el).size()" );
+      same( jQuery("p").get(), q("firstp","ap","sndp","en","sap","first"), "Get All Elements" );
+      same( jQuery("p").toArray(), q("firstp","ap","sndp","en","sap","first"), "Convert jQuery object to an Array" );
+      equals( jQuery("p").get(0), document.getElementById("firstp"), "Get A Single Element" );
+      equals( jQuery("p").get(-1), document.getElementById("first"), "Get a single element with negative index" )
+      var div = jQuery("div");
+      div.each(function(){this.foo = 'zoo';});
+      var pass = true;
+      for ( var i = 0; i < div.size(); i++ ) {
+        if ( div.get(i).foo != "zoo" ) pass = false;
+      }
+      ok( pass, "Execute a function, Relative" );
+      var $links = jQuery("#ap a");
+      same( $links.slice(1,2).get(), q("groups"), "slice(1,2)" );
+      same( $links.slice(1).get(), q("groups", "anchor1", "mark"), "slice(1)" );
+      same( $links.slice(0,3).get(), q("google", "groups", "anchor1"), "slice(0,3)" );
+      same( $links.slice(-1).get(), q("mark"), "slice(-1)" );
+      same( $links.eq(1).get(), q("groups"), "eq(1)" );
+      same( $links.eq('2').get(), q("anchor1"), "eq('2')" );
+      same( $links.eq(-1).get(), q("mark"), "eq(-1)" );
+      var $links = jQuery("#ap a"), $none = jQuery("asdf");
+      same( $links.first().get(), q("google"), "first()" );
+      same( $links.last().get(), q("mark"), "last()" );
+      same( $none.first().get(), [], "first() none" );
+      same( $none.last().get(), [], "last() none" );
+      same(
+        jQuery("#ap").map(function(){
+          return jQuery(this).find("a").get();
+        }).get(),
+        q("google", "groups", "anchor1", "mark"), "Array Map");
+      same(
+        jQuery("#ap > a").map(function(){
+          return this.parentNode();
+        }).get(),
+        q("ap", "ap", "ap"), "Single Map");
+      var parse = jQuery.merge;
+      same( parse([],[]), [], "Empty arrays" );
+      same( parse([1],[2]), [1,2], "Basic" );
+      same( parse([1,2],[3,4]), [1,2,3,4], "Basic" );
+      same( parse([1,2],[]), [1,2], "Second empty" );
+      same( parse([],[1,2]), [1,2], "First empty" );
+      same( parse([-2,-1], [0,1,2]), [-2,-1,0,1,2], "Second array including a zero (falsy)");
+      same( parse([], [null, undefined]), [null, undefined], "Second array including null and undefined values");
+      same( parse({length:0}, [1,2]), {length:2, 0:1, 1:2}, "First array like");
+    });
+
+    test("jQuery.extend(Object, Object)", function() {
+      expect(25);
+      var settings = { xnumber1: 5, xnumber2: 7, xstring1: "peter", xstring2: "pan" },
+        options = { xnumber2: 1, xstring2: "x", xxx: "newstring" },
+        optionsCopy = { xnumber2: 1, xstring2: "x", xxx: "newstring" },
+        merged = { xnumber1: 5, xnumber2: 1, xstring1: "peter", xstring2: "x", xxx: "newstring" },
+        deep1 = { foo: { bar: true } },
+        deep1copy = { foo: { bar: true } },
+        deep2 = { foo: { baz: true }, foo2: document },
+        deep2copy = { foo: { baz: true }, foo2: document },
+        deepmerged = { foo: { bar: true, baz: true }, foo2: document },
+        arr = [1, 2, 3],
+        nestedarray = { arr: arr };
+      jQuery.extend(settings, options);
+      same( settings, merged, "Check if extended: settings must be extended" );
+      same( options, optionsCopy, "Check if not modified: options must not be modified" );
+      jQuery.extend(settings, null, options);
+      same( settings, merged, "Check if extended: settings must be extended" );
+      same( options, optionsCopy, "Check if not modified: options must not be modified" );
+      jQuery.extend(true, deep1, deep2);
+      same( deep1.foo, deepmerged.foo, "Check if foo: settings must be extended" );
+      same( deep2.foo, deep2copy.foo, "Check if not deep2: options must not be modified" );
+      equals( deep1.foo2, document, "Make sure that a deep clone was not attempted on the document" );
+      ok( jQuery.extend(true, [], arr) !== arr, "Deep extend of array must clone array" );
+      ok( jQuery.extend(true, {}, nestedarray).arr !== arr, "Deep extend of object must clone child array" );
+      var empty = {};
+      var optionsWithLength = { foo: { length: -1 } };
+      jQuery.extend(true, empty, optionsWithLength);
+      same( empty.foo, optionsWithLength.foo, "The length property must copy correctly" );
+      empty = {};
+      var optionsWithDate = { foo: { date: new Date } };
+      jQuery.extend(true, empty, optionsWithDate);
+      same( empty.foo, optionsWithDate.foo, "Dates copy correctly" );
+      //var myKlass = function() {};
+      //var customObject = new myKlass();
+      //var optionsWithCustomObject = { foo: { date: customObject } };
+      //empty = {};
+      //jQuery.extend(true, empty, optionsWithCustomObject);
+      //ok( empty.foo && empty.foo.date === customObject, "Custom objects copy correctly (no methods)" );
+      //// Makes the class a little more realistic
+      //myKlass.prototype = { someMethod: function(){} };
+      //empty = {};
+      //jQuery.extend(true, empty, optionsWithCustomObject);
+      //ok( empty.foo && empty.foo.date === customObject, "Custom objects copy correctly" );
+      var ret = jQuery.extend(true, { foo: 4 }, { foo: new Number(5) } );
+      ok( ret.foo == 5, "Wrapped numbers copy correctly" );
+      var nullUndef;
+      nullUndef = jQuery.extend({}, options, { xnumber2: null });
+      ok( nullUndef.xnumber2 === null, "Check to make sure null values are copied");
+      nullUndef = jQuery.extend({}, options, { xnumber2: undefined });
+      ok( nullUndef.xnumber2 === options.xnumber2, "Check to make sure undefined values are not copied");
+      nullUndef = jQuery.extend({}, options, { xnumber0: null });
+      ok( nullUndef.xnumber0 === null, "Check to make sure null values are inserted");
+      var target = {};
+      var recursive = { foo:target, bar:5 };
+      jQuery.extend(true, target, recursive);
+      same( target, { bar:5 }, "Check to make sure a recursive obj doesn't go never-ending loop by not copying it over" );
+      var ret = jQuery.extend(true, { foo: [] }, { foo: [0] } ); // 1907
+      equals( ret.foo.length, 1, "Check to make sure a value with coersion 'false' copies over when necessary to fix #1907" );
+      var ret = jQuery.extend(true, { foo: "1,2,3" }, { foo: [1, 2, 3] } );
+      ok( typeof ret.foo != "string", "Check to make sure values equal with coersion (but not actually equal) overwrite correctly" );
+      var ret = jQuery.extend(true, { foo:"bar" }, { foo:null } );
+      ok( typeof ret.foo !== 'undefined', "Make sure a null value doesn't crash with deep extend, for #1908" );
+      var obj = { foo:null };
+      jQuery.extend(true, obj, { foo:"notnull" } );
+      equals( obj.foo, "notnull", "Make sure a null value can be overwritten" );
+      function func() {}
+      jQuery.extend(func, { key: "value" } );
+      equals( func.key, "value", "Verify a function can be extended" );
+      var defaults = { xnumber1: 5, xnumber2: 7, xstring1: "peter", xstring2: "pan" },
+        defaultsCopy = { xnumber1: 5, xnumber2: 7, xstring1: "peter", xstring2: "pan" },
+        options1 = { xnumber2: 1, xstring2: "x" },
+        options1Copy = { xnumber2: 1, xstring2: "x" },
+        options2 = { xstring2: "xx", xxx: "newstringx" },
+        options2Copy = { xstring2: "xx", xxx: "newstringx" },
+        merged2 = { xnumber1: 5, xnumber2: 1, xstring1: "peter", xstring2: "xx", xxx: "newstringx" };
+      var settings = jQuery.extend({}, defaults, options1, options2);
+      same( settings, merged2, "Check if extended: settings must be extended" );
+      same( defaults, defaultsCopy, "Check if not modified: options1 must not be modified" );
+      same( options1, options1Copy, "Check if not modified: options1 must not be modified" );
+      same( options2, options2Copy, "Check if not modified: options2 must not be modified" );
+    });
+
+    test("jQuery.each(Object,Function)", function() {
+      expect(13);
+      jQuery.each( [0,1,2], function(i, n){
+        equals( i, n, "Check array iteration" );
+      });
+      jQuery.each( [5,6,7], function(i, n){
+        equals( i, n - 5, "Check array iteration" );
+      });
+      jQuery.each( { name: "name", lang: "lang" }, function(i, n){
+        equals( i, n, "Check object iteration" );
+      });
+      var total = 0;
+      jQuery.each([1,2,3], function(i,v){ total += v; });
+      equals( total, 6, "Looping over an array" );
+      total = 0;
+      jQuery.each([1,2,3], function(i,v){ total += v; if ( i == 1 ) return false; });
+      equals( total, 3, "Looping over an array, with break" );
+      total = 0;
+      jQuery.each({"a":1,"b":2,"c":3}, function(i,v){ total += v; });
+      equals( total, 6, "Looping over an object" );
+      total = 0;
+      jQuery.each({"a":3,"b":3,"c":3}, function(i,v){ total += v; return false; });
+      equals( total, 3, "Looping over an object, with break" );
+      var f = function(){};
+      f.foo = 'bar';
+      jQuery.each(f, function(i){
+        f[i] = 'baz';
+      });
+      equals( "baz", f.foo, "Loop over a function" );
+    });
+
+    test("jQuery.makeArray", function(){
+      expect(15);
+      equals( jQuery.makeArray(jQuery('html>*'))[0].nodeName().toUpperCase(), "HEAD", "Pass makeArray a jQuery object" );
+      equals( jQuery.makeArray(document.getElementsByName("PWD")).slice(0,1)[0].getAttribute('name'), "PWD", "Pass makeArray a nodelist" );
+      equals( (function(){ return jQuery.makeArray(arguments); })(1,2).join(""), "12", "Pass makeArray an arguments array" );
+      equals( jQuery.makeArray([1,2,3]).join(""), "123", "Pass makeArray a real array" );
+      equals( jQuery.makeArray().length, 0, "Pass nothing to makeArray and expect an empty array" );
+      equals( jQuery.makeArray( 0 )[0], 0 , "Pass makeArray a number" );
+      equals( jQuery.makeArray( "foo" )[0], "foo", "Pass makeArray a string" );
+      equals( jQuery.makeArray( true )[0].constructor, Boolean, "Pass makeArray a boolean" );
+      equals( jQuery.makeArray( document.createElement("div") )[0].nodeName().toUpperCase(), "DIV", "Pass makeArray a single node" );
+      equals( jQuery.makeArray( {length:2, 0:"a", 1:"b"} ).join(""), "ab", "Pass makeArray an array like map (with length)" );
+      ok( !!jQuery.makeArray( document.documentElement().childNodes() ).slice(0,1)[0].nodeName(), "Pass makeArray a childNodes array" );
+      // function, is tricky as it has length
+      equals( jQuery.makeArray( function(){ return 1;} )[0](), 1, "Pass makeArray a function" );
+      equals( jQuery.makeArray(/a/)[0].constructor, RegExp, "Pass makeArray a regex" );
+      //ok( jQuery.makeArray(document.getElementById('form')).length >= 13, "Pass makeArray a form (treat as elements)" );
+      same( jQuery.makeArray({'length': '0'}), [], "Make sure object is coerced properly.");
+      same( jQuery.makeArray({'length': '5'}), [], "Make sure object is coerced properly.");
+    });
+
+    test("jQuery.isEmptyObject", function(){
+      expect(2);
+      equals(true, jQuery.isEmptyObject({}), "isEmptyObject on empty object literal" );
+      equals(false, jQuery.isEmptyObject({a:1}), "isEmptyObject on non-empty object literal" );
+    });
+
+
+    module("selector");
+
+    test("element", function() {
+      expect(18);
+      ok( jQuery("*").size() >= 30, "Select all" );
+      var all = jQuery("*"), good = true;
+      for ( var i = 0; i < all.length; i++ )
+        if ( all[i].nodeType() == 8 )
+          good = false;
+      ok( good, "Select all elements, no comment nodes" );
+      t( "Element Selector", "p", ["firstp","ap","sndp","en","sap","first"] );
+      t( "Element Selector", "body", ["body"] );
+      //t( "Element Selector", "html", ["html"] );
+      t( "Parent Element", "div p", ["firstp","ap","sndp","en","sap","first"] );
+      equals( jQuery("param", "#object1").length, 2, "Object/param as context" );
+      same( jQuery("p", document.getElementsByTagName("div")).get(), q("firstp","ap","sndp","en","sap","first"), "Finding elements with a context." );
+      same( jQuery("p", "div").get(), q("firstp","ap","sndp","en","sap","first"), "Finding elements with a context." );
+      same( jQuery("p", jQuery("div")).get(), q("firstp","ap","sndp","en","sap","first"), "Finding elements with a context." );
+      same( jQuery("div").find("p").get(), q("firstp","ap","sndp","en","sap","first"), "Finding elements with a context." );
+      same( jQuery("#form").find("select").get(), q("select1","select2","select3"), "Finding selects with a context." );
+      ok( jQuery("#length").length, '&lt;input name="length"&gt; cannot be found under IE, see #945' );
+      ok( jQuery("#lengthtest input").length, '&lt;input name="length"&gt; cannot be found under IE, see #945' );
+      // Check for unique-ness and sort order
+      same( jQuery("*").get(), jQuery("*, *").get(), "Check for duplicates: *, *" );
+      same( jQuery("p").get(), jQuery("p, div p").get(), "Check for duplicates: p, div p" );
+      t( "Checking sort order", "h2, h1", ["qunit-header", "qunit-banner", "qunit-userAgent"] );
+      t( "Checking sort order", "h2:first, h1:first", ["qunit-header", "qunit-banner"] );
+      t( "Checking sort order", "p, p a", ["firstp", "simon1", "ap", "google", "groups", "anchor1", "mark", "sndp", "en", "yahoo", "sap", "anchor2", "simon", "first"] );
+    });
+
 
 
     res.die(qunit.getTestResults());

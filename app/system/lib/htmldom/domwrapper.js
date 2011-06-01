@@ -131,7 +131,7 @@ function lib_domwrapper() {
       return NODE_TYPES[this._xmlNode.nodeType];
     },
     getElementsByName: function(val) {
-      return this.getElementsByAttr('name', val);
+      return this.getElementsByAttribute('name', val);
     },
     equals: function(otherHtmlNode) {
       return (this._xmlNode === otherHtmlNode._xmlNode);
@@ -172,7 +172,7 @@ function lib_domwrapper() {
       };
     });
   //Methods returning one or more Node
-  forEach('cloneNode getElementById getElementsByTagName getElementsByAttr'.w(),
+  forEach('cloneNode getElementById getElementsByTagName getElementsByAttribute'.w(),
     function(i, name) {
       HtmlNode.prototype[name] = function() {
         var node = this._xmlNode;
@@ -229,6 +229,9 @@ function lib_domwrapper() {
         this._xmlDoc.doctype = str;
       }
       return this._xmlDoc.doctype;
+    },
+    documentElement: function() {
+      return new HtmlNode(this._xmlNode);
     },
     equals: function(otherHtmlDoc) {
       return (this._xmlDoc === otherHtmlDoc._xmlDoc);

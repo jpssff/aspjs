@@ -380,6 +380,9 @@ function lib_qunit() {
     },
 
     getTestResults: function(format) {
+      var passed = this.config.stats.all - this.config.stats.bad;
+      this.results.push('TOTAL TESTS PASSED: ' + passed + ' / ' + this.config.stats.all);
+      this.results.push('');
       return this.results.join('\r\n');
     }
 
