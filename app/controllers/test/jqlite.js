@@ -633,6 +633,123 @@ bind('ready', function() {
       t( "Grouped Form Elements", "input[name='foo[bar]']", ["hidden2"] );
     });
 
+    test("pseudo - child", function() {
+      expect(31);
+      t( "First Child", "p:first-child", ["firstp","sndp"] );
+      t( "Last Child", "p:last-child", ["sap"] );
+      t( "Only Child", "a:only-child", ["simon1","anchor1","yahoo","anchor2","liveLink1","liveLink2"] );
+      t( "Empty", "ul:empty", ["firstUL"] );
+      t( "Is A Parent", "p:parent", ["firstp","ap","sndp","en","sap","first"] );
+      t( "First Child", "p:first-child", ["firstp","sndp"] );
+      t( "Nth Child", "p:nth-child(1)", ["firstp","sndp"] );
+      t( "Not Nth Child", "p:not(:nth-child(1))", ["ap","en","sap","first"] );
+      // Verify that the child position isn't being cached improperly
+      jQuery("p:first-child").after("<div></div>");
+      jQuery("p:first-child").before("<div></div>").next().remove();
+      t( "First Child", "p:first-child", [] );
+      reset();
+      t( "Last Child", "p:last-child", ["sap"] );
+      t( "Last Child", "a:last-child", ["simon1","anchor1","mark","yahoo","anchor2","simon","liveLink1","liveLink2"] );
+      t( "Nth-child", "#main form#form > *:nth-child(2)", ["text1"] );
+      t( "Nth-child", "#main form#form > :nth-child(2)", ["text1"] );
+      t( "Nth-child", "#form select:first option:nth-child(3)", ["option1c"] );
+      t( "Nth-child", "#form select:first option:nth-child(0n+3)", ["option1c"] );
+      t( "Nth-child", "#form select:first option:nth-child(1n+0)", ["option1a", "option1b", "option1c", "option1d"] );
+      t( "Nth-child", "#form select:first option:nth-child(1n)", ["option1a", "option1b", "option1c", "option1d"] );
+      t( "Nth-child", "#form select:first option:nth-child(n)", ["option1a", "option1b", "option1c", "option1d"] );
+      t( "Nth-child", "#form select:first option:nth-child(even)", ["option1b", "option1d"] );
+      t( "Nth-child", "#form select:first option:nth-child(odd)", ["option1a", "option1c"] );
+      t( "Nth-child", "#form select:first option:nth-child(2n)", ["option1b", "option1d"] );
+      t( "Nth-child", "#form select:first option:nth-child(2n+1)", ["option1a", "option1c"] );
+      t( "Nth-child", "#form select:first option:nth-child(3n)", ["option1c"] );
+      t( "Nth-child", "#form select:first option:nth-child(3n+1)", ["option1a", "option1d"] );
+      t( "Nth-child", "#form select:first option:nth-child(3n+2)", ["option1b"] );
+      t( "Nth-child", "#form select:first option:nth-child(3n+3)", ["option1c"] );
+      t( "Nth-child", "#form select:first option:nth-child(3n-1)", ["option1b"] );
+      t( "Nth-child", "#form select:first option:nth-child(3n-2)", ["option1a", "option1d"] );
+      t( "Nth-child", "#form select:first option:nth-child(3n-3)", ["option1c"] );
+      t( "Nth-child", "#form select:first option:nth-child(3n+0)", ["option1c"] );
+      t( "Nth-child", "#form select:first option:nth-child(-n+3)", ["option1a", "option1b", "option1c"] );
+    });
+
+    test("pseudo - misc", function() {
+      expect(6);
+      t( "Headers", ":header", ["qunit-header", "qunit-banner", "qunit-userAgent"] );
+      t( "Has Children - :has()", "p:has(a)", ["firstp","ap","en","sap"] );
+      t( "Text Contains", "a:contains('Google')", ["google","groups"] );
+      t( "Text Contains", "a:contains('Google Groups')", ["groups"] );
+      t( "Text Contains", "a:contains('Google Groups (Link)')", ["groups"] );
+      t( "Text Contains", "a:contains('(Link)')", ["groups"] );
+    });
+
+    test("pseudo - :not", function() {
+      expect(24);
+      t( "Not", "a.blog:not(.link)", ["mark"] );
+      t( "Not - multiple", "#form option:not(:contains('Nothing'),#option1b,:selected)", ["option1c", "option1d", "option2b", "option2c", "option3d", "option3e"] );
+      t( "Not - recursive", "#form option:not(:not(:selected))[id^='option3']", [ "option3b", "option3c"] );
+      t( ":not() failing interior", "p:not(.foo)", ["firstp","ap","sndp","en","sap","first"] );
+      t( ":not() failing interior", "p:not(div.foo)", ["firstp","ap","sndp","en","sap","first"] );
+      t( ":not() failing interior", "p:not(p.foo)", ["firstp","ap","sndp","en","sap","first"] );
+      t( ":not() failing interior", "p:not(#blargh)", ["firstp","ap","sndp","en","sap","first"] );
+      t( ":not() failing interior", "p:not(div#blargh)", ["firstp","ap","sndp","en","sap","first"] );
+      t( ":not() failing interior", "p:not(p#blargh)", ["firstp","ap","sndp","en","sap","first"] );
+      t( ":not Multiple", "p:not(a)", ["firstp","ap","sndp","en","sap","first"] );
+      t( ":not Multiple", "p:not(a, b)", ["firstp","ap","sndp","en","sap","first"] );
+      t( ":not Multiple", "p:not(a, b, div)", ["firstp","ap","sndp","en","sap","first"] );
+      t( ":not Multiple", "p:not(p)", [] );
+      t( ":not Multiple", "p:not(a,p)", [] );
+      t( ":not Multiple", "p:not(p,a)", [] );
+      t( ":not Multiple", "p:not(a,p,b)", [] );
+      t( ":not Multiple", ":input:not(:image,:input,:submit)", [] );
+      t( "No element not selector", ".container div:not(.excluded) div", [] );
+      t( ":not() Existing attribute", "#form select:not([multiple])", ["select1", "select2"]);
+      t( ":not() Equals attribute", "#form select:not([name=select1])", ["select2", "select3"]);
+      t( ":not() Equals quoted attribute", "#form select:not([name='select1'])", ["select2", "select3"]);
+      t( ":not() Multiple Class", "#foo a:not(.blog)", ["yahoo","anchor2"] );
+      t( ":not() Multiple Class", "#foo a:not(.link)", ["yahoo","anchor2"] );
+      t( ":not() Multiple Class", "#foo a:not(.blog.link)", ["yahoo","anchor2"] );
+    });
+
+    test("pseudo - position", function() {
+      expect(25);
+      t( "nth Element", "p:nth(1)", ["ap"] );
+      t( "First Element", "p:first", ["firstp"] );
+      t( "Last Element", "p:last", ["first"] );
+      t( "Even Elements", "p:even", ["firstp","sndp","sap"] );
+      t( "Odd Elements", "p:odd", ["ap","en","first"] );
+      t( "Position Equals", "p:eq(1)", ["ap"] );
+      t( "Position Greater Than", "p:gt(0)", ["ap","sndp","en","sap","first"] );
+      t( "Position Less Than", "p:lt(3)", ["firstp","ap","sndp"] );
+      t( "Check position filtering", "div#nothiddendiv:eq(0)", ["nothiddendiv"] );
+      t( "Check position filtering", "div#nothiddendiv:last", ["nothiddendiv"] );
+      t( "Check position filtering", "div#nothiddendiv:not(:gt(0))", ["nothiddendiv"] );
+      t( "Check position filtering", "#foo > :not(:first)", ["en", "sap"] );
+      t( "Check position filtering", "select > :not(:gt(2))", ["option1a", "option1b", "option1c"] );
+      t( "Check position filtering", "select:lt(2) :not(:first)", ["option1b", "option1c", "option1d", "option2a", "option2b", "option2c", "option2d"] );
+      t( "Check position filtering", "div.nothiddendiv:eq(0)", ["nothiddendiv"] );
+      t( "Check position filtering", "div.nothiddendiv:last", ["nothiddendiv"] );
+      t( "Check position filtering", "div.nothiddendiv:not(:lt(0))", ["nothiddendiv"] );
+      t( "Check element position", "div div:eq(0)", ["nothiddendivchild"] );
+      t( "Check element position", "div div:eq(5)", ["t2037"] );
+      t( "Check element position", "div div:eq(28)", ["hide"] );
+      t( "Check element position", "div div:first", ["nothiddendivchild"] );
+      t( "Check element position", "div > div:first", ["nothiddendivchild"] );
+      t( "Check element position", "#dl div:first div:first", ["foo"] );
+      t( "Check element position", "#dl div:first > div:first", ["foo"] );
+      t( "Check element position", "div#nothiddendiv:first > div:first", ["nothiddendivchild"] );
+    });
+
+    test("pseudo - form", function() {
+      expect(8);
+      t( "Form element :input", "#form :input", ["text1", "text2", "radio1", "radio2", "check1", "check2", "hidden1", "hidden2", "name", "search", "button", "area1", "select1", "select2", "select3"] );
+      t( "Form element :radio", "#form :radio", ["radio1", "radio2"] );
+      t( "Form element :checkbox", "#form :checkbox", ["check1", "check2"] );
+      t( "Form element :text", "#form :text:not(#search)", ["text1", "text2", "hidden2", "name"] );
+      t( "Form element :radio:checked", "#form :radio:checked", ["radio2"] );
+      t( "Form element :checkbox:checked", "#form :checkbox:checked", ["check1"] );
+      t( "Form element :radio:checked, :checkbox:checked", "#form :radio:checked, #form :checkbox:checked", ["radio2", "check1"] );
+      t( "Selected Option Element", "#form option:selected", ["option1a","option2d","option3b","option3c"] );
+    });
 
     res.die(qunit.getTestResults());
 

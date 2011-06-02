@@ -7,7 +7,6 @@
 function lib_sizzle() {
 
   var chunker = /((?:\((?:\([^()]+\)|[^()]+)+\)|\[(?:\[[^\[\]]*\]|['"][^'"]*['"]|[^\[\]'"]+)+\]|\\.|[^ >+~,(\[\\]+)+|[>+~])(\s*,\s*)?((?:.|\r|\n)*)/g,
-    done = 0,
     toString = Object.prototype.toString,
     hasDuplicate = false,
     baseHasDuplicate = true,
@@ -403,25 +402,23 @@ function lib_sizzle() {
       },
 
       '': function(checkSet, part) {
-        var doneName = done++,
-        checkFn = dirCheck;
+        var checkFn = dirCheck;
 
         if (typeof part == 'string' && !rNonWord.test(part)) {
           part = part.toLowerCase();
           checkFn = dirNodeCheck;
         }
 
-        checkFn('parentNode', part, doneName, checkSet);
+        checkFn('parentNode', part, checkSet);
       },
 
       '~': function(checkSet, part) {
-        var doneName = done++,
-        checkFn = dirCheck;
+        var checkFn = dirCheck;
         if (typeof part == 'string' && !rNonWord.test(part)) {
           part = part.toLowerCase();
           checkFn = dirNodeCheck;
         }
-        checkFn('previousSibling', part, doneName, checkSet);
+        checkFn('previousSibling', part, checkSet);
       }
     },
 
@@ -497,18 +494,13 @@ function lib_sizzle() {
           var test = /(-?)(\d*)(?:n([+\-]?\d*))?/.exec(
           match[2] == 'even' && '2n' || match[2] == 'odd' && '2n+1' ||
           !/\D/.test(match[2]) && '0n+' + match[2] || match[2]);
-
           // calculate the numbers (first)n+(last) including if they are negative
           match[2] = (test[1] + (test[2] || 1)) - 0;
           match[3] = test[3] - 0;
-        }
-        else
+        } else
         if (match[2]) {
           Sizzle.error(match[0]);
         }
-
-        // TODO: Move to normal caching system
-        match[0] = done++;
 
         return match;
       },
@@ -732,23 +724,23 @@ function lib_sizzle() {
             return true;
 
           case 'nth':
-            var first = match[2],
-            last = match[3];
+            var first = match[2], last = match[3];
 
             if (first == 1 && last == 0) {
               return true;
             }
 
-            var doneName = match[0],
-            nodeIndex = 0,
-            parent = elem.parentNode();
+            var parent = elem.parentNode(), nodeIndex;
 
             if (parent) {
               var count = 0;
-
               for (node = parent.firstChild(); node; node = node.nextSibling()) {
                 if (node.nodeType() == 1) {
-                  nodeIndex = ++count;
+                  count ++;
+                  if (node.equals(elem)) {
+                    nodeIndex = count;
+                    break;
+                  }
                 }
               }
 
@@ -920,7 +912,7 @@ function lib_sizzle() {
     return ret;
   };
 
-  function dirNodeCheck(dir, cur, doneName, checkSet) {
+  function dirNodeCheck(dir, cur, checkSet) {
     for (var i = 0, l = checkSet.length; i < l; i++) {
       var elem = checkSet[i];
       if (elem) {
@@ -938,7 +930,7 @@ function lib_sizzle() {
     }
   }
 
-  function dirCheck(dir, cur, doneName, checkSet) {
+  function dirCheck(dir, cur, checkSet) {
     for (var i = 0, l = checkSet.length; i < l; i++) {
       var elem = checkSet[i];
 
@@ -982,7 +974,7 @@ function lib_sizzle() {
     var match,
     tmpSet = [],
     later = '',
-    root = context.nodeType() ? [context] : context;
+    root = context.nodeType ? [context] : context;
 
     // Position selectors must be done after the filter
     // And so must :not(positional) so we move all PSEUDOs to the end
