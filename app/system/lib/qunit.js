@@ -411,7 +411,7 @@ function lib_qunit() {
   }
 
   function fail(testName, ex, callback) {
-    res.die("Test " + this.testName + " died with exception: " + ex.message);
+    res.die("Test " + testName + " died with exception: " + ex.message);
   }
 
   function extend(a, b) {

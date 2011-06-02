@@ -83,7 +83,7 @@ function lib_jqlite() {
 
             // HANDLE: $(html) -> $(array)
             if (match[1]) {
-              doc = (context ? (context.ownerDocument ? context.ownerDocument() : context) : document);
+              doc = (context && context.ownerDocument) ? (context.ownerDocument() || context) : document;
 
               // If a single string is passed in and it's a single tag just do a createElement
               ret = rsingleTag.exec(selector);
@@ -1030,7 +1030,7 @@ function lib_jqlite() {
         var r = [];
 
         for (; n; n = n.nextSibling()) {
-          if (n.nodeType() == 1 && n !== elem) {
+          if (n.nodeType() == 1 && !n.equals(elem)) {
             r.push(n);
           }
         }
