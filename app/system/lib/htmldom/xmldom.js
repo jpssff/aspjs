@@ -130,7 +130,8 @@ function lib_xmldom() {
     var oldNode = this, type = oldNode.nodeType, newNode;
     newNode = XNode.create(type, oldNode.nodeName, oldNode.nodeValue, oldNode.ownerDocument);
     for (var i = 0; i < oldNode.attributes.length; i++) {
-      newNode.attributes.push(oldNode.attributes[i].cloneNode());
+      var attr = oldNode.attributes[i];
+      newNode.setAttribute(attr.nodeName, attr.nodeValue);
     }
     if (deep) {
       for (var c = oldNode.firstChild; c; c = c.nextSibling) {
@@ -165,7 +166,6 @@ function lib_xmldom() {
     if (oldNode == newNode) {
       return;
     }
-
     for (var i = 0; i < this.childNodes.length; ++i) {
       if (this.childNodes[i] == oldNode) {
         this.childNodes[i] = newNode;
@@ -255,13 +255,24 @@ function lib_xmldom() {
   };
 
   XNode.prototype.setAttribute = function(name, value) {
+    var oldAttr;
     for (var i = 0; i < this.attributes.length; ++i) {
       if (this.attributes[i].nodeName == name) {
-        this.attributes[i].nodeValue = '' + value;
-        return;
+        oldAttr = this.attributes[i];
+        break;
       }
     }
-    this.attributes.push(XNode.create(DOM_ATTRIBUTE_NODE, name, value, this));
+    if (oldAttr) {
+      oldAttr.nodeValue = '' + value;
+//      if (name == 'id') {
+//        delete this.ownerDocument.elementsById[oldAttr.nodeValue];
+//      }
+    } else {
+      this.attributes.push(XNode.create(DOM_ATTRIBUTE_NODE, name, value, this));
+    }
+//    if (name == 'id') {
+//      if (value) this.ownerDocument.elementsById[value] = this;
+//    }
   };
 
   XNode.prototype.getAttribute = function(name) {
@@ -283,13 +294,18 @@ function lib_xmldom() {
   };
 
   XNode.prototype.removeAttribute = function(name) {
-    var a = [];
+    var a = [], val;
     for (var i = 0; i < this.attributes.length; ++i) {
-      if (this.attributes[i].nodeName != name) {
+      if (this.attributes[i].nodeName == name) {
+        val == this.attributes[i].nodeValue;
+      } else {
         a.push(this.attributes[i]);
       }
     }
     this.attributes = a;
+//    if (name == 'id' && val) {
+//      delete this.ownerDocument.elementsById[val];
+//    }
   };
 
   XNode.prototype.getElementsByTagName = function(name) {
@@ -322,6 +338,7 @@ function lib_xmldom() {
   };
 
   XNode.prototype.getElementById = function(id) {
+//    return this.ownerDocument.elementsById[id];
     var ret = null;
     domTraverseElements(this, function(node) {
       if (node.getAttribute('id') == id) {
@@ -389,6 +406,7 @@ function lib_xmldom() {
     // NOTE: Acocording to the DOM Spec, ownerDocument of a document node is null.
     XNode.call(this, DOM_DOCUMENT_NODE, '#document', null, null);
     this.documentElement = null;
+//    this.elementsById = {};
   }
 
   XDocument.prototype = new XNode(DOM_DOCUMENT_NODE, '#document');

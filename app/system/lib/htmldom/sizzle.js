@@ -350,16 +350,15 @@ function lib_sizzle() {
         if (isTag) {
           part = part.toLowerCase();
         }
-
+        var json = lib('json');
         for (var i = 0, l = checkSet.length, elem; i < l; i++) {
           if ((elem = checkSet[i])) {
-            while ((elem = elem.previousSibling()) && elem.nodeType() != 1) {
+            while ((elem = elem.previousSibling()) && elem.nodeType() != 1);
+            if (isPartStrNotTag || elem && elem.nodeName().toLowerCase() === part) {
+              checkSet[i] = elem || false;
+            } else {
+              checkSet[i] = !!elem && elem.equals(part);
             }
-
-            //TODO: split into string check and elem check to handle ===
-            checkSet[i] = isPartStrNotTag || elem && elem.nodeName().toLowerCase() === part ?
-            elem || false :
-            elem === part;
           }
         }
 
@@ -418,12 +417,10 @@ function lib_sizzle() {
       '~': function(checkSet, part) {
         var doneName = done++,
         checkFn = dirCheck;
-
         if (typeof part == 'string' && !rNonWord.test(part)) {
           part = part.toLowerCase();
           checkFn = dirNodeCheck;
         }
-
         checkFn('previousSibling', part, doneName, checkSet);
       }
     },
@@ -574,7 +571,15 @@ function lib_sizzle() {
       },
 
       selected: function(elem) {
-        return elem.hasAttribute('selected');
+        var p = elem.parentNode();
+        while (p && p.nodeName() == 'optgroup') p = p.parentNode();
+        if (p && p.nodeName() == 'select' && elem.nodeName() == 'option') {
+          if (elem.equals(Sizzle('option', p)[0]) && Sizzle('option[selected]', p).length == 0) {
+            return true;
+          }
+          return elem.hasAttribute('selected');
+        }
+        return false;
       },
 
       parent: function(elem) {
@@ -918,21 +923,16 @@ function lib_sizzle() {
   function dirNodeCheck(dir, cur, doneName, checkSet) {
     for (var i = 0, l = checkSet.length; i < l; i++) {
       var elem = checkSet[i];
-
       if (elem) {
         var match = false;
-
         elem = elem[dir]();
-
         while (elem) {
           if (elem.nodeName().toLowerCase() == cur) {
             match = elem;
             break;
           }
-
           elem = elem[dir]();
         }
-
         checkSet[i] = match;
       }
     }

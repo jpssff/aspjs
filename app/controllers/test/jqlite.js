@@ -1,6 +1,6 @@
 bind('ready', function() {
 
-  var qunit = lib('qunit'), jq = lib('jqlite'), jQuery, $;
+  var qunit = lib('qunit'), jq = lib('jqlite'), jQuery, $, html, document;
 
   function q() {
     var doc = jQuery._doc;
@@ -12,19 +12,15 @@ bind('ready', function() {
     var f = jQuery(b).get();
     same(f, q.apply(q, c), a + " (" + b + ")");
   }
-
-  //app('/test/jqlite', function() {
-  //  var jq = lib('jqlite');
-  //  var $ = jq.create('<p class=a>Hello <b>World');
-  //  $('body p').addClass('b').append('<div id="three"/><div id="four"></div>');
-  //  $('body').append('<p id=two>Another Paragraph</p>');
-  //  $('title').text('Bits & Bobs');
-  //  res.die($.toHTML());
-  //});
+  function reset() {
+    if (!html) html = sys.fs.readTextFile('~/system/data/test/jqlite.html');
+    jQuery = $ = jq.create(html);
+    document = jQuery._doc;
+    document.body = document.getElementsByTagName('body')[0];
+  }
 
   app('/test/sizzle', function() {
     var dom = lib('domwrapper'), sizzle = lib('sizzle');
-    //var doc = new dom.HtmlDoc('<p class=a name=one><b>Hello</b> <b>World');
     var html = '<p id="ap">Here are some links in a normal paragraph: <a id="google" href="http://www.google.com/" title="Google!">Google</a>,' +
     '<a id="groups" href="http://groups.google.com/" class="GROUPS">Google Groups (Link)</a>. ' +
     'This link has <code><a href="http://smin" id="anchor1">class="blog"</a></code>: ' +
@@ -40,10 +36,7 @@ bind('ready', function() {
 
   app('/test/jqlite/run', function() {
 
-    var html = sys.fs.readTextFile('~/system/data/test/jqlite.html');
-    jQuery = $ = jq.create(html);
-    var document = jQuery._doc, output = [];
-    document.body = document.getElementsByTagName('body')[0];
+    reset();
 
     module("core");
     test("Basic requirements", function() {
@@ -220,7 +213,7 @@ bind('ready', function() {
       ok( jQuery("<div></div>")[0], "Create a div with closing tag." );
       ok( jQuery("<table></table>")[0], "Create a table with closing tag." );
     });
-    
+
     test("jQuery('html', context)", function() {
       expect(1);
       var $div = jQuery("<div/>")[0];
@@ -560,7 +553,7 @@ bind('ready', function() {
       t( "Find elements that have similar IDs", "#tName2ID", ["tName2ID"] );
       a.remove();
     });
-    
+
     test("multiple", function() {
       expect(4);
       t( "Comma Support", "h2, p", ["qunit-banner","qunit-userAgent","firstp","ap","sndp","en","sap","first"]);
@@ -568,8 +561,9 @@ bind('ready', function() {
       t( "Comma Support", "h2 , p", ["qunit-banner","qunit-userAgent","firstp","ap","sndp","en","sap","first"]);
       t( "Comma Support", "h2,p", ["qunit-banner","qunit-userAgent","firstp","ap","sndp","en","sap","first"]);
     });
-    
+
     test("child and adjacent", function() {
+      reset();
       expect(27);
       t( "Child", "p > a", ["simon1","google","groups","mark","yahoo","simon"] );
       t( "Child", "p> a", ["simon1","google","groups","mark","yahoo","simon"] );
@@ -594,12 +588,50 @@ bind('ready', function() {
       t( "Element Preceded By", "#siblingfirst ~ em", ["siblingnext"] );
       t( "Verify deep class selector", "div.blah > p > a", [] );
       t( "No element deep selector", "div.foo > span > a", [] );
-      same( jQuery("> :first", document.getElementById("nothiddendiv")).get(), q("nothiddendivchild"), "Verify child context positional selctor" );
-      same( jQuery("> :eq(0)", document.getElementById("nothiddendiv")).get(), q("nothiddendivchild"), "Verify child context positional selctor" );
-      same( jQuery("> *:first", document.getElementById("nothiddendiv")).get(), q("nothiddendivchild"), "Verify child context positional selctor" );
+      same( jQuery("> :first", document.getElementById("nothiddendiv")).get(), q("nothiddendivchild"), "Verify child context positional selector" );
+      same( jQuery("> :eq(0)", document.getElementById("nothiddendiv")).get(), q("nothiddendivchild"), "Verify child context positional selector" );
+      same( jQuery("> *:first", document.getElementById("nothiddendiv")).get(), q("nothiddendivchild"), "Verify child context positional selector" );
       t( "Non-existant ancestors", ".fototab > .thumbnails > a", [] );
     });
 
+    test("attributes", function() {
+      expect(34);
+      t( "Attribute Exists", "a[title]", ["google"] );
+      t( "Attribute Exists", "*[title]", ["google"] );
+      t( "Attribute Exists", "[title]", ["google"] );
+      t( "Attribute Exists", "a[ title ]", ["google"] );
+      t( "Attribute Equals", "a[rel='bookmark']", ["simon1"] );
+      t( "Attribute Equals", 'a[rel="bookmark"]', ["simon1"] );
+      t( "Attribute Equals", "a[rel=bookmark]", ["simon1"] );
+      t( "Attribute Equals", "a[href='http://www.google.com/']", ["google"] );
+      t( "Attribute Equals", "a[ rel = 'bookmark' ]", ["simon1"] );
+      document.getElementById("anchor2").href = "#2";
+      t( "href Attribute", "p a[href^=#]", ["anchor2"] );
+      t( "href Attribute", "p a[href*=#]", ["simon1", "anchor2"] );
+      t( "for Attribute", "form label[for]", ["label-for"] );
+      t( "for Attribute in form", "#form [for=action]", ["label-for"] );
+      t( "Attribute containing []", "input[name^='foo[']", ["hidden2"] );
+      t( "Attribute containing []", "input[name^='foo[bar]']", ["hidden2"] );
+      t( "Attribute containing []", "input[name*='[bar]']", ["hidden2"] );
+      t( "Attribute containing []", "input[name$='bar]']", ["hidden2"] );
+      t( "Attribute containing []", "input[name$='[bar]']", ["hidden2"] );
+      t( "Attribute containing []", "input[name$='foo[bar]']", ["hidden2"] );
+      t( "Attribute containing []", "input[name*='foo[bar]']", ["hidden2"] );
+      t( "Multiple Attribute Equals", "#form input[type='radio'], #form input[type='hidden']", ["radio1", "radio2", "hidden1"] );
+      t( "Multiple Attribute Equals", "#form input[type='radio'], #form input[type=\"hidden\"]", ["radio1", "radio2", "hidden1"] );
+      t( "Multiple Attribute Equals", "#form input[type='radio'], #form input[type=hidden]", ["radio1", "radio2", "hidden1"] );
+      t( "Attribute selector using UTF8", "span[lang=中文]", ["台北"] );
+      t( "Attribute Begins With", "a[href ^= 'http://www']", ["google","yahoo"] );
+      t( "Attribute Ends With", "a[href $= 'org/']", ["mark"] );
+      t( "Attribute Contains", "a[href *= 'google']", ["google","groups"] );
+      t( "Attribute Is Not Equal", "#ap a[hreflang!='en']", ["google","groups","anchor1"] );
+      t("Empty values", "#select1 option[value='']", ["option1a"]);
+      t("Empty values", "#select1 option[value!='']", ["option1b","option1c","option1d"]);
+      t("Select options via :selected", "#select1 option:selected", ["option1a"] );
+      t("Select options via :selected", "#select2 option:selected", ["option2d"] );
+      t("Select options via :selected", "#select3 option:selected", ["option3b", "option3c"] );
+      t( "Grouped Form Elements", "input[name='foo[bar]']", ["hidden2"] );
+    });
 
 
     res.die(qunit.getTestResults());

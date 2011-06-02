@@ -63,6 +63,7 @@ function lib_qunit() {
       // allow utility functions to access the current test environment
       QUnit.current_testEnvironment = this.testEnvironment;
       try {
+        app.trycount = (app.trycount || 0) + 1;
         this.testEnvironment.setup.call(this.testEnvironment);
       } catch(e) {
         if (config.throwEx) throw e;
@@ -76,6 +77,7 @@ function lib_qunit() {
         return;
       }
       try {
+        app.trycount = (app.trycount || 0) + 1;
         this.callback.call(this.testEnvironment);
       } catch(e) {
         if (config.throwEx) throw e;
@@ -86,6 +88,7 @@ function lib_qunit() {
 
     teardown: function() {
       try {
+        app.trycount = (app.trycount || 0) + 1;
         this.testEnvironment.teardown.call(this.testEnvironment);
       } catch(e) {
         if (config.throwEx) throw e;
@@ -237,6 +240,7 @@ function lib_qunit() {
       }
 
       try {
+        app.trycount = (app.trycount || 0) + 1;
         block();
       } catch(e) {
         actual = e;

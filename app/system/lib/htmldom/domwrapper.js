@@ -103,7 +103,7 @@ function lib_domwrapper() {
     if (!node.tagName) return '';
     var tagName = node.tagName.toLowerCase(), i = 0;
     while (node = node.previousSibling) {
-      if (tagName == node.tagName.toLowerCase()) i++;
+      if (node.tagName && node.tagName.toLowerCase() == tagName) i++;
     }
     return tagName + '[' + i + ']';
   }
