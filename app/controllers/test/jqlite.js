@@ -845,6 +845,21 @@ bind('ready', function() {
       same( jQuery("#form input").filter(elements).get(), q("text1"), "filter(jQuery)" );
     });
 
+    test("closest()", function() {
+      expect(9);
+      same( jQuery("body").closest("body").get(), q("body"), "closest(body)" );
+      same( jQuery("body").closest("html").get(), q("html"), "closest(html)" );
+      same( jQuery("body").closest("div").get(), [], "closest(div)" );
+      same( jQuery("#main").closest("span,#html").get(), q("html"), "closest(span,#html)" );
+      same( jQuery("div:eq(1)").closest("div:first").get(), [], "closest(div:first)" );
+      same( jQuery("div").closest("body:first div:last").get(), q("fx-tests"), "closest(body:first div:last)" );
+      // Test .closest() limited by the context
+      var jq = jQuery("#nothiddendivchild");
+      same( jq.closest("html", document.body).get(), [], "Context limited." );
+      same( jq.closest("body", document.body).get(), [], "Context limited. [1]" );
+      same( jq.closest("#nothiddendiv", document.body).get(), q("nothiddendiv"), "Context not reached." );
+    });
+
     res.die(qunit.getTestResults());
 
   });

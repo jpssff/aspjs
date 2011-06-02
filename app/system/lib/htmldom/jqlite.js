@@ -860,24 +860,17 @@ function lib_jqlite() {
 
       closest: function(selectors, context) {
         if (jQuery.isArray(selectors)) {
-          var ret = [],
-              cur = this[0],
-              match, matches = {},
-              selector;
-
+          var ret = [], cur = this[0], match, matches = {}, selector;
           if (cur && selectors.length) {
             for (var i = 0, l = selectors.length; i < l; i++) {
               selector = selectors[i];
-
               if (!matches[selector]) {
                 matches[selector] = jQuery.expr.match.POS.test(selector) ? jQuery(selector, context || this.context) : selector;
               }
             }
-
-            while (cur && cur.ownerDocument && cur.ownerDocument() && cur !== context) {
+            while (cur && cur.ownerDocument() && !cur.equals(context)) {
               for (selector in matches) {
                 match = matches[selector];
-
                 if (match.jquery ? match.index(cur) > -1 : jQuery(cur).is(match)) {
                   ret.push({
                     selector: selector,
@@ -889,14 +882,13 @@ function lib_jqlite() {
               cur = cur.parentNode();
             }
           }
-
           return ret;
         }
 
         var pos = jQuery.expr.match.POS.test(selectors) ? jQuery(selectors, context || this.context) : null;
 
         return this.map(function(i, cur) {
-          while (cur && cur.ownerDocument && cur.ownerDocument() && cur !== context) {
+          while (cur && cur.ownerDocument() && !cur.equals(context)) {
             if (pos ? pos.index(cur) > -1 : jQuery(cur).is(selectors)) {
               return cur;
             }

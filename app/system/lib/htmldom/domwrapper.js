@@ -132,7 +132,7 @@ function lib_domwrapper() {
       return this.getElementsByAttribute('name', val);
     },
     equals: function(otherHtmlNode) {
-      return (this._xmlNode === otherHtmlNode._xmlNode);
+      return !!otherHtmlNode && (this._xmlNode === otherHtmlNode._xmlNode);
     },
     getPath: function() {
       var node = this._xmlNode, path = [getTagPosition(node)];
