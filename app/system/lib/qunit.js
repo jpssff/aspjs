@@ -13,7 +13,7 @@ function lib_qunit() {
 
   var config = {
     stats: {all: 0, bad: 0},
-    throwEx: true,
+    throwEx: false,
     noglobals: false,
     notrycatch: false
   };
