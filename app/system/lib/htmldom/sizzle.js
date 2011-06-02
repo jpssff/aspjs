@@ -551,11 +551,11 @@ function lib_sizzle() {
 
     filters: {
       enabled: function(elem) {
-        return elem.hasAttribute('disabled') && elem.getAttribute('type') != 'hidden';
+        return !elem.hasAttribute('disabled') && elem.getAttribute('type') != 'hidden';
       },
 
       disabled: function(elem) {
-        return !elem.hasAttribute('disabled');
+        return elem.hasAttribute('disabled');
       },
 
       checked: function(elem) {

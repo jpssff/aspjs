@@ -751,6 +751,100 @@ bind('ready', function() {
       t( "Selected Option Element", "#form option:selected", ["option1a","option2d","option3b","option3c"] );
     });
 
+
+    module("traversing");
+
+    test("find(String)", function() {
+      expect(2);
+      equals( 'Yahoo', jQuery('#foo').find('.blogTest').text(), 'Check for find' );
+      // using contents will get comments regular, text, and comment nodes
+      var j = jQuery("#nonnodes").contents();
+      equals( j.find("div").length, 0, "Check node,textnode,comment to find zero divs" );
+    });
+
+    test("is(String)", function() {
+      expect(26);
+      ok( jQuery('#form').is('form'), 'Check for element: A form must be a form' );
+      ok( !jQuery('#form').is('div'), 'Check for element: A form is not a div' );
+      ok( jQuery('#mark').is('.blog'), 'Check for class: Expected class "blog"' );
+      ok( !jQuery('#mark').is('.link'), 'Check for class: Did not expect class "link"' );
+      ok( jQuery('#simon').is('.blog.link'), 'Check for multiple classes: Expected classes "blog" and "link"' );
+      ok( !jQuery('#simon').is('.blogTest'), 'Check for multiple classes: Expected classes "blog" and "link", but not "blogTest"' );
+      ok( jQuery('#en').is('[lang="en"]'), 'Check for attribute: Expected attribute lang to be "en"' );
+      ok( !jQuery('#en').is('[lang="de"]'), 'Check for attribute: Expected attribute lang to be "en", not "de"' );
+      ok( jQuery('#text1').is('[type="text"]'), 'Check for attribute: Expected attribute type to be "text"' );
+      ok( !jQuery('#text1').is('[type="radio"]'), 'Check for attribute: Expected attribute type to be "text", not "radio"' );
+      ok( jQuery('#text2').is(':disabled'), 'Check for pseudoclass: Expected to be disabled' );
+      ok( !jQuery('#text1').is(':disabled'), 'Check for pseudoclass: Expected not disabled' );
+      ok( jQuery('#radio2').is(':checked'), 'Check for pseudoclass: Expected to be checked' );
+      ok( !jQuery('#radio1').is(':checked'), 'Check for pseudoclass: Expected not checked' );
+      ok( jQuery('#foo').is(':has(p)'), 'Check for child: Expected a child "p" element' );
+      ok( !jQuery('#foo').is(':has(ul)'), 'Check for child: Did not expect "ul" element' );
+      ok( jQuery('#foo').is(':has(p):has(a):has(code)'), 'Check for childs: Expected "p", "a" and "code" child elements' );
+      ok( !jQuery('#foo').is(':has(p):has(a):has(code):has(ol)'), 'Check for childs: Expected "p", "a" and "code" child elements, but no "ol"' );
+      ok( !jQuery('#foo').is(0), 'Expected false for an invalid expression - 0' );
+      ok( !jQuery('#foo').is(null), 'Expected false for an invalid expression - null' );
+      ok( !jQuery('#foo').is(''), 'Expected false for an invalid expression - ""' );
+      ok( !jQuery('#foo').is(undefined), 'Expected false for an invalid expression - undefined' );
+      // test is() with comma-separated expressions
+      ok( jQuery('#en').is('[lang="en"],[lang="de"]'), 'Comma-seperated; Check for lang attribute: Expect en or de' );
+      ok( jQuery('#en').is('[lang="de"],[lang="en"]'), 'Comma-seperated; Check for lang attribute: Expect en or de' );
+      ok( jQuery('#en').is('[lang="en"] , [lang="de"]'), 'Comma-seperated; Check for lang attribute: Expect en or de' );
+      ok( jQuery('#en').is('[lang="de"] , [lang="en"]'), 'Comma-seperated; Check for lang attribute: Expect en or de' );
+    });
+
+    test("index()", function() {
+      expect(1);
+      equals( jQuery("#text2").index(), 2, "Returns the index of a child amongst its siblings" )
+    });
+
+    test("index(Object|String|undefined)", function() {
+      expect(16);
+      function F(){};
+      var obj = new F();
+      var elements = jQuery([obj, document]), inputElements = jQuery('#radio1,#radio2,#check1,#check2');
+      // Passing a node
+      equals( elements.index(obj), 0, "Check for index of elements" );
+      equals( elements.index(document), 1, "Check for index of elements [1]" );
+      equals( inputElements.index(document.getElementById('radio1')), 0, "Check for index of elements [2]" );
+      equals( inputElements.index(document.getElementById('radio2')), 1, "Check for index of elements [3]" );
+      equals( inputElements.index(document.getElementById('check1')), 2, "Check for index of elements [4]" );
+      equals( inputElements.index(document.getElementById('check2')), 3, "Check for index of elements [5]" );
+      equals( inputElements.index(obj), -1, "Check for not found index" );
+      equals( inputElements.index(document), -1, "Check for not found index" );
+      // Passing a jQuery object
+      // enabled since [5500]
+      equals( elements.index( elements ), 0, "Pass in a jQuery object" );
+      equals( elements.index( elements.eq(1) ), 1, "Pass in a jQuery object [1]" );
+      equals( jQuery("#form :radio").index( jQuery("#radio2") ), 1, "Pass in a jQuery object [2]" );
+      // Passing a selector or nothing
+      // enabled since [6330]
+      equals( jQuery('#text2').index(), 2, "Check for index amongst siblings" );
+      equals( jQuery('#form').children().eq(4).index(), 4, "Check for index amongst siblings" );
+      equals( jQuery('#radio2').index('#form :radio') , 1, "Check for index within a selector" );
+      equals( jQuery('#form :radio').index( jQuery('#radio2') ), 1, "Check for index within a selector" );
+      equals( jQuery('#radio2').index('#form :text') , -1, "Check for index not found within a selector" );
+    });
+
+    test("filter(Selector|Function|Element|Array|jQuery)", function() {
+      expect(10);
+      same( jQuery("#form input").filter(":checked").get(), q("radio2", "check1"), "filter(String)" );
+      same( jQuery("p").filter("#ap, #sndp").get(), q("ap", "sndp"), "filter('String, String')" );
+      same( jQuery("p").filter("#ap,#sndp").get(), q("ap", "sndp"), "filter('String,String')" );
+      // using contents will get comments regular, text, and comment nodes
+      var j = jQuery("#nonnodes").contents();
+      equals( j.filter("span").length, 1, "Check node,textnode,comment to filter the one span" );
+      equals( j.filter("[name]").length, 0, "Check node,textnode,comment to filter the one span" );
+      same( jQuery("p").filter(function() { return !jQuery("a", this).length }).get(), q("sndp", "first"), "filter(Function)" );
+      same( jQuery("p").filter(function(i, elem) { return !jQuery("a", elem).length }).get(), q("sndp", "first"), "filter(Function) using arg" );
+      var element = document.getElementById("text1");
+      same( jQuery("#form input").filter(element).get(), q("text1"), "filter(Element)" );
+      var elements = [ document.getElementById("text1") ];
+      same( jQuery("#form input").filter(elements).get(), q("text1"), "filter(Array)" );
+      var elements = jQuery("#text1");
+      same( jQuery("#form input").filter(elements).get(), q("text1"), "filter(jQuery)" );
+    });
+
     res.die(qunit.getTestResults());
 
   });

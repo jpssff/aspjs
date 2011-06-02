@@ -19,7 +19,7 @@ function lib_jqlite() {
    * http://jquery.org/license
    *
    */
-  function new_jQuery(document) {
+  function instantiate(document) {
 
     function jQuery(selector, context) {
       return new jQuery.fn.init(selector, context);
@@ -413,17 +413,18 @@ function lib_jqlite() {
       },
 
       inArray: function(elem, array) {
-        if (array.indexOf) {
-          return array.indexOf(elem);
+        var pos = -1;
+        if (Array.prototype.indexOf) {
+          pos = Array.prototype.indexOf.call(array, elem);
+        } else {
+          throw new Error('No Array.prototype.indexOf');
         }
-
-        for (var i = 0, length = array.length; i < length; i++) {
-          if (array[i] === elem || (array[i] instanceof Object && array[i].equals instanceof Function && array[i].equals(elem))) {
-            return i;
+        if (pos < 0 && elem instanceof Object && elem.equals instanceof Function) {
+          for (var i = 0, len = array.length; i < len; i++) {
+            if (elem.equals(array[i])) return i;
           }
         }
-
-        return -1;
+        return pos;
       },
 
       merge: function(first, second) {
@@ -788,26 +789,22 @@ function lib_jqlite() {
         return jQuery.grep(elements, function(elem, i) {
           return !!qualifier.call(elem, i, elem) === keep;
         });
-
       } else
       if (qualifier.nodeType) {
         return jQuery.grep(elements, function(elem, i) {
           return (elem.equals(qualifier)) === keep;
         });
-
       } else
       if (typeof qualifier == 'string') {
         var filtered = jQuery.grep(elements, function(elem) {
           return elem.nodeType() == 1;
         });
-
         if (isSimple.test(qualifier)) {
           return jQuery.filter(qualifier, filtered, !keep);
         } else {
           qualifier = jQuery.filter(qualifier, filtered);
         }
       }
-
       return jQuery.grep(elements, function(elem, i) {
         return (jQuery.inArray(elem, qualifier) >= 0) === keep;
       });
@@ -1403,7 +1400,7 @@ function lib_jqlite() {
 
   return {
     create: function(html) {
-      var dom = lib('domwrapper'), doc = new dom.HtmlDoc(html), jQuery = new_jQuery(doc);
+      var dom = lib('domwrapper'), doc = new dom.HtmlDoc(html), jQuery = instantiate(doc);
       jQuery._doc = doc;
       return jQuery;
     }
