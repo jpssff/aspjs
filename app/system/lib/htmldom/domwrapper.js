@@ -174,7 +174,7 @@ function lib_domwrapper() {
     }
   };
   //Properties returning primitive value
-  forEach('nodeName nodeType nodeValue'.w(),
+  forEach('nodeName tagName nodeType nodeValue'.w(),
     function(i, name) {
       HtmlNode.prototype[name] = function() {
         return this._xmlNode[name];

@@ -457,7 +457,7 @@ function lib_globals() {
   
   String.htmlEnc = function(s) {
     s = String(s).replace(/&/g, '&amp;').replace(/>/g, '&gt;')
-      .replace(/</g, '&lt;').replace(/"/g, '&quot;');
+      .replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/\u00a0/g, '&nbsp;');
     return s;
   };
   String.htmlDec = function(s) {
