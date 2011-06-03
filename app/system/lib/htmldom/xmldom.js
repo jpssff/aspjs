@@ -328,13 +328,14 @@ function lib_xmldom() {
     var ret = [], self = this;
     if ("*" == name) {
       domTraverseElements(this, function(node) {
-        if (self == node) return;
+        if (self === node) return;
         ret.push(node);
       }, null);
     } else {
+      name = String(name).toLowerCase();
       domTraverseElements(this, function(node) {
         if (self == node) return;
-        if (node.nodeName == name) {
+        if (node.nodeName.toLowerCase() == name) {
           ret.push(node);
         }
       }, null);
@@ -345,7 +346,7 @@ function lib_xmldom() {
   XNode.prototype.getElementsByAttribute = function(name, val) {
     var ret = [], self = this;
     domTraverseElements(this, function(node) {
-      if (self == node) return;
+      if (self === node) return;
       if (node.getAttribute(name) == val) {
         ret.push(node);
       }

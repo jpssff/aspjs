@@ -195,88 +195,88 @@ bind('ready', function() {
       same(jQuery('body > span.unwrap').get(), abcdef, 'body contains 6 .unwrap child spans');
       jQuery('body > span.unwrap').remove();
     });
-//
-//    function testAppend(valueObj) {
-//      expect(36);
-//      var defaultText = 'Try them out:'
-//      var result = jQuery('#first').append(valueObj('<b>buga</b>'));
-//      equals(result.text(), defaultText + 'buga', 'Check if text appending works');
-//      equals(jQuery('#select3').append(valueObj('<option value="appendTest">Append Test</option>')).find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
-//      reset();
-//      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
-//      jQuery('#sap').append(valueObj(document.getElementById('first')));
-//      equals(expected, jQuery('#sap').text(), "Check for appending of element");
-//      reset();
-//      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
-//      jQuery('#sap').append(valueObj([document.getElementById('first'), document.getElementById('yahoo')]));
-//      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
-//      reset();
-//      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
-//      jQuery('#sap').append(valueObj(jQuery("#first, #yahoo")));
-//      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
-//      reset();
-//      jQuery("#sap").append(valueObj(5));
-//      ok(jQuery("#sap")[0].innerHTML().match(/5$/), "Check for appending a number");
-//      reset();
-//      jQuery("#sap").append(valueObj(" text with spaces "));
-//      ok(jQuery("#sap")[0].innerHTML().match(/ text with spaces $/), "Check for appending text with spaces");
-//      reset();
-//      ok(jQuery("#sap").append(valueObj([])), "Check for appending an empty array.");
-//      ok(jQuery("#sap").append(valueObj("")), "Check for appending an empty string.");
-//      ok(jQuery("#sap").append(valueObj(document.getElementsByTagName("foo"))), "Check for appending an empty nodelist.");
-//      reset();
-//      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked="checked" />'));
-//      jQuery("form input[name=radiotest]").each(function () {
-//        ok(jQuery(this).is(':checked'), "Append checked radio");
-//      }).remove();
-//      reset();
-//      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked    =   \'checked\' />'));
-//      jQuery("form input[name=radiotest]").each(function () {
-//        ok(jQuery(this).is(':checked'), "Append alternately formated checked radio");
-//      }).remove();
-//      reset();
-//      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked />'));
-//      jQuery("form input[name=radiotest]").each(function () {
-//        ok(jQuery(this).is(':checked'), "Append HTML5-formated checked radio");
-//      }).remove();
-//      reset();
-//      jQuery("#sap").append(valueObj(document.getElementById('form')));
-//      equals(jQuery("#sap>form").size(), 1, "Check for appending a form"); // Bug #910
-//      reset();
-//      jQuery('<fieldset/>').appendTo('#form').append(valueObj('<legend id="legend">test</legend>'));
-//      t('Append legend', '#legend', ['legend']);
-//      reset();
-//      jQuery('#select1').append(valueObj('<OPTION>Test</OPTION>'));
-//      equals(jQuery('#select1 option:last').text(), "Test", "Appending &lt;OPTION&gt; (all caps)");
-//      jQuery('#table').append(valueObj('<colgroup></colgroup>'));
-//      ok(jQuery('#table colgroup').length, "Append colgroup");
-//      jQuery('#table colgroup').append(valueObj('<col/>'));
-//      ok(jQuery('#table colgroup col').length, "Append col");
-//      reset();
-//      jQuery('#table').append(valueObj('<caption></caption>'));
-//      ok(jQuery('#table caption').length, "Append caption");
-//      reset();
-//      jQuery('form:last').append(valueObj('<select id="appendSelect1"></select>')).append(valueObj('<select id="appendSelect2"><option>Test</option></select>'));
-//      t("Append Select", "#appendSelect1, #appendSelect2", ["appendSelect1", "appendSelect2"]);
-//      equals("Two nodes", jQuery('<div />').append("Two", " nodes").text(), "Appending two text nodes (#4011)");
-//      // using contents will get comments regular, text, and comment nodes
-//      var j = jQuery("#nonnodes").contents();
-//      var d = jQuery("<div/>").appendTo("#nonnodes").append(j);
-//      equals(jQuery("#nonnodes").length, 1, "Check node,textnode,comment append moved leaving just the div");
-//      ok(d.contents().length >= 2, "Check node,textnode,comment append works");
-//      d.contents().appendTo("#nonnodes");
-//      d.remove();
-//      ok(jQuery("#nonnodes").contents().length >= 2, "Check node,textnode,comment append cleanup worked");
-//    }
-//
-//    test("append(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-//      testAppend(bareObj);
-//    });
-//
-//    test("append(Function)", function () {
-//      testAppend(functionReturningObj);
-//    });
-//
+
+    function testAppend(valueObj) {
+      expect(36);
+      var defaultText = 'Try them out:'
+      var result = jQuery('#first').append(valueObj('<b>buga</b>'));
+      equals(result.text(), defaultText + 'buga', 'Check if text appending works');
+      equals(jQuery('#select3').append(valueObj('<option value="appendTest">Append Test</option>')).find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
+      reset();
+      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
+      jQuery('#sap').append(valueObj(document.getElementById('first')));
+      equals(expected, jQuery('#sap').text(), "Check for appending of element");
+      reset();
+      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
+      jQuery('#sap').append(valueObj([document.getElementById('first'), document.getElementById('yahoo')]));
+      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
+      reset();
+      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
+      jQuery('#sap').append(valueObj(jQuery("#first, #yahoo")));
+      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
+      reset();
+      jQuery("#sap").append(valueObj(5));
+      ok(jQuery("#sap")[0].innerHTML().match(/5$/), "Check for appending a number");
+      reset();
+      jQuery("#sap").append(valueObj(" text with spaces "));
+      ok(jQuery("#sap")[0].innerHTML().match(/ text with spaces $/), "Check for appending text with spaces");
+      reset();
+      ok(jQuery("#sap").append(valueObj([])), "Check for appending an empty array.");
+      ok(jQuery("#sap").append(valueObj("")), "Check for appending an empty string.");
+      ok(jQuery("#sap").append(valueObj(document.getElementsByTagName("foo"))), "Check for appending an empty nodelist.");
+      reset();
+      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked="checked" />'));
+      jQuery("form input[name=radiotest]").each(function () {
+        ok(jQuery(this).is(':checked'), "Append checked radio");
+      }).remove();
+      reset();
+      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked    =   \'checked\' />'));
+      jQuery("form input[name=radiotest]").each(function () {
+        ok(jQuery(this).is(':checked'), "Append alternately formated checked radio");
+      }).remove();
+      reset();
+      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked />'));
+      jQuery("form input[name=radiotest]").each(function () {
+        ok(jQuery(this).is(':checked'), "Append HTML5-formated checked radio");
+      }).remove();
+      reset();
+      jQuery("#sap").append(valueObj(document.getElementById('form')));
+      equals(jQuery("#sap>form").size(), 1, "Check for appending a form"); // Bug #910
+      reset();
+      jQuery('<fieldset/>').appendTo('#form').append(valueObj('<legend id="legend">test</legend>'));
+      t('Append legend', '#legend', ['legend']);
+      reset();
+      jQuery('#select1').append(valueObj('<OPTION>Test</OPTION>'));
+      equals(jQuery('#select1 option:last').text(), "Test", "Appending <OPTION> (all caps)");
+      jQuery('#table').append(valueObj('<colgroup></colgroup>'));
+      ok(jQuery('#table colgroup').length, "Append colgroup");
+      jQuery('#table colgroup').append(valueObj('<col/>'));
+      ok(jQuery('#table colgroup col').length, "Append col");
+      reset();
+      jQuery('#table').append(valueObj('<caption></caption>'));
+      ok(jQuery('#table caption').length, "Append caption");
+      reset();
+      jQuery('form:last').append(valueObj('<select id="appendSelect1"></select>')).append(valueObj('<select id="appendSelect2"><option>Test</option></select>'));
+      t("Append Select", "#appendSelect1, #appendSelect2", ["appendSelect1", "appendSelect2"]);
+      equals("Two nodes", jQuery('<div />').append("Two", " nodes").text(), "Appending two text nodes (#4011)");
+      // using contents will get comments regular, text, and comment nodes
+      var j = jQuery("#nonnodes").contents();
+      var d = jQuery("<div/>").appendTo("#nonnodes").append(j);
+      equals(jQuery("#nonnodes").length, 1, "Check node,textnode,comment append moved leaving just the div");
+      ok(d.contents().length >= 2, "Check node,textnode,comment append works");
+      d.contents().appendTo("#nonnodes");
+      d.remove();
+      ok(jQuery("#nonnodes").contents().length >= 2, "Check node,textnode,comment append cleanup worked");
+    }
+
+    test("append(String|Element|Array<Element>|jQuery)", function () {
+      testAppend(bareObj);
+    });
+
+    test("append(Function)", function () {
+      testAppend(functionReturningObj);
+    });
+
 //    test("append(Function) with incoming value", function () {
 //      expect(12);
 //      var defaultText = 'Try them out:',
