@@ -277,284 +277,285 @@ bind('ready', function() {
       testAppend(functionReturningObj);
     });
 
-//    test("append(Function) with incoming value", function () {
-//      expect(12);
-//      var defaultText = 'Try them out:',
-//          old = jQuery("#first").html();
-//      var result = jQuery('#first').append(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return '<b>buga</b>';
-//      });
-//      equals(result.text(), defaultText + 'buga', 'Check if text appending works');
-//      var select = jQuery('#select3');
-//      old = select.html();
-//      equals(select.append(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return '<option value="appendTest">Append Test</option>';
-//      }).find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
-//      reset();
-//      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
-//      old = jQuery("#sap").html();
-//      jQuery('#sap').append(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return document.getElementById('first');
-//      });
-//      equals(expected, jQuery('#sap').text(), "Check for appending of element");
-//      reset();
-//      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
-//      old = jQuery("#sap").html();
-//      jQuery('#sap').append(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return [document.getElementById('first'), document.getElementById('yahoo')];
-//      });
-//      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
-//      reset();
-//      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
-//      old = jQuery("#sap").html();
-//      jQuery('#sap').append(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return jQuery("#first, #yahoo");
-//      });
-//      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
-//      reset();
-//      old = jQuery("#sap").html();
-//      jQuery("#sap").append(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return 5;
-//      });
-//      ok(jQuery("#sap")[0].innerHTML().match(/5$/), "Check for appending a number");
-//      reset();
-//    });
-//
-//    test("appendTo(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-//      expect(12);
-//      var defaultText = 'Try them out:'
-//      jQuery('<b>buga</b>').appendTo('#first');
-//      equals(jQuery("#first").text(), defaultText + 'buga', 'Check if text appending works');
-//      equals(jQuery('<option value="appendTest">Append Test</option>').appendTo('#select3').parent().find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
-//      reset();
-//      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
-//      jQuery(document.getElementById('first')).appendTo('#sap');
-//      equals(expected, jQuery('#sap').text(), "Check for appending of element");
-//      reset();
-//      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
-//      jQuery([document.getElementById('first'), document.getElementById('yahoo')]).appendTo('#sap');
-//      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
-//      reset();
-//      ok(jQuery(document.createElement("script")).appendTo("body").length, "Make sure a disconnected script can be appended.");
-//      reset();
-//      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
-//      jQuery("#first, #yahoo").appendTo('#sap');
-//      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
-//      reset();
-//      jQuery('#select1').appendTo('#foo');
-//      t('Append select', '#foo select', ['select1']);
-//      reset();
-//      var div = jQuery("<div/>").appendTo("#main, #moretests");
-//      equals(div.length, 2, "appendTo returns the inserted elements");
-//      div.addClass("test");
-//      ok(jQuery("#main div:last").hasClass("test"), "appendTo element was modified after the insertion");
-//      ok(jQuery("#moretests div:last").hasClass("test"), "appendTo element was modified after the insertion");
-//      reset();
-//      div = jQuery("<div/>");
-//      jQuery("<span>a</span><b>b</b>").filter("span").appendTo(div);
-//      equals(div.children().length, 1, "Make sure the right number of children were inserted.");
-//      div = jQuery("#moretests div");
-//      var num = jQuery("#main div").length;
-//      div.remove().appendTo("#main");
-//      equals(jQuery("#main div").length, num, "Make sure all the removed divs were inserted.");
-//      reset();
-//    });
-//
-//    function testPrepend(val) {
-//        expect(5);
-//        var defaultText = 'Try them out:'
-//        var result = jQuery('#first').prepend(val('<b>buga</b>'));
-//        equals(result.text(), 'buga' + defaultText, 'Check if text prepending works');
-//        equals(jQuery('#select3').prepend(val('<option value="prependTest">Prepend Test</option>')).find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
-//        reset();
-//        var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
-//        jQuery('#sap').prepend(val(document.getElementById('first')));
-//        equals(expected, jQuery('#sap').text(), "Check for prepending of element");
-//        reset();
-//        expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
-//        jQuery('#sap').prepend(val([document.getElementById('first'), document.getElementById('yahoo')]));
-//        equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
-//        reset();
-//        expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
-//        jQuery('#sap').prepend(val(jQuery("#first, #yahoo")));
-//        equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
-//        };
-//    test("prepend(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-//      testPrepend(bareObj);
-//    });
-//
-//    test("prepend(Function)", function () {
-//      testPrepend(functionReturningObj);
-//    });
-//
-//    test("prepend(Function) with incoming value", function () {
-//      expect(10);
-//      var defaultText = 'Try them out:',
-//          old = jQuery('#first').html();
-//      var result = jQuery('#first').prepend(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return '<b>buga</b>';
-//      });
-//      equals(result.text(), 'buga' + defaultText, 'Check if text prepending works');
-//      old = jQuery("#select3").html();
-//      equals(jQuery('#select3').prepend(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return '<option value="prependTest">Prepend Test</option>';
-//      }).find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
-//      reset();
-//      var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
-//      old = jQuery('#sap').html();
-//      jQuery('#sap').prepend(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return document.getElementById('first');
-//      });
-//      equals(expected, jQuery('#sap').text(), "Check for prepending of element");
-//      reset();
-//      expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
-//      old = jQuery('#sap').html();
-//      jQuery('#sap').prepend(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return [document.getElementById('first'), document.getElementById('yahoo')];
-//      });
-//      equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
-//      reset();
-//      expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
-//      old = jQuery('#sap').html();
-//      jQuery('#sap').prepend(function (i, val) {
-//        equals(val, old, "Make sure the incoming value is correct.");
-//        return jQuery("#first, #yahoo");
-//      });
-//      equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
-//    });
-//
-//    test("prependTo(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-//      expect(6);
-//      var defaultText = 'Try them out:'
-//      jQuery('<b>buga</b>').prependTo('#first');
-//      equals(jQuery('#first').text(), 'buga' + defaultText, 'Check if text prepending works');
-//      equals(jQuery('<option value="prependTest">Prepend Test</option>').prependTo('#select3').parent().find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
-//      reset();
-//      var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
-//      jQuery(document.getElementById('first')).prependTo('#sap');
-//      equals(expected, jQuery('#sap').text(), "Check for prepending of element");
-//      reset();
-//      expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
-//      jQuery([document.getElementById('first'), document.getElementById('yahoo')]).prependTo('#sap');
-//      equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
-//      reset();
-//      expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
-//      jQuery("#first, #yahoo").prependTo('#sap');
-//      equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
-//      reset();
-//      jQuery('<select id="prependSelect1"></select>').prependTo('form:last');
-//      jQuery('<select id="prependSelect2"><option>Test</option></select>').prependTo('form:last');
-//      t("Prepend Select", "#prependSelect2, #prependSelect1", ["prependSelect2", "prependSelect1"]);
-//    });
-//
-//    function testBefore(val) {
-//      expect(6);
-//      var expected = 'This is a normal link: bugaYahoo';
-//      jQuery('#yahoo').before(val('<b>buga</b>'));
-//      equals(expected, jQuery('#en').text(), 'Insert String before');
-//      reset();
-//      expected = "This is a normal link: Try them out:Yahoo";
-//      jQuery('#yahoo').before(val(document.getElementById('first')));
-//      equals(expected, jQuery('#en').text(), "Insert element before");
-//      reset();
-//      expected = "This is a normal link: Try them out:diveintomarkYahoo";
-//      jQuery('#yahoo').before(val([document.getElementById('first'), document.getElementById('mark')]));
-//      equals(expected, jQuery('#en').text(), "Insert array of elements before");
-//      reset();
-//      expected = "This is a normal link: diveintomarkTry them out:Yahoo";
-//      jQuery('#yahoo').before(val(jQuery("#first, #mark")));
-//      equals(expected, jQuery('#en').text(), "Insert jQuery before");
-//      var set = jQuery("<div/>").before("<span>test</span>");
-//      equals(set[0].nodeName().toLowerCase(), "span", "Insert the element before the disconnected node.");
-//      equals(set.length, 2, "Insert the element before the disconnected node.");
-//    }
-//
-//    test("before(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-//      testBefore(bareObj);
-//    });
-//
-//    test("before(Function)", function () {
-//      testBefore(functionReturningObj);
-//    });
-//
-//    test("insertBefore(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-//      expect(4);
-//      var expected = 'This is a normal link: bugaYahoo';
-//      jQuery('<b>buga</b>').insertBefore('#yahoo');
-//      equals(expected, jQuery('#en').text(), 'Insert String before');
-//      reset();
-//      expected = "This is a normal link: Try them out:Yahoo";
-//      jQuery(document.getElementById('first')).insertBefore('#yahoo');
-//      equals(expected, jQuery('#en').text(), "Insert element before");
-//      reset();
-//      expected = "This is a normal link: Try them out:diveintomarkYahoo";
-//      jQuery([document.getElementById('first'), document.getElementById('mark')]).insertBefore('#yahoo');
-//      equals(expected, jQuery('#en').text(), "Insert array of elements before");
-//      reset();
-//      expected = "This is a normal link: diveintomarkTry them out:Yahoo";
-//      jQuery("#first, #mark").insertBefore('#yahoo');
-//      equals(expected, jQuery('#en').text(), "Insert jQuery before");
-//    });
-//
-//    function testAfter(val) {
-//      expect(6);
-//      var expected = 'This is a normal link: Yahoobuga';
-//      jQuery('#yahoo').after(val('<b>buga</b>'));
-//      equals(expected, jQuery('#en').text(), 'Insert String after');
-//      reset();
-//      expected = "This is a normal link: YahooTry them out:";
-//      jQuery('#yahoo').after(val(document.getElementById('first')));
-//      equals(expected, jQuery('#en').text(), "Insert element after");
-//      reset();
-//      expected = "This is a normal link: YahooTry them out:diveintomark";
-//      jQuery('#yahoo').after(val([document.getElementById('first'), document.getElementById('mark')]));
-//      equals(expected, jQuery('#en').text(), "Insert array of elements after");
-//      reset();
-//      expected = "This is a normal link: YahoodiveintomarkTry them out:";
-//      jQuery('#yahoo').after(val(jQuery("#first, #mark")));
-//      equals(expected, jQuery('#en').text(), "Insert jQuery after");
-//      var set = jQuery("<div/>").after("<span>test</span>");
-//      equals(set[1].nodeName().toLowerCase(), "span", "Insert the element after the disconnected node.");
-//      equals(set.length, 2, "Insert the element after the disconnected node.");
-//    }
-//
-//    test("after(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-//      testAfter(bareObj);
-//    });
-//
-//    test("after(Function)", function () {
-//      testAfter(functionReturningObj);
-//    });
-//
-//    test("insertAfter(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-//      expect(4);
-//      var expected = 'This is a normal link: Yahoobuga';
-//      jQuery('<b>buga</b>').insertAfter('#yahoo');
-//      equals(expected, jQuery('#en').text(), 'Insert String after');
-//      reset();
-//      expected = "This is a normal link: YahooTry them out:";
-//      jQuery(document.getElementById('first')).insertAfter('#yahoo');
-//      equals(expected, jQuery('#en').text(), "Insert element after");
-//      reset();
-//      expected = "This is a normal link: YahooTry them out:diveintomark";
-//      jQuery([document.getElementById('first'), document.getElementById('mark')]).insertAfter('#yahoo');
-//      equals(expected, jQuery('#en').text(), "Insert array of elements after");
-//      reset();
-//      expected = "This is a normal link: YahoodiveintomarkTry them out:";
-//      jQuery("#first, #mark").insertAfter('#yahoo');
-//      equals(expected, jQuery('#en').text(), "Insert jQuery after");
-//    });
-//
+    test("append(Function) with incoming value", function () {
+      expect(12);
+      var defaultText = 'Try them out:',
+          old = jQuery("#first").html();
+      var result = jQuery('#first').append(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return '<b>buga</b>';
+      });
+      equals(result.text(), defaultText + 'buga', 'Check if text appending works');
+      var select = jQuery('#select3');
+      old = select.html();
+      equals(select.append(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return '<option value="appendTest">Append Test</option>';
+      }).find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
+      reset();
+      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
+      old = jQuery("#sap").html();
+      jQuery('#sap').append(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return document.getElementById('first');
+      });
+      equals(expected, jQuery('#sap').text(), "Check for appending of element");
+      reset();
+      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
+      old = jQuery("#sap").html();
+      jQuery('#sap').append(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return [document.getElementById('first'), document.getElementById('yahoo')];
+      });
+      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
+      reset();
+      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
+      old = jQuery("#sap").html();
+      jQuery('#sap').append(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return jQuery("#first, #yahoo");
+      });
+      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
+      reset();
+      old = jQuery("#sap").html();
+      jQuery("#sap").append(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return 5;
+      });
+      ok(jQuery("#sap")[0].innerHTML().match(/5$/), "Check for appending a number");
+      reset();
+    });
+
+    test("appendTo(String|Element|Array<Element>|jQuery)", function () {
+      expect(12);
+      var defaultText = 'Try them out:'
+      jQuery('<b>buga</b>').appendTo('#first');
+      equals(jQuery("#first").text(), defaultText + 'buga', 'Check if text appending works');
+      equals(jQuery('<option value="appendTest">Append Test</option>').appendTo('#select3').parent().find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
+      reset();
+      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
+      jQuery(document.getElementById('first')).appendTo('#sap');
+      equals(expected, jQuery('#sap').text(), "Check for appending of element");
+      reset();
+      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
+      jQuery([document.getElementById('first'), document.getElementById('yahoo')]).appendTo('#sap');
+      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
+      reset();
+      ok(jQuery(document.createElement("script")).appendTo("body").length, "Make sure a disconnected script can be appended.");
+      reset();
+      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
+      jQuery("#first, #yahoo").appendTo('#sap');
+      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
+      reset();
+      jQuery('#select1').appendTo('#foo');
+      t('Append select', '#foo select', ['select1']);
+      reset();
+      var div = jQuery("<div/>").appendTo("#main, #moretests");
+      equals(div.length, 2, "appendTo returns the inserted elements");
+      div.addClass("test");
+      ok(jQuery("#main div:last").hasClass("test"), "appendTo element was modified after the insertion");
+      ok(jQuery("#moretests div:last").hasClass("test"), "appendTo element was modified after the insertion");
+      reset();
+      div = jQuery("<div/>");
+      jQuery("<span>a</span><b>b</b>").filter("span").appendTo(div);
+      equals(div.children().length, 1, "Make sure the right number of children were inserted.");
+      div = jQuery("#moretests div");
+      var num = jQuery("#main div").length;
+      div.remove().appendTo("#main");
+      equals(jQuery("#main div").length, num, "Make sure all the removed divs were inserted.");
+      reset();
+    });
+
+    function testPrepend(val) {
+      expect(5);
+      var defaultText = 'Try them out:'
+      var result = jQuery('#first').prepend(val('<b>buga</b>'));
+      equals(result.text(), 'buga' + defaultText, 'Check if text prepending works');
+      equals(jQuery('#select3').prepend(val('<option value="prependTest">Prepend Test</option>')).find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
+      reset();
+      var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
+      jQuery('#sap').prepend(val(document.getElementById('first')));
+      equals(expected, jQuery('#sap').text(), "Check for prepending of element");
+      reset();
+      expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
+      jQuery('#sap').prepend(val([document.getElementById('first'), document.getElementById('yahoo')]));
+      equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
+      reset();
+      expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
+      jQuery('#sap').prepend(val(jQuery("#first, #yahoo")));
+      equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
+    }
+    test("prepend(String|Element|Array<Element>|jQuery)", function () {
+      testPrepend(bareObj);
+    });
+
+    test("prepend(Function)", function () {
+      testPrepend(functionReturningObj);
+    });
+
+    test("prepend(Function) with incoming value", function () {
+      expect(10);
+      var defaultText = 'Try them out:',
+          old = jQuery('#first').html();
+      var result = jQuery('#first').prepend(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return '<b>buga</b>';
+      });
+      equals(result.text(), 'buga' + defaultText, 'Check if text prepending works');
+      old = jQuery("#select3").html();
+      equals(jQuery('#select3').prepend(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return '<option value="prependTest">Prepend Test</option>';
+      }).find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
+      reset();
+      var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
+      old = jQuery('#sap').html();
+      jQuery('#sap').prepend(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return document.getElementById('first');
+      });
+      equals(expected, jQuery('#sap').text(), "Check for prepending of element");
+      reset();
+      expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
+      old = jQuery('#sap').html();
+      jQuery('#sap').prepend(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return [document.getElementById('first'), document.getElementById('yahoo')];
+      });
+      equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
+      reset();
+      expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
+      old = jQuery('#sap').html();
+      jQuery('#sap').prepend(function (i, val) {
+        equals(val, old, "Make sure the incoming value is correct.");
+        return jQuery("#first, #yahoo");
+      });
+      equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
+    });
+
+    test("prependTo(String|Element|Array<Element>|jQuery)", function () {
+      expect(6);
+      var defaultText = 'Try them out:'
+      jQuery('<b>buga</b>').prependTo('#first');
+      equals(jQuery('#first').text(), 'buga' + defaultText, 'Check if text prepending works');
+      equals(jQuery('<option value="prependTest">Prepend Test</option>').prependTo('#select3').parent().find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
+      reset();
+      var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
+      jQuery(document.getElementById('first')).prependTo('#sap');
+      equals(expected, jQuery('#sap').text(), "Check for prepending of element");
+      reset();
+      expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
+      jQuery([document.getElementById('first'), document.getElementById('yahoo')]).prependTo('#sap');
+      equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
+      reset();
+      expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
+      jQuery("#first, #yahoo").prependTo('#sap');
+      equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
+      reset();
+      jQuery('<select id="prependSelect1"></select>').prependTo('form:last');
+      jQuery('<select id="prependSelect2"><option>Test</option></select>').prependTo('form:last');
+      t("Prepend Select", "#prependSelect2, #prependSelect1", ["prependSelect2", "prependSelect1"]);
+    });
+
+    function testBefore(val) {
+      expect(6);
+      var expected = 'This is a normal link: bugaYahoo';
+      jQuery('#yahoo').before(val('<b>buga</b>'));
+      equals(expected, jQuery('#en').text(), 'Insert String before');
+      reset();
+      expected = "This is a normal link: Try them out:Yahoo";
+      jQuery('#yahoo').before(val(document.getElementById('first')));
+      equals(expected, jQuery('#en').text(), "Insert element before");
+      reset();
+      expected = "This is a normal link: Try them out:diveintomarkYahoo";
+      jQuery('#yahoo').before(val([document.getElementById('first'), document.getElementById('mark')]));
+      equals(expected, jQuery('#en').text(), "Insert array of elements before");
+      reset();
+      expected = "This is a normal link: diveintomarkTry them out:Yahoo";
+      jQuery('#yahoo').before(val(jQuery("#first, #mark")));
+      equals(expected, jQuery('#en').text(), "Insert jQuery before");
+      var set = jQuery("<div/>").before("<span>test</span>");
+      equals(set[0].nodeName().toLowerCase(), "span", "Insert the element before the disconnected node.");
+      equals(set.length, 2, "Insert the element before the disconnected node.");
+      reset();
+    }
+
+    test("before(String|Element|Array<Element>|jQuery)", function () {
+      testBefore(bareObj);
+    });
+
+    test("before(Function)", function () {
+      testBefore(functionReturningObj);
+    });
+
+    test("insertBefore(String|Element|Array<Element>|jQuery)", function () {
+      expect(4);
+      var expected = 'This is a normal link: bugaYahoo';
+      jQuery('<b>buga</b>').insertBefore('#yahoo');
+      equals(expected, jQuery('#en').text(), 'Insert String before');
+      reset();
+      expected = "This is a normal link: Try them out:Yahoo";
+      jQuery(document.getElementById('first')).insertBefore('#yahoo');
+      equals(expected, jQuery('#en').text(), "Insert element before");
+      reset();
+      expected = "This is a normal link: Try them out:diveintomarkYahoo";
+      jQuery([document.getElementById('first'), document.getElementById('mark')]).insertBefore('#yahoo');
+      equals(expected, jQuery('#en').text(), "Insert array of elements before");
+      reset();
+      expected = "This is a normal link: diveintomarkTry them out:Yahoo";
+      jQuery("#first, #mark").insertBefore('#yahoo');
+      equals(expected, jQuery('#en').text(), "Insert jQuery before");
+    });
+
+    function testAfter(val) {
+      expect(6);
+      var expected = 'This is a normal link: Yahoobuga';
+      jQuery('#yahoo').after(val('<b>buga</b>'));
+      equals(expected, jQuery('#en').text(), 'Insert String after');
+      reset();
+      expected = "This is a normal link: YahooTry them out:";
+      jQuery('#yahoo').after(val(document.getElementById('first')));
+      equals(expected, jQuery('#en').text(), "Insert element after");
+      reset();
+      expected = "This is a normal link: YahooTry them out:diveintomark";
+      jQuery('#yahoo').after(val([document.getElementById('first'), document.getElementById('mark')]));
+      equals(expected, jQuery('#en').text(), "Insert array of elements after");
+      reset();
+      expected = "This is a normal link: YahoodiveintomarkTry them out:";
+      jQuery('#yahoo').after(val(jQuery("#first, #mark")));
+      equals(expected, jQuery('#en').text(), "Insert jQuery after");
+      var set = jQuery("<div/>").after("<span>test</span>");
+      equals(set[1].nodeName().toLowerCase(), "span", "Insert the element after the disconnected node.");
+      equals(set.length, 2, "Insert the element after the disconnected node.");
+    }
+
+    test("after(String|Element|Array<Element>|jQuery)", function () {
+      testAfter(bareObj);
+    });
+
+    test("after(Function)", function () {
+      testAfter(functionReturningObj);
+    });
+
+    test("insertAfter(String|Element|Array<Element>|jQuery)", function () {
+      expect(4);
+      var expected = 'This is a normal link: Yahoobuga';
+      jQuery('<b>buga</b>').insertAfter('#yahoo');
+      equals(expected, jQuery('#en').text(), 'Insert String after');
+      reset();
+      expected = "This is a normal link: YahooTry them out:";
+      jQuery(document.getElementById('first')).insertAfter('#yahoo');
+      equals(expected, jQuery('#en').text(), "Insert element after");
+      reset();
+      expected = "This is a normal link: YahooTry them out:diveintomark";
+      jQuery([document.getElementById('first'), document.getElementById('mark')]).insertAfter('#yahoo');
+      equals(expected, jQuery('#en').text(), "Insert array of elements after");
+      reset();
+      expected = "This is a normal link: YahoodiveintomarkTry them out:";
+      jQuery("#first, #mark").insertAfter('#yahoo');
+      equals(expected, jQuery('#en').text(), "Insert jQuery after");
+    });
+
 //    function testReplaceWith(val) {
 //      expect(12);
 //      jQuery('#yahoo').replaceWith(val('<b id="replace">buga</b>'));
@@ -588,7 +589,7 @@ bind('ready', function() {
 //      jQuery('.replacewith').remove();
 //    }
 //
-//    test("replaceWith(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//    test("replaceWith(String|Element|Array<Element>|jQuery)", function () {
 //      testReplaceWith(bareObj);
 //    });
 //
@@ -610,7 +611,7 @@ bind('ready', function() {
 //      equals(jQuery('#foo p').length, 0, 'verify that all the three original element have been replaced');
 //    });
 //
-//    test("replaceAll(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//    test("replaceAll(String|Element|Array<Element>|jQuery)", function () {
 //      expect(10);
 //      jQuery('<b id="replace">buga</b>').replaceAll("#yahoo");
 //      ok(jQuery("#replace")[0], 'Replace element with string');
@@ -640,7 +641,7 @@ bind('ready', function() {
 //      var cloneTags = ["<table/>", "<tr/>", "<td/>", "<div/>", "<button/>", "<ul/>", "<ol/>", "<li/>", "<input type='checkbox' />", "<select/>", "<option/>", "<textarea/>", "<tbody/>", "<thead/>", "<tfoot/>", "<iframe/>"];
 //      for (var i = 0; i < cloneTags.length; i++) {
 //        var j = jQuery(cloneTags[i]);
-//        equals(j[0].tagName(), j.clone()[0].tagName(), 'Clone a &lt;' + cloneTags[i].substring(1));
+//        equals(j[0].tagName(), j.clone()[0].tagName(), 'Clone a <' + cloneTags[i].substring(1));
 //      }
 //      // using contents will get comments regular, text, and comment nodes
 //      var cl = jQuery("#nonnodes").contents().clone();

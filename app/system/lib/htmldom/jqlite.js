@@ -1209,14 +1209,14 @@ function lib_jqlite() {
         return this.remove(selector, true);
       },
 
-      domManip: function(args, table, callback) {
+      domManip: function(args, callFuncWithHTML, callback) {
         var first, value = args[0];
 
         if (jQuery.isFunction(value)) {
           return this.each(function(i) {
             var self = jQuery(this);
-            args[0] = value.call(this, i, table ? self.html() : undefined);
-            self.domManip(args, table, callback);
+            args[0] = value.call(this, i, callFuncWithHTML ? self.html() : undefined);
+            self.domManip(args, callFuncWithHTML, callback);
           });
         }
 

@@ -202,7 +202,7 @@ function lib_domwrapper() {
       HtmlNode.prototype[name] = function() {
         var node = this._xmlNode,
         args = toArray(arguments).map(function(el) {
-          return el._xmlNode;
+          return el && el._xmlNode;
         });
         node[name].apply(node, args);
       };

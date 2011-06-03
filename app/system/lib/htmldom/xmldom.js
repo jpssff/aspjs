@@ -202,6 +202,9 @@ function lib_xmldom() {
   };
 
   XNode.prototype.insertBefore = function(newNode, oldNode) {
+    if (!oldNode) {
+      return this.appendChild(newNode);
+    }
     if (oldNode === newNode) {
       return;
     }
