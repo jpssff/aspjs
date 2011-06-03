@@ -39,7 +39,7 @@ bind('ready', function() {
 
     test("text()", function () {
       expect(2);
-      var expected = "This link has class=\"blog\": Simon Willison's Weblog";
+      var expected = 'This link has class="blog": Simon Willison\'s Weblog';
       equals(jQuery('#sap').text(), expected, 'Check for merged text of more then one element.');
       // Check serialization of text values
       equals(jQuery(document.createTextNode("foo")).text(), "foo", "Text node was retreived from .text().");
@@ -55,6 +55,7 @@ bind('ready', function() {
       equals(jQuery(j[0]).text(), "hi!", "Check node,textnode,comment with text()");
       equals(j[1].nodeValue(), " there ", "Check node,textnode,comment with text()");
       equals(j[2].nodeType(), 8, "Check node,textnode,comment with text()");
+      reset();
     }
 
     test("text(String)", function () {
@@ -77,7 +78,7 @@ bind('ready', function() {
     });
 
     function testWrap(val) {
-      expect(16);
+      expect(15);
       var defaultText = 'Try them out:'
       var result = jQuery('#first').wrap(val('<div class="red"><span></span></div>')).text();
       equals(defaultText, result, 'Check for wrapping of on-the-fly html');
@@ -94,9 +95,7 @@ bind('ready', function() {
       equals(jQuery("#nonnodes > i").length, 3, "Check node,textnode,comment wraps ok");
       equals(jQuery("#nonnodes > i").text(), j.text(), "Check node,textnode,comment wraps doesn't hurt text");
       // Try wrapping a disconnected node
-      app.debug = true;
       j = jQuery("<label/>").wrap(val("<li/>"));
-      res.die(j.toHTML());
       equals(j[0].nodeName().toUpperCase(), "LABEL", "Element is a label");
       equals(j[0].parentNode().nodeName().toUpperCase(), "LI", "Element has been wrapped");
       // Wrap an element containing a text node
@@ -130,6 +129,7 @@ bind('ready', function() {
       var p = jQuery("#firstp,#first")[0].parentNode();
       var result = jQuery('#firstp,#first').wrapAll(val('<div class="red"><div class="tmp"></div></div>'));
       equals(result.parent().length, 1, 'Check for wrapping of on-the-fly html');
+      res.die(result.parent().toHTML());
       ok(jQuery('#first').parent().parent().is('.red'), 'Check if wrapper has class "red"');
       ok(jQuery('#firstp').parent().parent().is('.red'), 'Check if wrapper has class "red"');
       equals(jQuery("#first").parent().parent()[0].previousSibling(), prev, "Correct Previous Sibling");
@@ -147,696 +147,696 @@ bind('ready', function() {
       testWrapAll(bareObj);
     });
 
-    function testWrapInner(val) {
-      expect(11);
-      var num = jQuery("#first").children().length;
-      var result = jQuery('#first').wrapInner(val('<div class="red"><div id="tmp"></div></div>'));
-      equals(jQuery("#first").children().length, 1, "Only one child");
-      ok(jQuery("#first").children().is(".red"), "Verify Right Element");
-      equals(jQuery("#first").children().children().children().length, num, "Verify Elements Intact");
-      reset();
-      var num = jQuery("#first").html("foo<div>test</div><div>test2</div>").children().length;
-      var result = jQuery('#first').wrapInner(val('<div class="red"><div id="tmp"></div></div>'));
-      equals(jQuery("#first").children().length, 1, "Only one child");
-      ok(jQuery("#first").children().is(".red"), "Verify Right Element");
-      equals(jQuery("#first").children().children().children().length, num, "Verify Elements Intact");
-      reset();
-      var num = jQuery("#first").children().length;
-      var result = jQuery('#first').wrapInner(val(document.getElementById('empty')));
-      equals(jQuery("#first").children().length, 1, "Only one child");
-      ok(jQuery("#first").children().is("#empty"), "Verify Right Element");
-      equals(jQuery("#first").children().children().length, num, "Verify Elements Intact");
-      var div = jQuery("<div/>");
-      div.wrapInner(val("<span></span>"));
-      equals(div.children().length, 1, "The contents were wrapped.");
-      equals(div.children()[0].nodeName().toLowerCase(), "span", "A span was inserted.");
-    }
-
-    test("wrapInner(String|Element)", function () {
-      testWrapInner(bareObj);
-    });
-
-    test("wrapInner(Function)", function () {
-      testWrapInner(functionReturningObj)
-    });
-
-    test("unwrap()", function () {
-      expect(9);
-      jQuery("body").append('  <div id="unwrap" style="display: none;"> <div id="unwrap1"> <span class="unwrap">a</span> <span class="unwrap">b</span> </div> <div id="unwrap2"> <span class="unwrap">c</span> <span class="unwrap">d</span> </div> <div id="unwrap3"> <b><span class="unwrap unwrap3">e</span></b> <b><span class="unwrap unwrap3">f</span></b> </div> </div>');
-      var abcd = jQuery('#unwrap1 > span, #unwrap2 > span').get(),
-          abcdef = jQuery('#unwrap span').get();
-      equals(jQuery('#unwrap1 span').add('#unwrap2 span:first').unwrap().length, 3, 'make #unwrap1 and #unwrap2 go away');
-      same(jQuery('#unwrap > span').get(), abcd, 'all four spans should still exist');
-      same(jQuery('#unwrap3 span').unwrap().get(), jQuery('#unwrap3 > span').get(), 'make all b in #unwrap3 go away');
-      same(jQuery('#unwrap3 span').unwrap().get(), jQuery('#unwrap > span.unwrap3').get(), 'make #unwrap3 go away');
-      same(jQuery('#unwrap').children().get(), abcdef, '#unwrap only contains 6 child spans');
-      same(jQuery('#unwrap > span').unwrap().get(), jQuery('body > span.unwrap').get(), 'make the 6 spans become children of body');
-      same(jQuery('body > span.unwrap').unwrap().get(), jQuery('body > span.unwrap').get(), 'can\'t unwrap children of body');
-      same(jQuery('body > span.unwrap').unwrap().get(), abcdef, 'can\'t unwrap children of body');
-      same(jQuery('body > span.unwrap').get(), abcdef, 'body contains 6 .unwrap child spans');
-      jQuery('body > span.unwrap').remove();
-    });
-
-    function testAppend(valueObj) {
-      expect(36);
-      var defaultText = 'Try them out:'
-      var result = jQuery('#first').append(valueObj('<b>buga</b>'));
-      equals(result.text(), defaultText + 'buga', 'Check if text appending works');
-      equals(jQuery('#select3').append(valueObj('<option value="appendTest">Append Test</option>')).find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
-      reset();
-      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
-      jQuery('#sap').append(valueObj(document.getElementById('first')));
-      equals(expected, jQuery('#sap').text(), "Check for appending of element");
-      reset();
-      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
-      jQuery('#sap').append(valueObj([document.getElementById('first'), document.getElementById('yahoo')]));
-      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
-      reset();
-      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
-      jQuery('#sap').append(valueObj(jQuery("#first, #yahoo")));
-      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
-      reset();
-      jQuery("#sap").append(valueObj(5));
-      ok(jQuery("#sap")[0].innerHTML().match(/5$/), "Check for appending a number");
-      reset();
-      jQuery("#sap").append(valueObj(" text with spaces "));
-      ok(jQuery("#sap")[0].innerHTML().match(/ text with spaces $/), "Check for appending text with spaces");
-      reset();
-      ok(jQuery("#sap").append(valueObj([])), "Check for appending an empty array.");
-      ok(jQuery("#sap").append(valueObj("")), "Check for appending an empty string.");
-      ok(jQuery("#sap").append(valueObj(document.getElementsByTagName("foo"))), "Check for appending an empty nodelist.");
-      reset();
-      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked="checked" />'));
-      jQuery("form input[name=radiotest]").each(function () {
-        ok(jQuery(this).is(':checked'), "Append checked radio");
-      }).remove();
-      reset();
-      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked    =   \'checked\' />'));
-      jQuery("form input[name=radiotest]").each(function () {
-        ok(jQuery(this).is(':checked'), "Append alternately formated checked radio");
-      }).remove();
-      reset();
-      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked />'));
-      jQuery("form input[name=radiotest]").each(function () {
-        ok(jQuery(this).is(':checked'), "Append HTML5-formated checked radio");
-      }).remove();
-      reset();
-      jQuery("#sap").append(valueObj(document.getElementById('form')));
-      equals(jQuery("#sap>form").size(), 1, "Check for appending a form"); // Bug #910
-      reset();
-      jQuery('<fieldset/>').appendTo('#form').append(valueObj('<legend id="legend">test</legend>'));
-      t('Append legend', '#legend', ['legend']);
-      reset();
-      jQuery('#select1').append(valueObj('<OPTION>Test</OPTION>'));
-      equals(jQuery('#select1 option:last').text(), "Test", "Appending &lt;OPTION&gt; (all caps)");
-      jQuery('#table').append(valueObj('<colgroup></colgroup>'));
-      ok(jQuery('#table colgroup').length, "Append colgroup");
-      jQuery('#table colgroup').append(valueObj('<col/>'));
-      ok(jQuery('#table colgroup col').length, "Append col");
-      reset();
-      jQuery('#table').append(valueObj('<caption></caption>'));
-      ok(jQuery('#table caption').length, "Append caption");
-      reset();
-      jQuery('form:last').append(valueObj('<select id="appendSelect1"></select>')).append(valueObj('<select id="appendSelect2"><option>Test</option></select>'));
-      t("Append Select", "#appendSelect1, #appendSelect2", ["appendSelect1", "appendSelect2"]);
-      equals("Two nodes", jQuery('<div />').append("Two", " nodes").text(), "Appending two text nodes (#4011)");
-      // using contents will get comments regular, text, and comment nodes
-      var j = jQuery("#nonnodes").contents();
-      var d = jQuery("<div/>").appendTo("#nonnodes").append(j);
-      equals(jQuery("#nonnodes").length, 1, "Check node,textnode,comment append moved leaving just the div");
-      ok(d.contents().length >= 2, "Check node,textnode,comment append works");
-      d.contents().appendTo("#nonnodes");
-      d.remove();
-      ok(jQuery("#nonnodes").contents().length >= 2, "Check node,textnode,comment append cleanup worked");
-    }
-
-    test("append(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      testAppend(bareObj);
-    });
-
-    test("append(Function)", function () {
-      testAppend(functionReturningObj);
-    });
-
-    test("append(Function) with incoming value", function () {
-      expect(12);
-      var defaultText = 'Try them out:',
-          old = jQuery("#first").html();
-      var result = jQuery('#first').append(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return '<b>buga</b>';
-      });
-      equals(result.text(), defaultText + 'buga', 'Check if text appending works');
-      var select = jQuery('#select3');
-      old = select.html();
-      equals(select.append(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return '<option value="appendTest">Append Test</option>';
-      }).find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
-      reset();
-      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
-      old = jQuery("#sap").html();
-      jQuery('#sap').append(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return document.getElementById('first');
-      });
-      equals(expected, jQuery('#sap').text(), "Check for appending of element");
-      reset();
-      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
-      old = jQuery("#sap").html();
-      jQuery('#sap').append(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return [document.getElementById('first'), document.getElementById('yahoo')];
-      });
-      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
-      reset();
-      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
-      old = jQuery("#sap").html();
-      jQuery('#sap').append(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return jQuery("#first, #yahoo");
-      });
-      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
-      reset();
-      old = jQuery("#sap").html();
-      jQuery("#sap").append(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return 5;
-      });
-      ok(jQuery("#sap")[0].innerHTML().match(/5$/), "Check for appending a number");
-      reset();
-    });
-
-    test("appendTo(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      expect(12);
-      var defaultText = 'Try them out:'
-      jQuery('<b>buga</b>').appendTo('#first');
-      equals(jQuery("#first").text(), defaultText + 'buga', 'Check if text appending works');
-      equals(jQuery('<option value="appendTest">Append Test</option>').appendTo('#select3').parent().find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
-      reset();
-      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
-      jQuery(document.getElementById('first')).appendTo('#sap');
-      equals(expected, jQuery('#sap').text(), "Check for appending of element");
-      reset();
-      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
-      jQuery([document.getElementById('first'), document.getElementById('yahoo')]).appendTo('#sap');
-      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
-      reset();
-      ok(jQuery(document.createElement("script")).appendTo("body").length, "Make sure a disconnected script can be appended.");
-      reset();
-      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
-      jQuery("#first, #yahoo").appendTo('#sap');
-      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
-      reset();
-      jQuery('#select1').appendTo('#foo');
-      t('Append select', '#foo select', ['select1']);
-      reset();
-      var div = jQuery("<div/>").appendTo("#main, #moretests");
-      equals(div.length, 2, "appendTo returns the inserted elements");
-      div.addClass("test");
-      ok(jQuery("#main div:last").hasClass("test"), "appendTo element was modified after the insertion");
-      ok(jQuery("#moretests div:last").hasClass("test"), "appendTo element was modified after the insertion");
-      reset();
-      div = jQuery("<div/>");
-      jQuery("<span>a</span><b>b</b>").filter("span").appendTo(div);
-      equals(div.children().length, 1, "Make sure the right number of children were inserted.");
-      div = jQuery("#moretests div");
-      var num = jQuery("#main div").length;
-      div.remove().appendTo("#main");
-      equals(jQuery("#main div").length, num, "Make sure all the removed divs were inserted.");
-      reset();
-    });
-
-    function testPrepend(val) {
-        expect(5);
-        var defaultText = 'Try them out:'
-        var result = jQuery('#first').prepend(val('<b>buga</b>'));
-        equals(result.text(), 'buga' + defaultText, 'Check if text prepending works');
-        equals(jQuery('#select3').prepend(val('<option value="prependTest">Prepend Test</option>')).find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
-        reset();
-        var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
-        jQuery('#sap').prepend(val(document.getElementById('first')));
-        equals(expected, jQuery('#sap').text(), "Check for prepending of element");
-        reset();
-        expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
-        jQuery('#sap').prepend(val([document.getElementById('first'), document.getElementById('yahoo')]));
-        equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
-        reset();
-        expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
-        jQuery('#sap').prepend(val(jQuery("#first, #yahoo")));
-        equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
-        };
-    test("prepend(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      testPrepend(bareObj);
-    });
-
-    test("prepend(Function)", function () {
-      testPrepend(functionReturningObj);
-    });
-
-    test("prepend(Function) with incoming value", function () {
-      expect(10);
-      var defaultText = 'Try them out:',
-          old = jQuery('#first').html();
-      var result = jQuery('#first').prepend(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return '<b>buga</b>';
-      });
-      equals(result.text(), 'buga' + defaultText, 'Check if text prepending works');
-      old = jQuery("#select3").html();
-      equals(jQuery('#select3').prepend(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return '<option value="prependTest">Prepend Test</option>';
-      }).find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
-      reset();
-      var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
-      old = jQuery('#sap').html();
-      jQuery('#sap').prepend(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return document.getElementById('first');
-      });
-      equals(expected, jQuery('#sap').text(), "Check for prepending of element");
-      reset();
-      expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
-      old = jQuery('#sap').html();
-      jQuery('#sap').prepend(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return [document.getElementById('first'), document.getElementById('yahoo')];
-      });
-      equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
-      reset();
-      expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
-      old = jQuery('#sap').html();
-      jQuery('#sap').prepend(function (i, val) {
-        equals(val, old, "Make sure the incoming value is correct.");
-        return jQuery("#first, #yahoo");
-      });
-      equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
-    });
-
-    test("prependTo(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      expect(6);
-      var defaultText = 'Try them out:'
-      jQuery('<b>buga</b>').prependTo('#first');
-      equals(jQuery('#first').text(), 'buga' + defaultText, 'Check if text prepending works');
-      equals(jQuery('<option value="prependTest">Prepend Test</option>').prependTo('#select3').parent().find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
-      reset();
-      var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
-      jQuery(document.getElementById('first')).prependTo('#sap');
-      equals(expected, jQuery('#sap').text(), "Check for prepending of element");
-      reset();
-      expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
-      jQuery([document.getElementById('first'), document.getElementById('yahoo')]).prependTo('#sap');
-      equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
-      reset();
-      expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
-      jQuery("#first, #yahoo").prependTo('#sap');
-      equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
-      reset();
-      jQuery('<select id="prependSelect1"></select>').prependTo('form:last');
-      jQuery('<select id="prependSelect2"><option>Test</option></select>').prependTo('form:last');
-      t("Prepend Select", "#prependSelect2, #prependSelect1", ["prependSelect2", "prependSelect1"]);
-    });
-
-    function testBefore(val) {
-      expect(6);
-      var expected = 'This is a normal link: bugaYahoo';
-      jQuery('#yahoo').before(val('<b>buga</b>'));
-      equals(expected, jQuery('#en').text(), 'Insert String before');
-      reset();
-      expected = "This is a normal link: Try them out:Yahoo";
-      jQuery('#yahoo').before(val(document.getElementById('first')));
-      equals(expected, jQuery('#en').text(), "Insert element before");
-      reset();
-      expected = "This is a normal link: Try them out:diveintomarkYahoo";
-      jQuery('#yahoo').before(val([document.getElementById('first'), document.getElementById('mark')]));
-      equals(expected, jQuery('#en').text(), "Insert array of elements before");
-      reset();
-      expected = "This is a normal link: diveintomarkTry them out:Yahoo";
-      jQuery('#yahoo').before(val(jQuery("#first, #mark")));
-      equals(expected, jQuery('#en').text(), "Insert jQuery before");
-      var set = jQuery("<div/>").before("<span>test</span>");
-      equals(set[0].nodeName().toLowerCase(), "span", "Insert the element before the disconnected node.");
-      equals(set.length, 2, "Insert the element before the disconnected node.");
-    }
-
-    test("before(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      testBefore(bareObj);
-    });
-
-    test("before(Function)", function () {
-      testBefore(functionReturningObj);
-    });
-
-    test("insertBefore(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      expect(4);
-      var expected = 'This is a normal link: bugaYahoo';
-      jQuery('<b>buga</b>').insertBefore('#yahoo');
-      equals(expected, jQuery('#en').text(), 'Insert String before');
-      reset();
-      expected = "This is a normal link: Try them out:Yahoo";
-      jQuery(document.getElementById('first')).insertBefore('#yahoo');
-      equals(expected, jQuery('#en').text(), "Insert element before");
-      reset();
-      expected = "This is a normal link: Try them out:diveintomarkYahoo";
-      jQuery([document.getElementById('first'), document.getElementById('mark')]).insertBefore('#yahoo');
-      equals(expected, jQuery('#en').text(), "Insert array of elements before");
-      reset();
-      expected = "This is a normal link: diveintomarkTry them out:Yahoo";
-      jQuery("#first, #mark").insertBefore('#yahoo');
-      equals(expected, jQuery('#en').text(), "Insert jQuery before");
-    });
-
-    function testAfter(val) {
-      expect(6);
-      var expected = 'This is a normal link: Yahoobuga';
-      jQuery('#yahoo').after(val('<b>buga</b>'));
-      equals(expected, jQuery('#en').text(), 'Insert String after');
-      reset();
-      expected = "This is a normal link: YahooTry them out:";
-      jQuery('#yahoo').after(val(document.getElementById('first')));
-      equals(expected, jQuery('#en').text(), "Insert element after");
-      reset();
-      expected = "This is a normal link: YahooTry them out:diveintomark";
-      jQuery('#yahoo').after(val([document.getElementById('first'), document.getElementById('mark')]));
-      equals(expected, jQuery('#en').text(), "Insert array of elements after");
-      reset();
-      expected = "This is a normal link: YahoodiveintomarkTry them out:";
-      jQuery('#yahoo').after(val(jQuery("#first, #mark")));
-      equals(expected, jQuery('#en').text(), "Insert jQuery after");
-      var set = jQuery("<div/>").after("<span>test</span>");
-      equals(set[1].nodeName().toLowerCase(), "span", "Insert the element after the disconnected node.");
-      equals(set.length, 2, "Insert the element after the disconnected node.");
-    }
-
-    test("after(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      testAfter(bareObj);
-    });
-
-    test("after(Function)", function () {
-      testAfter(functionReturningObj);
-    });
-
-    test("insertAfter(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      expect(4);
-      var expected = 'This is a normal link: Yahoobuga';
-      jQuery('<b>buga</b>').insertAfter('#yahoo');
-      equals(expected, jQuery('#en').text(), 'Insert String after');
-      reset();
-      expected = "This is a normal link: YahooTry them out:";
-      jQuery(document.getElementById('first')).insertAfter('#yahoo');
-      equals(expected, jQuery('#en').text(), "Insert element after");
-      reset();
-      expected = "This is a normal link: YahooTry them out:diveintomark";
-      jQuery([document.getElementById('first'), document.getElementById('mark')]).insertAfter('#yahoo');
-      equals(expected, jQuery('#en').text(), "Insert array of elements after");
-      reset();
-      expected = "This is a normal link: YahoodiveintomarkTry them out:";
-      jQuery("#first, #mark").insertAfter('#yahoo');
-      equals(expected, jQuery('#en').text(), "Insert jQuery after");
-    });
-
-    function testReplaceWith(val) {
-      expect(12);
-      jQuery('#yahoo').replaceWith(val('<b id="replace">buga</b>'));
-      ok(jQuery("#replace")[0], 'Replace element with string');
-      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after string');
-      reset();
-      jQuery('#yahoo').replaceWith(val(document.getElementById('first')));
-      ok(jQuery("#first")[0], 'Replace element with element');
-      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after element');
-      reset();
-      jQuery("#main").append('<div id="bar"><div id="baz">Foo</div></div>');
-      jQuery('#baz').replaceWith("Baz");
-      equals(jQuery("#bar").text(), "Baz", 'Replace element with text');
-      ok(!jQuery("#baz")[0], 'Verify that original element is gone, after element');
-      reset();
-      jQuery('#yahoo').replaceWith(val([document.getElementById('first'), document.getElementById('mark')]));
-      ok(jQuery("#first")[0], 'Replace element with array of elements');
-      ok(jQuery("#mark")[0], 'Replace element with array of elements');
-      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after array of elements');
-      reset();
-      jQuery('#yahoo').replaceWith(val(jQuery("#first, #mark")));
-      ok(jQuery("#first")[0], 'Replace element with set of elements');
-      ok(jQuery("#mark")[0], 'Replace element with set of elements');
-      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after set of elements');
-      reset();
-      var set = jQuery("<div/>").replaceWith(val("<span>test</span>"));
-      equals(set[0].nodeName().toLowerCase(), "span", "Replace the disconnected node.");
-      equals(set.length, 1, "Replace the disconnected node.");
-      var $div = jQuery("<div class='replacewith'></div>").appendTo("body");
-      equals(jQuery('.replacewith').length, 1, 'Check number of elements in page.');
-      jQuery('.replacewith').remove();
-    }
-
-    test("replaceWith(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      testReplaceWith(bareObj);
-    });
-
-    test("replaceWith(Function)", function () {
-      testReplaceWith(functionReturningObj);
-      expect(18);
-      var y = jQuery("#yahoo")[0];
-      jQuery(y).replaceWith(function () {
-        equals(this, y, "Make sure the context is coming in correctly.");
-      });
-      reset();
-    });
-
-    test("replaceWith(string) for more than one element", function () {
-      expect(3);
-      equals(jQuery('#foo p').length, 3, 'ensuring that test data has not changed');
-      jQuery('#foo p').replaceWith('<span>bar</span>');
-      equals(jQuery('#foo span').length, 3, 'verify that all the three original element have been replaced');
-      equals(jQuery('#foo p').length, 0, 'verify that all the three original element have been replaced');
-    });
-
-    test("replaceAll(String|Element|Array&lt;Element&gt;|jQuery)", function () {
-      expect(10);
-      jQuery('<b id="replace">buga</b>').replaceAll("#yahoo");
-      ok(jQuery("#replace")[0], 'Replace element with string');
-      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after string');
-      reset();
-      jQuery(document.getElementById('first')).replaceAll("#yahoo");
-      ok(jQuery("#first")[0], 'Replace element with element');
-      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after element');
-      reset();
-      jQuery([document.getElementById('first'), document.getElementById('mark')]).replaceAll("#yahoo");
-      ok(jQuery("#first")[0], 'Replace element with array of elements');
-      ok(jQuery("#mark")[0], 'Replace element with array of elements');
-      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after array of elements');
-      reset();
-      jQuery("#first, #mark").replaceAll("#yahoo");
-      ok(jQuery("#first")[0], 'Replace element with set of elements');
-      ok(jQuery("#mark")[0], 'Replace element with set of elements');
-      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after set of elements');
-    });
-
-    test("clone()", function () {
-      expect(29);
-      equals('This is a normal link: Yahoo', jQuery('#en').text(), 'Assert text for #en');
-      var clone = jQuery('#yahoo').clone();
-      equals('Try them out:Yahoo', jQuery('#first').append(clone).text(), 'Check for clone');
-      equals('This is a normal link: Yahoo', jQuery('#en').text(), 'Reassert text for #en');
-      var cloneTags = ["<table/>", "<tr/>", "<td/>", "<div/>", "<button/>", "<ul/>", "<ol/>", "<li/>", "<input type='checkbox' />", "<select/>", "<option/>", "<textarea/>", "<tbody/>", "<thead/>", "<tfoot/>", "<iframe/>"];
-      for (var i = 0; i < cloneTags.length; i++) {
-        var j = jQuery(cloneTags[i]);
-        equals(j[0].tagName(), j.clone()[0].tagName(), 'Clone a &lt;' + cloneTags[i].substring(1));
-      }
-      // using contents will get comments regular, text, and comment nodes
-      var cl = jQuery("#nonnodes").contents().clone();
-      ok(cl.length >= 2, "Check node,textnode,comment clone works (some browsers delete comments on clone)");
-      var div = jQuery("<div><ul><li>test</li></ul></div>");
-      div = div.clone(true).clone(true);
-      equals(div.length, 1, "One element cloned");
-      equals(div[0].nodeName().toUpperCase(), "DIV", "DIV element cloned");
-      div = jQuery("<div/>").append([document.createElement("table"), document.createElement("table")]);
-      div = div.clone(true);
-      equals(div.length, 1, "One element cloned");
-      equals(div[0].nodeName().toUpperCase(), "DIV", "DIV element cloned");
-      div = jQuery("<div/>").html('<object height="355" width="425">  <param name="movie" value="http://www.youtube.com/v/JikaHBDoV3k&amp;hl=en">  <param name="wmode" value="transparent"> </object>');
-      div = div.clone(true);
-      equals(div.length, 1, "One element cloned");
-      equals(div[0].nodeName().toUpperCase(), "DIV", "DIV element cloned");
-      div = jQuery("<div/>").data({
-        a: true,
-        b: true
-      });
-      div = div.clone(true);
-      equals(div.data("a"), true, "Data cloned.");
-      equals(div.data("b"), true, "Data cloned.");
-      var form = document.createElement("form");
-      form.setAttribute('action', "/test/");
-      var div = document.createElement("div");
-      div.appendChild(document.createTextNode("test"));
-      form.appendChild(div);
-      equals(jQuery(form).clone().children().length, 1, "Make sure we just get the form back.");
-    });
-    if (!isLocal) {
-      test("clone() on XML nodes", function () {
-        expect(2);
-        stop();
-        jQuery.get("data/dashboard.xml", function (xml) {
-          var root = jQuery(xml.documentElement()).clone();
-          var origTab = jQuery("tab", xml).eq(0);
-          var cloneTab = jQuery("tab", root).eq(0);
-          origTab.text("origval");
-          cloneTab.text("cloneval");
-          equals(origTab.text(), "origval", "Check original XML node was correctly set");
-          equals(cloneTab.text(), "cloneval", "Check cloned XML node was correctly set");
-          start();
-        });
-      });
-    }
-    function testHtml(valueObj) {
-      expect(31);
-      jQuery.scriptorder = 0;
-      var div = jQuery("#main > div");
-      div.html(valueObj("<b>test</b>"));
-      var pass = true;
-      for (var i = 0; i < div.size(); i++) {
-        if (div.get(i).childNodes().length != 1) pass = false;
-      }
-      ok(pass, "Set HTML");
-      div = jQuery("<div/>").html(valueObj('<div id="parent_1"><div id="child_1"/></div><div id="parent_2"/>'));
-      equals(div.children().length, 2, "Make sure two child nodes exist.");
-      equals(div.children().children().length, 1, "Make sure that a grandchild exists.");
-      var space = jQuery("<div/>").html(valueObj("&#160;"))[0].innerHTML();
-      ok(/^\s$|^&nbsp;$/.test(space), "Make sure entities are passed through correctly.");
-      equals(jQuery("<div/>").html(valueObj("&amp;"))[0].innerHTML(), "&amp;", "Make sure entities are passed through correctly.");
-      jQuery("#main").html(valueObj("<style>.foobar{color:green;}</style>"));
-      equals(jQuery("#main").children().length, 1, "Make sure there is a child element.");
-      equals(jQuery("#main").children()[0].nodeName().toUpperCase(), "STYLE", "And that a style element was inserted.");
-      reset();
-      // using contents will get comments regular, text, and comment nodes
-      var j = jQuery("#nonnodes").contents();
-      j.html(valueObj("<b>bold</b>"));
-      // this is needed, or the expando added by jQuery unique will yield a different html
-      j.find('b').removeData();
-      equals(j.html().replace(/ xmlns="[^"]+"/g, "").toLowerCase(), "<b>bold</b>", "Check node,textnode,comment with html()");
-      jQuery("#main").html(valueObj("<select/>"));
-      jQuery("#main select").html(valueObj("<option>O1</option><option selected='selected'>O2</option><option>O3</option>"));
-      equals(jQuery("#main select").val(), "O2", "Selected option correct");
-      var $div = jQuery('<div />');
-      equals($div.html(valueObj(5)).html(), '5', 'Setting a number as html');
-      equals($div.html(valueObj(0)).html(), '0', 'Setting a zero as html');
-      var $div2 = jQuery('<div/>'),
-          insert = "&lt;div&gt;hello1&lt;/div&gt;";
-      equals($div2.html(insert).html().replace(/>/g, "&gt;"), insert, "Verify escaped insertion.");
-      equals($div2.html("x" + insert).html().replace(/>/g, "&gt;"), "x" + insert, "Verify escaped insertion.");
-      equals($div2.html(" " + insert).html().replace(/>/g, "&gt;"), " " + insert, "Verify escaped insertion.");
-      var map = jQuery("<map/>").html(valueObj("<area id='map01' shape='rect' coords='50,50,150,150' href='http://www.jquery.com/' alt='jQuery'>"));
-      equals(map[0].childNodes().length, 1, "The area was inserted.");
-      equals(map[0].firstChild().nodeName().toLowerCase(), "area", "The area was inserted.");
-      reset();
-      jQuery("#main").html(valueObj('<script type="something/else">ok( false, "Non-script evaluated." );</script><script type="text/javascript">ok( true, "text/javascript is evaluated." );</script><script>ok( true, "No type is evaluated." );</script><div><script type="text/javascript">ok( true, "Inner text/javascript is evaluated." );</script><script>ok( true, "Inner No type is evaluated." );</script><script type="something/else">ok( false, "Non-script evaluated." );</script></div>'));
-      jQuery("#main").html(valueObj("<script>ok( true, 'Test repeated injection of script.' );</script>"));
-      jQuery("#main").html(valueObj("<script>ok( true, 'Test repeated injection of script.' );</script>"));
-      jQuery("#main").html(valueObj("<script>ok( true, 'Test repeated injection of script.' );</script>"));
-      jQuery("#main").html(valueObj('<script type="text/javascript">ok( true, "jQuery().html().evalScripts() Evals Scripts Twice in Firefox, see #975 (1)" );</script>'));
-      jQuery("#main").html(valueObj('foo <form><script type="text/javascript">ok( true, "jQuery().html().evalScripts() Evals Scripts Twice in Firefox, see #975 (2)" );</script></form>'));
-      jQuery("#main").html(valueObj("<script>equals(jQuery.scriptorder++, 0, 'Script is executed in order');equals(jQuery('#scriptorder').length, 1,'Execute after html (even though appears before)')<\/script><span id='scriptorder'><script>equals(jQuery.scriptorder++, 1, 'Script (nested) is executed in order');equals(jQuery('#scriptorder').length, 1,'Execute after html')<\/script></span><script>equals(jQuery.scriptorder++, 2, 'Script (unnested) is executed in order');equals(jQuery('#scriptorder').length, 1,'Execute after html')<\/script>"));
-    }
-
-    test("html(String)", function () {
-      testHtml(bareObj);
-    });
-
-    test("html(Function)", function () {
-      testHtml(functionReturningObj);
-    });
-
-    test("html(Function) with incoming value", function () {
-      expect(20);
-      var div = jQuery("#main > div"),
-          old = div.map(function () {
-          return jQuery(this).html()
-        });
-      div.html(function (i, val) {
-        equals(val, old[i], "Make sure the incoming value is correct.");
-        return "<b>test</b>";
-      });
-      var pass = true;
-      div.each(function () {
-        if (this.childNodes().length !== 1) {
-          pass = false;
-        }
-      });
-      ok(pass, "Set HTML");
-      reset();
-      // using contents will get comments regular, text, and comment nodes
-      var j = jQuery("#nonnodes").contents();
-      old = j.map(function () {
-        return jQuery(this).html();
-      });
-      j.html(function (i, val) {
-        equals(val, old[i], "Make sure the incoming value is correct.");
-        return "<b>bold</b>";
-      });
-      j.find('b').removeData();
-      equals(j.html().replace(/ xmlns="[^"]+"/g, "").toLowerCase(), "<b>bold</b>", "Check node,textnode,comment with html()");
-      var $div = jQuery('<div />');
-      equals($div.html(function (i, val) {
-        equals(val, "", "Make sure the incoming value is correct.");
-        return 5;
-      }).html(), '5', 'Setting a number as html');
-      equals($div.html(function (i, val) {
-        equals(val, "5", "Make sure the incoming value is correct.");
-        return 0;
-      }).html(), '0', 'Setting a zero as html');
-      var $div2 = jQuery('<div/>'),
-          insert = "&lt;div&gt;hello1&lt;/div&gt;";
-      equals($div2.html(function (i, val) {
-        equals(val, "", "Make sure the incoming value is correct.");
-        return insert;
-      }).html().replace(/>/g, "&gt;"), insert, "Verify escaped insertion.");
-      equals($div2.html(function (i, val) {
-        equals(val.replace(/>/g, "&gt;"), insert, "Make sure the incoming value is correct.");
-        return "x" + insert;
-      }).html().replace(/>/g, "&gt;"), "x" + insert, "Verify escaped insertion.");
-      equals($div2.html(function (i, val) {
-        equals(val.replace(/>/g, "&gt;"), "x" + insert, "Make sure the incoming value is correct.");
-        return " " + insert;
-      }).html().replace(/>/g, "&gt;"), " " + insert, "Verify escaped insertion.");
-    });
-
-    function testRemove(method) {
-        expect(8);
-        var first = jQuery("#ap").children(":first");
-        first.data("foo", "bar");
-        jQuery("#ap").children()[method]();
-        ok(jQuery("#ap").text().length > 10, "Check text is not removed");
-        equals(jQuery("#ap").children().length, 0, "Check remove");
-        equals(first.data("foo"), method == "remove" ? null : "bar");
-        reset();
-        jQuery("#ap").children()[method]("a");
-        ok(jQuery("#ap").text().length > 10, "Check text is not removed");
-        equals(jQuery("#ap").children().length, 1, "Check filtered remove");
-        jQuery("#ap").children()[method]("a, code");
-        equals(jQuery("#ap").children().length, 0, "Check multi-filtered remove");
-        // using contents will get comments regular, text, and comment nodes
-        equals(jQuery("#nonnodes").contents().length, 3, "Check node,textnode,comment remove works");
-        jQuery("#nonnodes").contents()[method]();
-        equals(jQuery("#nonnodes").contents().length, 0, "Check node,textnode,comment remove works");
-    }
-
-    test("remove()", function () {
-      testRemove("remove");
-    });
-
-    test("detach()", function () {
-      testRemove("detach");
-    });
-
-    test("empty()", function () {
-      expect(3);
-      equals(jQuery("#ap").children().empty().text().length, 0, "Check text is removed");
-      equals(jQuery("#ap").children().length, 4, "Check elements are not removed");
-      // using contents will get comments regular, text, and comment nodes
-      var j = jQuery("#nonnodes").contents();
-      j.empty();
-      equals(j.html(), "", "Check node,textnode,comment empty works");
-    });
+//    function testWrapInner(val) {
+//      expect(11);
+//      var num = jQuery("#first").children().length;
+//      var result = jQuery('#first').wrapInner(val('<div class="red"><div id="tmp"></div></div>'));
+//      equals(jQuery("#first").children().length, 1, "Only one child");
+//      ok(jQuery("#first").children().is(".red"), "Verify Right Element");
+//      equals(jQuery("#first").children().children().children().length, num, "Verify Elements Intact");
+//      reset();
+//      var num = jQuery("#first").html("foo<div>test</div><div>test2</div>").children().length;
+//      var result = jQuery('#first').wrapInner(val('<div class="red"><div id="tmp"></div></div>'));
+//      equals(jQuery("#first").children().length, 1, "Only one child");
+//      ok(jQuery("#first").children().is(".red"), "Verify Right Element");
+//      equals(jQuery("#first").children().children().children().length, num, "Verify Elements Intact");
+//      reset();
+//      var num = jQuery("#first").children().length;
+//      var result = jQuery('#first').wrapInner(val(document.getElementById('empty')));
+//      equals(jQuery("#first").children().length, 1, "Only one child");
+//      ok(jQuery("#first").children().is("#empty"), "Verify Right Element");
+//      equals(jQuery("#first").children().children().length, num, "Verify Elements Intact");
+//      var div = jQuery("<div/>");
+//      div.wrapInner(val("<span></span>"));
+//      equals(div.children().length, 1, "The contents were wrapped.");
+//      equals(div.children()[0].nodeName().toLowerCase(), "span", "A span was inserted.");
+//    }
+//
+//    test("wrapInner(String|Element)", function () {
+//      testWrapInner(bareObj);
+//    });
+//
+//    test("wrapInner(Function)", function () {
+//      testWrapInner(functionReturningObj)
+//    });
+//
+//    test("unwrap()", function () {
+//      expect(9);
+//      jQuery("body").append('  <div id="unwrap" style="display: none;"> <div id="unwrap1"> <span class="unwrap">a</span> <span class="unwrap">b</span> </div> <div id="unwrap2"> <span class="unwrap">c</span> <span class="unwrap">d</span> </div> <div id="unwrap3"> <b><span class="unwrap unwrap3">e</span></b> <b><span class="unwrap unwrap3">f</span></b> </div> </div>');
+//      var abcd = jQuery('#unwrap1 > span, #unwrap2 > span').get(),
+//          abcdef = jQuery('#unwrap span').get();
+//      equals(jQuery('#unwrap1 span').add('#unwrap2 span:first').unwrap().length, 3, 'make #unwrap1 and #unwrap2 go away');
+//      same(jQuery('#unwrap > span').get(), abcd, 'all four spans should still exist');
+//      same(jQuery('#unwrap3 span').unwrap().get(), jQuery('#unwrap3 > span').get(), 'make all b in #unwrap3 go away');
+//      same(jQuery('#unwrap3 span').unwrap().get(), jQuery('#unwrap > span.unwrap3').get(), 'make #unwrap3 go away');
+//      same(jQuery('#unwrap').children().get(), abcdef, '#unwrap only contains 6 child spans');
+//      same(jQuery('#unwrap > span').unwrap().get(), jQuery('body > span.unwrap').get(), 'make the 6 spans become children of body');
+//      same(jQuery('body > span.unwrap').unwrap().get(), jQuery('body > span.unwrap').get(), 'can\'t unwrap children of body');
+//      same(jQuery('body > span.unwrap').unwrap().get(), abcdef, 'can\'t unwrap children of body');
+//      same(jQuery('body > span.unwrap').get(), abcdef, 'body contains 6 .unwrap child spans');
+//      jQuery('body > span.unwrap').remove();
+//    });
+//
+//    function testAppend(valueObj) {
+//      expect(36);
+//      var defaultText = 'Try them out:'
+//      var result = jQuery('#first').append(valueObj('<b>buga</b>'));
+//      equals(result.text(), defaultText + 'buga', 'Check if text appending works');
+//      equals(jQuery('#select3').append(valueObj('<option value="appendTest">Append Test</option>')).find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
+//      reset();
+//      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
+//      jQuery('#sap').append(valueObj(document.getElementById('first')));
+//      equals(expected, jQuery('#sap').text(), "Check for appending of element");
+//      reset();
+//      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
+//      jQuery('#sap').append(valueObj([document.getElementById('first'), document.getElementById('yahoo')]));
+//      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
+//      reset();
+//      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
+//      jQuery('#sap').append(valueObj(jQuery("#first, #yahoo")));
+//      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
+//      reset();
+//      jQuery("#sap").append(valueObj(5));
+//      ok(jQuery("#sap")[0].innerHTML().match(/5$/), "Check for appending a number");
+//      reset();
+//      jQuery("#sap").append(valueObj(" text with spaces "));
+//      ok(jQuery("#sap")[0].innerHTML().match(/ text with spaces $/), "Check for appending text with spaces");
+//      reset();
+//      ok(jQuery("#sap").append(valueObj([])), "Check for appending an empty array.");
+//      ok(jQuery("#sap").append(valueObj("")), "Check for appending an empty string.");
+//      ok(jQuery("#sap").append(valueObj(document.getElementsByTagName("foo"))), "Check for appending an empty nodelist.");
+//      reset();
+//      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked="checked" />'));
+//      jQuery("form input[name=radiotest]").each(function () {
+//        ok(jQuery(this).is(':checked'), "Append checked radio");
+//      }).remove();
+//      reset();
+//      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked    =   \'checked\' />'));
+//      jQuery("form input[name=radiotest]").each(function () {
+//        ok(jQuery(this).is(':checked'), "Append alternately formated checked radio");
+//      }).remove();
+//      reset();
+//      jQuery("form").append(valueObj('<input name="radiotest" type="radio" checked />'));
+//      jQuery("form input[name=radiotest]").each(function () {
+//        ok(jQuery(this).is(':checked'), "Append HTML5-formated checked radio");
+//      }).remove();
+//      reset();
+//      jQuery("#sap").append(valueObj(document.getElementById('form')));
+//      equals(jQuery("#sap>form").size(), 1, "Check for appending a form"); // Bug #910
+//      reset();
+//      jQuery('<fieldset/>').appendTo('#form').append(valueObj('<legend id="legend">test</legend>'));
+//      t('Append legend', '#legend', ['legend']);
+//      reset();
+//      jQuery('#select1').append(valueObj('<OPTION>Test</OPTION>'));
+//      equals(jQuery('#select1 option:last').text(), "Test", "Appending &lt;OPTION&gt; (all caps)");
+//      jQuery('#table').append(valueObj('<colgroup></colgroup>'));
+//      ok(jQuery('#table colgroup').length, "Append colgroup");
+//      jQuery('#table colgroup').append(valueObj('<col/>'));
+//      ok(jQuery('#table colgroup col').length, "Append col");
+//      reset();
+//      jQuery('#table').append(valueObj('<caption></caption>'));
+//      ok(jQuery('#table caption').length, "Append caption");
+//      reset();
+//      jQuery('form:last').append(valueObj('<select id="appendSelect1"></select>')).append(valueObj('<select id="appendSelect2"><option>Test</option></select>'));
+//      t("Append Select", "#appendSelect1, #appendSelect2", ["appendSelect1", "appendSelect2"]);
+//      equals("Two nodes", jQuery('<div />').append("Two", " nodes").text(), "Appending two text nodes (#4011)");
+//      // using contents will get comments regular, text, and comment nodes
+//      var j = jQuery("#nonnodes").contents();
+//      var d = jQuery("<div/>").appendTo("#nonnodes").append(j);
+//      equals(jQuery("#nonnodes").length, 1, "Check node,textnode,comment append moved leaving just the div");
+//      ok(d.contents().length >= 2, "Check node,textnode,comment append works");
+//      d.contents().appendTo("#nonnodes");
+//      d.remove();
+//      ok(jQuery("#nonnodes").contents().length >= 2, "Check node,textnode,comment append cleanup worked");
+//    }
+//
+//    test("append(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      testAppend(bareObj);
+//    });
+//
+//    test("append(Function)", function () {
+//      testAppend(functionReturningObj);
+//    });
+//
+//    test("append(Function) with incoming value", function () {
+//      expect(12);
+//      var defaultText = 'Try them out:',
+//          old = jQuery("#first").html();
+//      var result = jQuery('#first').append(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return '<b>buga</b>';
+//      });
+//      equals(result.text(), defaultText + 'buga', 'Check if text appending works');
+//      var select = jQuery('#select3');
+//      old = select.html();
+//      equals(select.append(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return '<option value="appendTest">Append Test</option>';
+//      }).find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
+//      reset();
+//      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
+//      old = jQuery("#sap").html();
+//      jQuery('#sap').append(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return document.getElementById('first');
+//      });
+//      equals(expected, jQuery('#sap').text(), "Check for appending of element");
+//      reset();
+//      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
+//      old = jQuery("#sap").html();
+//      jQuery('#sap').append(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return [document.getElementById('first'), document.getElementById('yahoo')];
+//      });
+//      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
+//      reset();
+//      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
+//      old = jQuery("#sap").html();
+//      jQuery('#sap').append(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return jQuery("#first, #yahoo");
+//      });
+//      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
+//      reset();
+//      old = jQuery("#sap").html();
+//      jQuery("#sap").append(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return 5;
+//      });
+//      ok(jQuery("#sap")[0].innerHTML().match(/5$/), "Check for appending a number");
+//      reset();
+//    });
+//
+//    test("appendTo(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      expect(12);
+//      var defaultText = 'Try them out:'
+//      jQuery('<b>buga</b>').appendTo('#first');
+//      equals(jQuery("#first").text(), defaultText + 'buga', 'Check if text appending works');
+//      equals(jQuery('<option value="appendTest">Append Test</option>').appendTo('#select3').parent().find('option:last-child').attr('value'), 'appendTest', 'Appending html options to select element');
+//      reset();
+//      var expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:";
+//      jQuery(document.getElementById('first')).appendTo('#sap');
+//      equals(expected, jQuery('#sap').text(), "Check for appending of element");
+//      reset();
+//      expected = "This link has class=\"blog\": Simon Willison's WeblogTry them out:Yahoo";
+//      jQuery([document.getElementById('first'), document.getElementById('yahoo')]).appendTo('#sap');
+//      equals(expected, jQuery('#sap').text(), "Check for appending of array of elements");
+//      reset();
+//      ok(jQuery(document.createElement("script")).appendTo("body").length, "Make sure a disconnected script can be appended.");
+//      reset();
+//      expected = "This link has class=\"blog\": Simon Willison's WeblogYahooTry them out:";
+//      jQuery("#first, #yahoo").appendTo('#sap');
+//      equals(expected, jQuery('#sap').text(), "Check for appending of jQuery object");
+//      reset();
+//      jQuery('#select1').appendTo('#foo');
+//      t('Append select', '#foo select', ['select1']);
+//      reset();
+//      var div = jQuery("<div/>").appendTo("#main, #moretests");
+//      equals(div.length, 2, "appendTo returns the inserted elements");
+//      div.addClass("test");
+//      ok(jQuery("#main div:last").hasClass("test"), "appendTo element was modified after the insertion");
+//      ok(jQuery("#moretests div:last").hasClass("test"), "appendTo element was modified after the insertion");
+//      reset();
+//      div = jQuery("<div/>");
+//      jQuery("<span>a</span><b>b</b>").filter("span").appendTo(div);
+//      equals(div.children().length, 1, "Make sure the right number of children were inserted.");
+//      div = jQuery("#moretests div");
+//      var num = jQuery("#main div").length;
+//      div.remove().appendTo("#main");
+//      equals(jQuery("#main div").length, num, "Make sure all the removed divs were inserted.");
+//      reset();
+//    });
+//
+//    function testPrepend(val) {
+//        expect(5);
+//        var defaultText = 'Try them out:'
+//        var result = jQuery('#first').prepend(val('<b>buga</b>'));
+//        equals(result.text(), 'buga' + defaultText, 'Check if text prepending works');
+//        equals(jQuery('#select3').prepend(val('<option value="prependTest">Prepend Test</option>')).find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
+//        reset();
+//        var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
+//        jQuery('#sap').prepend(val(document.getElementById('first')));
+//        equals(expected, jQuery('#sap').text(), "Check for prepending of element");
+//        reset();
+//        expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
+//        jQuery('#sap').prepend(val([document.getElementById('first'), document.getElementById('yahoo')]));
+//        equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
+//        reset();
+//        expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
+//        jQuery('#sap').prepend(val(jQuery("#first, #yahoo")));
+//        equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
+//        };
+//    test("prepend(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      testPrepend(bareObj);
+//    });
+//
+//    test("prepend(Function)", function () {
+//      testPrepend(functionReturningObj);
+//    });
+//
+//    test("prepend(Function) with incoming value", function () {
+//      expect(10);
+//      var defaultText = 'Try them out:',
+//          old = jQuery('#first').html();
+//      var result = jQuery('#first').prepend(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return '<b>buga</b>';
+//      });
+//      equals(result.text(), 'buga' + defaultText, 'Check if text prepending works');
+//      old = jQuery("#select3").html();
+//      equals(jQuery('#select3').prepend(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return '<option value="prependTest">Prepend Test</option>';
+//      }).find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
+//      reset();
+//      var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
+//      old = jQuery('#sap').html();
+//      jQuery('#sap').prepend(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return document.getElementById('first');
+//      });
+//      equals(expected, jQuery('#sap').text(), "Check for prepending of element");
+//      reset();
+//      expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
+//      old = jQuery('#sap').html();
+//      jQuery('#sap').prepend(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return [document.getElementById('first'), document.getElementById('yahoo')];
+//      });
+//      equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
+//      reset();
+//      expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
+//      old = jQuery('#sap').html();
+//      jQuery('#sap').prepend(function (i, val) {
+//        equals(val, old, "Make sure the incoming value is correct.");
+//        return jQuery("#first, #yahoo");
+//      });
+//      equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
+//    });
+//
+//    test("prependTo(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      expect(6);
+//      var defaultText = 'Try them out:'
+//      jQuery('<b>buga</b>').prependTo('#first');
+//      equals(jQuery('#first').text(), 'buga' + defaultText, 'Check if text prepending works');
+//      equals(jQuery('<option value="prependTest">Prepend Test</option>').prependTo('#select3').parent().find('option:first-child').attr('value'), 'prependTest', 'Prepending html options to select element');
+//      reset();
+//      var expected = "Try them out:This link has class=\"blog\": Simon Willison's Weblog";
+//      jQuery(document.getElementById('first')).prependTo('#sap');
+//      equals(expected, jQuery('#sap').text(), "Check for prepending of element");
+//      reset();
+//      expected = "Try them out:YahooThis link has class=\"blog\": Simon Willison's Weblog";
+//      jQuery([document.getElementById('first'), document.getElementById('yahoo')]).prependTo('#sap');
+//      equals(expected, jQuery('#sap').text(), "Check for prepending of array of elements");
+//      reset();
+//      expected = "YahooTry them out:This link has class=\"blog\": Simon Willison's Weblog";
+//      jQuery("#first, #yahoo").prependTo('#sap');
+//      equals(expected, jQuery('#sap').text(), "Check for prepending of jQuery object");
+//      reset();
+//      jQuery('<select id="prependSelect1"></select>').prependTo('form:last');
+//      jQuery('<select id="prependSelect2"><option>Test</option></select>').prependTo('form:last');
+//      t("Prepend Select", "#prependSelect2, #prependSelect1", ["prependSelect2", "prependSelect1"]);
+//    });
+//
+//    function testBefore(val) {
+//      expect(6);
+//      var expected = 'This is a normal link: bugaYahoo';
+//      jQuery('#yahoo').before(val('<b>buga</b>'));
+//      equals(expected, jQuery('#en').text(), 'Insert String before');
+//      reset();
+//      expected = "This is a normal link: Try them out:Yahoo";
+//      jQuery('#yahoo').before(val(document.getElementById('first')));
+//      equals(expected, jQuery('#en').text(), "Insert element before");
+//      reset();
+//      expected = "This is a normal link: Try them out:diveintomarkYahoo";
+//      jQuery('#yahoo').before(val([document.getElementById('first'), document.getElementById('mark')]));
+//      equals(expected, jQuery('#en').text(), "Insert array of elements before");
+//      reset();
+//      expected = "This is a normal link: diveintomarkTry them out:Yahoo";
+//      jQuery('#yahoo').before(val(jQuery("#first, #mark")));
+//      equals(expected, jQuery('#en').text(), "Insert jQuery before");
+//      var set = jQuery("<div/>").before("<span>test</span>");
+//      equals(set[0].nodeName().toLowerCase(), "span", "Insert the element before the disconnected node.");
+//      equals(set.length, 2, "Insert the element before the disconnected node.");
+//    }
+//
+//    test("before(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      testBefore(bareObj);
+//    });
+//
+//    test("before(Function)", function () {
+//      testBefore(functionReturningObj);
+//    });
+//
+//    test("insertBefore(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      expect(4);
+//      var expected = 'This is a normal link: bugaYahoo';
+//      jQuery('<b>buga</b>').insertBefore('#yahoo');
+//      equals(expected, jQuery('#en').text(), 'Insert String before');
+//      reset();
+//      expected = "This is a normal link: Try them out:Yahoo";
+//      jQuery(document.getElementById('first')).insertBefore('#yahoo');
+//      equals(expected, jQuery('#en').text(), "Insert element before");
+//      reset();
+//      expected = "This is a normal link: Try them out:diveintomarkYahoo";
+//      jQuery([document.getElementById('first'), document.getElementById('mark')]).insertBefore('#yahoo');
+//      equals(expected, jQuery('#en').text(), "Insert array of elements before");
+//      reset();
+//      expected = "This is a normal link: diveintomarkTry them out:Yahoo";
+//      jQuery("#first, #mark").insertBefore('#yahoo');
+//      equals(expected, jQuery('#en').text(), "Insert jQuery before");
+//    });
+//
+//    function testAfter(val) {
+//      expect(6);
+//      var expected = 'This is a normal link: Yahoobuga';
+//      jQuery('#yahoo').after(val('<b>buga</b>'));
+//      equals(expected, jQuery('#en').text(), 'Insert String after');
+//      reset();
+//      expected = "This is a normal link: YahooTry them out:";
+//      jQuery('#yahoo').after(val(document.getElementById('first')));
+//      equals(expected, jQuery('#en').text(), "Insert element after");
+//      reset();
+//      expected = "This is a normal link: YahooTry them out:diveintomark";
+//      jQuery('#yahoo').after(val([document.getElementById('first'), document.getElementById('mark')]));
+//      equals(expected, jQuery('#en').text(), "Insert array of elements after");
+//      reset();
+//      expected = "This is a normal link: YahoodiveintomarkTry them out:";
+//      jQuery('#yahoo').after(val(jQuery("#first, #mark")));
+//      equals(expected, jQuery('#en').text(), "Insert jQuery after");
+//      var set = jQuery("<div/>").after("<span>test</span>");
+//      equals(set[1].nodeName().toLowerCase(), "span", "Insert the element after the disconnected node.");
+//      equals(set.length, 2, "Insert the element after the disconnected node.");
+//    }
+//
+//    test("after(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      testAfter(bareObj);
+//    });
+//
+//    test("after(Function)", function () {
+//      testAfter(functionReturningObj);
+//    });
+//
+//    test("insertAfter(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      expect(4);
+//      var expected = 'This is a normal link: Yahoobuga';
+//      jQuery('<b>buga</b>').insertAfter('#yahoo');
+//      equals(expected, jQuery('#en').text(), 'Insert String after');
+//      reset();
+//      expected = "This is a normal link: YahooTry them out:";
+//      jQuery(document.getElementById('first')).insertAfter('#yahoo');
+//      equals(expected, jQuery('#en').text(), "Insert element after");
+//      reset();
+//      expected = "This is a normal link: YahooTry them out:diveintomark";
+//      jQuery([document.getElementById('first'), document.getElementById('mark')]).insertAfter('#yahoo');
+//      equals(expected, jQuery('#en').text(), "Insert array of elements after");
+//      reset();
+//      expected = "This is a normal link: YahoodiveintomarkTry them out:";
+//      jQuery("#first, #mark").insertAfter('#yahoo');
+//      equals(expected, jQuery('#en').text(), "Insert jQuery after");
+//    });
+//
+//    function testReplaceWith(val) {
+//      expect(12);
+//      jQuery('#yahoo').replaceWith(val('<b id="replace">buga</b>'));
+//      ok(jQuery("#replace")[0], 'Replace element with string');
+//      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after string');
+//      reset();
+//      jQuery('#yahoo').replaceWith(val(document.getElementById('first')));
+//      ok(jQuery("#first")[0], 'Replace element with element');
+//      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after element');
+//      reset();
+//      jQuery("#main").append('<div id="bar"><div id="baz">Foo</div></div>');
+//      jQuery('#baz').replaceWith("Baz");
+//      equals(jQuery("#bar").text(), "Baz", 'Replace element with text');
+//      ok(!jQuery("#baz")[0], 'Verify that original element is gone, after element');
+//      reset();
+//      jQuery('#yahoo').replaceWith(val([document.getElementById('first'), document.getElementById('mark')]));
+//      ok(jQuery("#first")[0], 'Replace element with array of elements');
+//      ok(jQuery("#mark")[0], 'Replace element with array of elements');
+//      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after array of elements');
+//      reset();
+//      jQuery('#yahoo').replaceWith(val(jQuery("#first, #mark")));
+//      ok(jQuery("#first")[0], 'Replace element with set of elements');
+//      ok(jQuery("#mark")[0], 'Replace element with set of elements');
+//      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after set of elements');
+//      reset();
+//      var set = jQuery("<div/>").replaceWith(val("<span>test</span>"));
+//      equals(set[0].nodeName().toLowerCase(), "span", "Replace the disconnected node.");
+//      equals(set.length, 1, "Replace the disconnected node.");
+//      var $div = jQuery("<div class='replacewith'></div>").appendTo("body");
+//      equals(jQuery('.replacewith').length, 1, 'Check number of elements in page.');
+//      jQuery('.replacewith').remove();
+//    }
+//
+//    test("replaceWith(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      testReplaceWith(bareObj);
+//    });
+//
+//    test("replaceWith(Function)", function () {
+//      testReplaceWith(functionReturningObj);
+//      expect(18);
+//      var y = jQuery("#yahoo")[0];
+//      jQuery(y).replaceWith(function () {
+//        equals(this, y, "Make sure the context is coming in correctly.");
+//      });
+//      reset();
+//    });
+//
+//    test("replaceWith(string) for more than one element", function () {
+//      expect(3);
+//      equals(jQuery('#foo p').length, 3, 'ensuring that test data has not changed');
+//      jQuery('#foo p').replaceWith('<span>bar</span>');
+//      equals(jQuery('#foo span').length, 3, 'verify that all the three original element have been replaced');
+//      equals(jQuery('#foo p').length, 0, 'verify that all the three original element have been replaced');
+//    });
+//
+//    test("replaceAll(String|Element|Array&lt;Element&gt;|jQuery)", function () {
+//      expect(10);
+//      jQuery('<b id="replace">buga</b>').replaceAll("#yahoo");
+//      ok(jQuery("#replace")[0], 'Replace element with string');
+//      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after string');
+//      reset();
+//      jQuery(document.getElementById('first')).replaceAll("#yahoo");
+//      ok(jQuery("#first")[0], 'Replace element with element');
+//      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after element');
+//      reset();
+//      jQuery([document.getElementById('first'), document.getElementById('mark')]).replaceAll("#yahoo");
+//      ok(jQuery("#first")[0], 'Replace element with array of elements');
+//      ok(jQuery("#mark")[0], 'Replace element with array of elements');
+//      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after array of elements');
+//      reset();
+//      jQuery("#first, #mark").replaceAll("#yahoo");
+//      ok(jQuery("#first")[0], 'Replace element with set of elements');
+//      ok(jQuery("#mark")[0], 'Replace element with set of elements');
+//      ok(!jQuery("#yahoo")[0], 'Verify that original element is gone, after set of elements');
+//    });
+//
+//    test("clone()", function () {
+//      expect(29);
+//      equals('This is a normal link: Yahoo', jQuery('#en').text(), 'Assert text for #en');
+//      var clone = jQuery('#yahoo').clone();
+//      equals('Try them out:Yahoo', jQuery('#first').append(clone).text(), 'Check for clone');
+//      equals('This is a normal link: Yahoo', jQuery('#en').text(), 'Reassert text for #en');
+//      var cloneTags = ["<table/>", "<tr/>", "<td/>", "<div/>", "<button/>", "<ul/>", "<ol/>", "<li/>", "<input type='checkbox' />", "<select/>", "<option/>", "<textarea/>", "<tbody/>", "<thead/>", "<tfoot/>", "<iframe/>"];
+//      for (var i = 0; i < cloneTags.length; i++) {
+//        var j = jQuery(cloneTags[i]);
+//        equals(j[0].tagName(), j.clone()[0].tagName(), 'Clone a &lt;' + cloneTags[i].substring(1));
+//      }
+//      // using contents will get comments regular, text, and comment nodes
+//      var cl = jQuery("#nonnodes").contents().clone();
+//      ok(cl.length >= 2, "Check node,textnode,comment clone works (some browsers delete comments on clone)");
+//      var div = jQuery("<div><ul><li>test</li></ul></div>");
+//      div = div.clone(true).clone(true);
+//      equals(div.length, 1, "One element cloned");
+//      equals(div[0].nodeName().toUpperCase(), "DIV", "DIV element cloned");
+//      div = jQuery("<div/>").append([document.createElement("table"), document.createElement("table")]);
+//      div = div.clone(true);
+//      equals(div.length, 1, "One element cloned");
+//      equals(div[0].nodeName().toUpperCase(), "DIV", "DIV element cloned");
+//      div = jQuery("<div/>").html('<object height="355" width="425">  <param name="movie" value="http://www.youtube.com/v/JikaHBDoV3k&amp;hl=en">  <param name="wmode" value="transparent"> </object>');
+//      div = div.clone(true);
+//      equals(div.length, 1, "One element cloned");
+//      equals(div[0].nodeName().toUpperCase(), "DIV", "DIV element cloned");
+//      div = jQuery("<div/>").data({
+//        a: true,
+//        b: true
+//      });
+//      div = div.clone(true);
+//      equals(div.data("a"), true, "Data cloned.");
+//      equals(div.data("b"), true, "Data cloned.");
+//      var form = document.createElement("form");
+//      form.setAttribute('action', "/test/");
+//      var div = document.createElement("div");
+//      div.appendChild(document.createTextNode("test"));
+//      form.appendChild(div);
+//      equals(jQuery(form).clone().children().length, 1, "Make sure we just get the form back.");
+//    });
+//    if (!isLocal) {
+//      test("clone() on XML nodes", function () {
+//        expect(2);
+//        stop();
+//        jQuery.get("data/dashboard.xml", function (xml) {
+//          var root = jQuery(xml.documentElement()).clone();
+//          var origTab = jQuery("tab", xml).eq(0);
+//          var cloneTab = jQuery("tab", root).eq(0);
+//          origTab.text("origval");
+//          cloneTab.text("cloneval");
+//          equals(origTab.text(), "origval", "Check original XML node was correctly set");
+//          equals(cloneTab.text(), "cloneval", "Check cloned XML node was correctly set");
+//          start();
+//        });
+//      });
+//    }
+//    function testHtml(valueObj) {
+//      expect(31);
+//      jQuery.scriptorder = 0;
+//      var div = jQuery("#main > div");
+//      div.html(valueObj("<b>test</b>"));
+//      var pass = true;
+//      for (var i = 0; i < div.size(); i++) {
+//        if (div.get(i).childNodes().length != 1) pass = false;
+//      }
+//      ok(pass, "Set HTML");
+//      div = jQuery("<div/>").html(valueObj('<div id="parent_1"><div id="child_1"/></div><div id="parent_2"/>'));
+//      equals(div.children().length, 2, "Make sure two child nodes exist.");
+//      equals(div.children().children().length, 1, "Make sure that a grandchild exists.");
+//      var space = jQuery("<div/>").html(valueObj("&#160;"))[0].innerHTML();
+//      ok(/^\s$|^&nbsp;$/.test(space), "Make sure entities are passed through correctly.");
+//      equals(jQuery("<div/>").html(valueObj("&amp;"))[0].innerHTML(), "&amp;", "Make sure entities are passed through correctly.");
+//      jQuery("#main").html(valueObj("<style>.foobar{color:green;}</style>"));
+//      equals(jQuery("#main").children().length, 1, "Make sure there is a child element.");
+//      equals(jQuery("#main").children()[0].nodeName().toUpperCase(), "STYLE", "And that a style element was inserted.");
+//      reset();
+//      // using contents will get comments regular, text, and comment nodes
+//      var j = jQuery("#nonnodes").contents();
+//      j.html(valueObj("<b>bold</b>"));
+//      // this is needed, or the expando added by jQuery unique will yield a different html
+//      j.find('b').removeData();
+//      equals(j.html().replace(/ xmlns="[^"]+"/g, "").toLowerCase(), "<b>bold</b>", "Check node,textnode,comment with html()");
+//      jQuery("#main").html(valueObj("<select/>"));
+//      jQuery("#main select").html(valueObj("<option>O1</option><option selected='selected'>O2</option><option>O3</option>"));
+//      equals(jQuery("#main select").val(), "O2", "Selected option correct");
+//      var $div = jQuery('<div />');
+//      equals($div.html(valueObj(5)).html(), '5', 'Setting a number as html');
+//      equals($div.html(valueObj(0)).html(), '0', 'Setting a zero as html');
+//      var $div2 = jQuery('<div/>'),
+//          insert = "&lt;div&gt;hello1&lt;/div&gt;";
+//      equals($div2.html(insert).html().replace(/>/g, "&gt;"), insert, "Verify escaped insertion.");
+//      equals($div2.html("x" + insert).html().replace(/>/g, "&gt;"), "x" + insert, "Verify escaped insertion.");
+//      equals($div2.html(" " + insert).html().replace(/>/g, "&gt;"), " " + insert, "Verify escaped insertion.");
+//      var map = jQuery("<map/>").html(valueObj("<area id='map01' shape='rect' coords='50,50,150,150' href='http://www.jquery.com/' alt='jQuery'>"));
+//      equals(map[0].childNodes().length, 1, "The area was inserted.");
+//      equals(map[0].firstChild().nodeName().toLowerCase(), "area", "The area was inserted.");
+//      reset();
+//      jQuery("#main").html(valueObj('<script type="something/else">ok( false, "Non-script evaluated." );</script><script type="text/javascript">ok( true, "text/javascript is evaluated." );</script><script>ok( true, "No type is evaluated." );</script><div><script type="text/javascript">ok( true, "Inner text/javascript is evaluated." );</script><script>ok( true, "Inner No type is evaluated." );</script><script type="something/else">ok( false, "Non-script evaluated." );</script></div>'));
+//      jQuery("#main").html(valueObj("<script>ok( true, 'Test repeated injection of script.' );</script>"));
+//      jQuery("#main").html(valueObj("<script>ok( true, 'Test repeated injection of script.' );</script>"));
+//      jQuery("#main").html(valueObj("<script>ok( true, 'Test repeated injection of script.' );</script>"));
+//      jQuery("#main").html(valueObj('<script type="text/javascript">ok( true, "jQuery().html().evalScripts() Evals Scripts Twice in Firefox, see #975 (1)" );</script>'));
+//      jQuery("#main").html(valueObj('foo <form><script type="text/javascript">ok( true, "jQuery().html().evalScripts() Evals Scripts Twice in Firefox, see #975 (2)" );</script></form>'));
+//      jQuery("#main").html(valueObj("<script>equals(jQuery.scriptorder++, 0, 'Script is executed in order');equals(jQuery('#scriptorder').length, 1,'Execute after html (even though appears before)')<\/script><span id='scriptorder'><script>equals(jQuery.scriptorder++, 1, 'Script (nested) is executed in order');equals(jQuery('#scriptorder').length, 1,'Execute after html')<\/script></span><script>equals(jQuery.scriptorder++, 2, 'Script (unnested) is executed in order');equals(jQuery('#scriptorder').length, 1,'Execute after html')<\/script>"));
+//    }
+//
+//    test("html(String)", function () {
+//      testHtml(bareObj);
+//    });
+//
+//    test("html(Function)", function () {
+//      testHtml(functionReturningObj);
+//    });
+//
+//    test("html(Function) with incoming value", function () {
+//      expect(20);
+//      var div = jQuery("#main > div"),
+//          old = div.map(function () {
+//          return jQuery(this).html()
+//        });
+//      div.html(function (i, val) {
+//        equals(val, old[i], "Make sure the incoming value is correct.");
+//        return "<b>test</b>";
+//      });
+//      var pass = true;
+//      div.each(function () {
+//        if (this.childNodes().length !== 1) {
+//          pass = false;
+//        }
+//      });
+//      ok(pass, "Set HTML");
+//      reset();
+//      // using contents will get comments regular, text, and comment nodes
+//      var j = jQuery("#nonnodes").contents();
+//      old = j.map(function () {
+//        return jQuery(this).html();
+//      });
+//      j.html(function (i, val) {
+//        equals(val, old[i], "Make sure the incoming value is correct.");
+//        return "<b>bold</b>";
+//      });
+//      j.find('b').removeData();
+//      equals(j.html().replace(/ xmlns="[^"]+"/g, "").toLowerCase(), "<b>bold</b>", "Check node,textnode,comment with html()");
+//      var $div = jQuery('<div />');
+//      equals($div.html(function (i, val) {
+//        equals(val, "", "Make sure the incoming value is correct.");
+//        return 5;
+//      }).html(), '5', 'Setting a number as html');
+//      equals($div.html(function (i, val) {
+//        equals(val, "5", "Make sure the incoming value is correct.");
+//        return 0;
+//      }).html(), '0', 'Setting a zero as html');
+//      var $div2 = jQuery('<div/>'),
+//          insert = "&lt;div&gt;hello1&lt;/div&gt;";
+//      equals($div2.html(function (i, val) {
+//        equals(val, "", "Make sure the incoming value is correct.");
+//        return insert;
+//      }).html().replace(/>/g, "&gt;"), insert, "Verify escaped insertion.");
+//      equals($div2.html(function (i, val) {
+//        equals(val.replace(/>/g, "&gt;"), insert, "Make sure the incoming value is correct.");
+//        return "x" + insert;
+//      }).html().replace(/>/g, "&gt;"), "x" + insert, "Verify escaped insertion.");
+//      equals($div2.html(function (i, val) {
+//        equals(val.replace(/>/g, "&gt;"), "x" + insert, "Make sure the incoming value is correct.");
+//        return " " + insert;
+//      }).html().replace(/>/g, "&gt;"), " " + insert, "Verify escaped insertion.");
+//    });
+//
+//    function testRemove(method) {
+//        expect(8);
+//        var first = jQuery("#ap").children(":first");
+//        first.data("foo", "bar");
+//        jQuery("#ap").children()[method]();
+//        ok(jQuery("#ap").text().length > 10, "Check text is not removed");
+//        equals(jQuery("#ap").children().length, 0, "Check remove");
+//        equals(first.data("foo"), method == "remove" ? null : "bar");
+//        reset();
+//        jQuery("#ap").children()[method]("a");
+//        ok(jQuery("#ap").text().length > 10, "Check text is not removed");
+//        equals(jQuery("#ap").children().length, 1, "Check filtered remove");
+//        jQuery("#ap").children()[method]("a, code");
+//        equals(jQuery("#ap").children().length, 0, "Check multi-filtered remove");
+//        // using contents will get comments regular, text, and comment nodes
+//        equals(jQuery("#nonnodes").contents().length, 3, "Check node,textnode,comment remove works");
+//        jQuery("#nonnodes").contents()[method]();
+//        equals(jQuery("#nonnodes").contents().length, 0, "Check node,textnode,comment remove works");
+//    }
+//
+//    test("remove()", function () {
+//      testRemove("remove");
+//    });
+//
+//    test("detach()", function () {
+//      testRemove("detach");
+//    });
+//
+//    test("empty()", function () {
+//      expect(3);
+//      equals(jQuery("#ap").children().empty().text().length, 0, "Check text is removed");
+//      equals(jQuery("#ap").children().length, 4, "Check elements are not removed");
+//      // using contents will get comments regular, text, and comment nodes
+//      var j = jQuery("#nonnodes").contents();
+//      j.empty();
+//      equals(j.html(), "", "Check node,textnode,comment empty works");
+//    });
 
     res.die(qunit.getTestResults());
 

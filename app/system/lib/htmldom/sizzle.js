@@ -26,6 +26,7 @@ function lib_sizzle() {
       context = seed[0].ownerDocument();
     }
     if (!context) {
+      //stackTrace();
       throw new Error('No Document/Context Specified: ' + vartype(seed));
     }
 
