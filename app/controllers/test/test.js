@@ -1,7 +1,5 @@
 bind('ready', function() {
 
-  var jasmine = lib('jasmine');
-
   app('/test/suite', function() {
     var templ = lib('templ');
     var html = templ.render('test/test-suite');
@@ -16,7 +14,6 @@ bind('ready', function() {
         expect(p('number')).toEqual('123');
       });
     });
-    jasmine.getEnv().execute();
     res.die({result: 'success'});
   });
 
@@ -28,7 +25,6 @@ bind('ready', function() {
         expect(req.qs('number')).toEqual('123');
       });
     });
-    jasmine.getEnv().execute();
     res.die({result: 'success'});
   });
 
@@ -41,7 +37,6 @@ bind('ready', function() {
         expect(req.post('number')).toEqual('123');
       });
     });
-    jasmine.getEnv().execute();
     res.die({result: 'success'});
   });
 

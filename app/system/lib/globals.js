@@ -180,7 +180,7 @@ function lib_globals() {
             if (Object.isPrimitive(val)) {
               ret[n] = val;
             } else
-            if (Object.vartype(val) == 'object') {
+            if (Object.vartype(val, 'object')) {
               //TODO: valueOf
               if (Object.exists(ret, n)) {
                 ret[n] = Object.combine(ret[n],val)
@@ -226,7 +226,7 @@ function lib_globals() {
     return Object.prototype.hasOwnProperty.call(o, n);
   };
   Object.isPrimitive = function(obj) {
-    return 'boolean null number string undefined'.w().exists(Object.vartype(obj));
+    return Object.vartype(obj, 'boolean null number string undefined');
   };
   Object.isSet = function(obj) {
     return !(obj === null || obj === undefined);
