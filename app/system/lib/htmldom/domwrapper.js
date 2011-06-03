@@ -75,10 +75,10 @@ function lib_domwrapper() {
     rootEl.appendChild(struct['head']);
     rootEl.appendChild(struct['body']);
     if (!struct['body'].childNodes.length) {
-      for (var i = 0; i < frag.childNodes.length; i++) {
-        var el = frag.childNodes[i];
-        if (['html', 'head', 'body'].indexOf(el.nodeName) < 0) {
-          struct['body'].appendChild(el);
+      var nodes = frag.childNodes.slice(0);
+      for (var i = 0; i < nodes.length; i++) {
+        if (['html', 'head', 'body'].indexOf(nodes[i].nodeName) < 0) {
+          struct['body'].appendChild(nodes[i]);
         }
       }
     }
@@ -162,6 +162,9 @@ function lib_domwrapper() {
     },
     outerHTML: function() {
       return this._xmlNode.xml(EL_EMPTY, EL_NOENC);
+    },
+    toHTML: function() {
+      return this.outerHTML();
     },
     toJSON: function() {
       var node = this._xmlNode, desc = {nodeType: this.nodeTypeName(), nodeName: node.nodeName};
@@ -258,6 +261,9 @@ function lib_domwrapper() {
       html.push(toHTML('body', doc.getElementsByTagName('body')[0]));
       html.push('</html>');
       return html.join('\r\n');
+    },
+    toHTML: function() {
+      return this.outerHTML();
     },
     toJSON: function() {
       var doc = this._xmlDoc, desc = {nodeType: 'DOCUMENT_NODE', nodeName: doc.nodeName};

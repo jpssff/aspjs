@@ -127,9 +127,9 @@ bind('ready', function() {
       expect(8);
       var prev = jQuery("#firstp")[0].previousSibling();
       var p = jQuery("#firstp,#first")[0].parentNode();
+      var parent = jQuery('#firstp,#first').parent();
       var result = jQuery('#firstp,#first').wrapAll(val('<div class="red"><div class="tmp"></div></div>'));
       equals(result.parent().length, 1, 'Check for wrapping of on-the-fly html');
-      res.die(result.parent().toHTML());
       ok(jQuery('#first').parent().parent().is('.red'), 'Check if wrapper has class "red"');
       ok(jQuery('#firstp').parent().parent().is('.red'), 'Check if wrapper has class "red"');
       equals(jQuery("#first").parent().parent()[0].previousSibling(), prev, "Correct Previous Sibling");

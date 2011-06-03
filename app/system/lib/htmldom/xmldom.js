@@ -142,22 +142,28 @@ function lib_xmldom() {
   };
 
   XNode.prototype.appendChild = function(node) {
-    // firstChild
+    //fragments cannot be attached, so their children are instead
+    if (node.nodeType == DOM_DOCUMENT_FRAGMENT_NODE) {
+      var nodes = node.childNodes.slice(0);
+      for (var i = 0, l = nodes.length; i < l; i++) {
+        this.appendChild(nodes[i]);
+      }
+      return;
+    }
+    //node cannot be attached to more than one parent
+    if (node.parentNode) {
+      node.parentNode.removeChild(node);
+    }
     if (this.childNodes.length == 0) {
       this.firstChild = node;
     }
-    // previousSibling
     node.previousSibling = this.lastChild;
-    // nextSibling
     node.nextSibling = null;
     if (this.lastChild) {
       this.lastChild.nextSibling = node;
     }
-    // parentNode
     node.parentNode = this;
-    // lastChild
     this.lastChild = node;
-    // childNodes
     this.childNodes.push(node);
   };
 

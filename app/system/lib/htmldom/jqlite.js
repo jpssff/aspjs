@@ -1053,16 +1053,14 @@ function lib_jqlite() {
           if (this[0].parentNode()) {
             wrap.insertBefore(this[0]);
             //Added 2011/06/03 (not sure where the child is *supposed* to be removed)
-            this[0].parentNode().removeChild(this[0]);
+            //this[0].parentNode().removeChild(this[0]);
           }
 
           wrap = wrap.map(function() {
             var elem = this;
-
             while (elem.firstChild() && elem.firstChild().nodeType() == 1) {
               elem = elem.firstChild();
             }
-
             return elem;
           });
           wrap.append(this);
@@ -1102,6 +1100,7 @@ function lib_jqlite() {
       },
 
       append: function() {
+        //! parent: this, children: arguments[0] (set) + arguments[1] ...
         return this.domManip(arguments, true, function(elem) {
           if (this.nodeType() == 1) {
             this.appendChild(elem);
@@ -1245,7 +1244,7 @@ function lib_jqlite() {
       },
 
       domManip: function(args, table, callback) {
-        var first, value = args[0], fragment, parent;
+        var first, value = args[0];
 
         if (jQuery.isFunction(value)) {
           return this.each(function(i) {
@@ -1256,9 +1255,8 @@ function lib_jqlite() {
         }
 
         //$(label) = value = args[0]
-        //li = this
         if (this[0]) {
-          parent = value && value.parentNode && value.parentNode();
+          var parent = value && value.parentNode && value.parentNode(), fragment;
           // If we're in a fragment, just use that instead of building a new one
           if (parent && parent.nodeType() == 11 && parent.childNodes().length === this.length) {
             fragment = parent;

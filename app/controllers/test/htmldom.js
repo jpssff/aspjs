@@ -1,8 +1,16 @@
 bind('ready', function() {
 
+  app('/test/xmldom', function() {
+    var dom = lib('domwrapper');
+    var doc = new dom.HtmlDoc('<div id="first"><p id="one">one</p><p id="two">two</p><p id="three">three</p></div><div id="second"></div>')._xmlDoc;
+    var p1 = doc.getElementById('one'), div2 = doc.getElementById('second');
+    div2.appendChild(p1);
+    res.die(doc.xml());
+  });
+
   app('/test/dom', function() {
     var dom = lib('domwrapper');
-    var doc = new dom.HtmlDoc('<!DOCTYPE html><html><body><p><' + '!--asdf--' + '>Hello <b>World</b></p></body></html>');
+    var doc = new dom.HtmlDoc('<!DOCTYPE html><html><body><p><' + '!--comment--' + '>Hello <b>World</b></p></body></html>');
     var _doc = doc._xmlDoc;
     var frag = _doc.createDocumentFragment(), el = _doc.createElement('div');
     frag.appendChild(el);
