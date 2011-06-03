@@ -202,19 +202,28 @@ function lib_xmldom() {
   };
 
   XNode.prototype.insertBefore = function(newNode, oldNode) {
-    if (oldNode == newNode) {
+    if (oldNode === newNode) {
       return;
     }
-    if (oldNode.parentNode != this) {
+    if (oldNode.parentNode !== this) {
       return;
     }
+    //fragments cannot be attached, so their children are instead
+    if (newNode.nodeType == DOM_DOCUMENT_FRAGMENT_NODE) {
+      var nodes = newNode.childNodes.slice(0);
+      for (var i = 0, l = nodes.length; i < l; i++) {
+        this.insertBefore(nodes[i], oldNode);
+      }
+      return;
+    }
+    //node cannot be attached to more than one parent
     if (newNode.parentNode) {
       newNode.parentNode.removeChild(newNode);
     }
     var newChildren = [];
     for (var i = 0; i < this.childNodes.length; ++i) {
       var c = this.childNodes[i];
-      if (c == oldNode) {
+      if (c === oldNode) {
         newChildren.push(newNode);
         newNode.parentNode = this;
         newNode.previousSibling = oldNode.previousSibling;
@@ -236,7 +245,7 @@ function lib_xmldom() {
     var newChildren = [];
     for (var i = 0; i < this.childNodes.length; ++i) {
       var c = this.childNodes[i];
-      if (c != node) {
+      if (c !== node) {
         newChildren.push(c);
       } else {
         if (c.previousSibling) {
@@ -251,6 +260,7 @@ function lib_xmldom() {
         if (this.lastChild == c) {
           this.lastChild = c.previousSibling;
         }
+        c.parentNode = null;
       }
     }
     this.childNodes = newChildren;

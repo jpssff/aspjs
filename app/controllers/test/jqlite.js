@@ -147,55 +147,54 @@ bind('ready', function() {
       testWrapAll(bareObj);
     });
 
-//    function testWrapInner(val) {
-//      expect(11);
-//      var num = jQuery("#first").children().length;
-//      var result = jQuery('#first').wrapInner(val('<div class="red"><div id="tmp"></div></div>'));
-//      equals(jQuery("#first").children().length, 1, "Only one child");
-//      ok(jQuery("#first").children().is(".red"), "Verify Right Element");
-//      equals(jQuery("#first").children().children().children().length, num, "Verify Elements Intact");
-//      reset();
-//      var num = jQuery("#first").html("foo<div>test</div><div>test2</div>").children().length;
-//      var result = jQuery('#first').wrapInner(val('<div class="red"><div id="tmp"></div></div>'));
-//      equals(jQuery("#first").children().length, 1, "Only one child");
-//      ok(jQuery("#first").children().is(".red"), "Verify Right Element");
-//      equals(jQuery("#first").children().children().children().length, num, "Verify Elements Intact");
-//      reset();
-//      var num = jQuery("#first").children().length;
-//      var result = jQuery('#first').wrapInner(val(document.getElementById('empty')));
-//      equals(jQuery("#first").children().length, 1, "Only one child");
-//      ok(jQuery("#first").children().is("#empty"), "Verify Right Element");
-//      equals(jQuery("#first").children().children().length, num, "Verify Elements Intact");
-//      var div = jQuery("<div/>");
-//      div.wrapInner(val("<span></span>"));
-//      equals(div.children().length, 1, "The contents were wrapped.");
-//      equals(div.children()[0].nodeName().toLowerCase(), "span", "A span was inserted.");
-//    }
-//
-//    test("wrapInner(String|Element)", function () {
-//      testWrapInner(bareObj);
-//    });
-//
-//    test("wrapInner(Function)", function () {
-//      testWrapInner(functionReturningObj)
-//    });
-//
-//    test("unwrap()", function () {
-//      expect(9);
-//      jQuery("body").append('  <div id="unwrap" style="display: none;"> <div id="unwrap1"> <span class="unwrap">a</span> <span class="unwrap">b</span> </div> <div id="unwrap2"> <span class="unwrap">c</span> <span class="unwrap">d</span> </div> <div id="unwrap3"> <b><span class="unwrap unwrap3">e</span></b> <b><span class="unwrap unwrap3">f</span></b> </div> </div>');
-//      var abcd = jQuery('#unwrap1 > span, #unwrap2 > span').get(),
-//          abcdef = jQuery('#unwrap span').get();
-//      equals(jQuery('#unwrap1 span').add('#unwrap2 span:first').unwrap().length, 3, 'make #unwrap1 and #unwrap2 go away');
-//      same(jQuery('#unwrap > span').get(), abcd, 'all four spans should still exist');
-//      same(jQuery('#unwrap3 span').unwrap().get(), jQuery('#unwrap3 > span').get(), 'make all b in #unwrap3 go away');
-//      same(jQuery('#unwrap3 span').unwrap().get(), jQuery('#unwrap > span.unwrap3').get(), 'make #unwrap3 go away');
-//      same(jQuery('#unwrap').children().get(), abcdef, '#unwrap only contains 6 child spans');
-//      same(jQuery('#unwrap > span').unwrap().get(), jQuery('body > span.unwrap').get(), 'make the 6 spans become children of body');
-//      same(jQuery('body > span.unwrap').unwrap().get(), jQuery('body > span.unwrap').get(), 'can\'t unwrap children of body');
-//      same(jQuery('body > span.unwrap').unwrap().get(), abcdef, 'can\'t unwrap children of body');
-//      same(jQuery('body > span.unwrap').get(), abcdef, 'body contains 6 .unwrap child spans');
-//      jQuery('body > span.unwrap').remove();
-//    });
+    function testWrapInner(val) {
+      expect(11);
+      var num = jQuery("#first").children().length;
+      var result = jQuery('#first').wrapInner(val('<div class="red"><div id="tmp"></div></div>'));
+      equals(jQuery("#first").children().length, 1, "Only one child");
+      ok(jQuery("#first").children().is(".red"), "Verify Right Element");
+      equals(jQuery("#first").children().children().children().length, num, "Verify Elements Intact");
+      reset();
+      var num = jQuery("#first").html("foo<div>test</div><div>test2</div>").children().length;
+      var result = jQuery('#first').wrapInner(val('<div class="red"><div id="tmp"></div></div>'));
+      equals(jQuery("#first").children().length, 1, "Only one child");
+      ok(jQuery("#first").children().is(".red"), "Verify Right Element");
+      equals(jQuery("#first").children().children().children().length, num, "Verify Elements Intact");
+      reset();
+      var num = jQuery("#first").children().length;
+      var result = jQuery('#first').wrapInner(val(document.getElementById('empty')));
+      equals(jQuery("#first").children().length, 1, "Only one child");
+      ok(jQuery("#first").children().is("#empty"), "Verify Right Element");
+      equals(jQuery("#first").children().children().length, num, "Verify Elements Intact");
+      var div = jQuery("<div/>");
+      div.wrapInner(val("<span></span>"));
+      equals(div.children().length, 1, "The contents were wrapped.");
+      equals(div.children()[0].nodeName().toLowerCase(), "span", "A span was inserted.");
+    }
+
+    test("wrapInner(String|Element)", function () {
+      testWrapInner(bareObj);
+    });
+
+    test("wrapInner(Function)", function () {
+      testWrapInner(functionReturningObj)
+    });
+
+    test("unwrap()", function () {
+      expect(9);
+      jQuery("body").append('  <div id="unwrap" style="display: none;"> <div id="unwrap1"> <span class="unwrap">a</span> <span class="unwrap">b</span> </div> <div id="unwrap2"> <span class="unwrap">c</span> <span class="unwrap">d</span> </div> <div id="unwrap3"> <b><span class="unwrap unwrap3">e</span></b> <b><span class="unwrap unwrap3">f</span></b> </div> </div>');
+      var abcd = jQuery('#unwrap1 > span, #unwrap2 > span').get(), abcdef = jQuery('#unwrap span').get();
+      equals(jQuery('#unwrap1 span').add('#unwrap2 span:first').unwrap().length, 3, 'make #unwrap1 and #unwrap2 go away');
+      same(jQuery('#unwrap > span').get(), abcd, 'all four spans should still exist');
+      same(jQuery('#unwrap3 span').unwrap().get(), jQuery('#unwrap3 > span').get(), 'make all b in #unwrap3 go away');
+      same(jQuery('#unwrap3 span').unwrap().get(), jQuery('#unwrap > span.unwrap3').get(), 'make #unwrap3 go away');
+      same(jQuery('#unwrap').children().get(), abcdef, '#unwrap only contains 6 child spans');
+      same(jQuery('#unwrap > span').unwrap().get(), jQuery('body > span.unwrap').get(), 'make the 6 spans become children of body');
+      same(jQuery('body > span.unwrap').unwrap().get(), jQuery('body > span.unwrap').get(), 'can\'t unwrap children of body');
+      same(jQuery('body > span.unwrap').unwrap().get(), abcdef, 'can\'t unwrap children of body');
+      same(jQuery('body > span.unwrap').get(), abcdef, 'body contains 6 .unwrap child spans');
+      jQuery('body > span.unwrap').remove();
+    });
 //
 //    function testAppend(valueObj) {
 //      expect(36);
