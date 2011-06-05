@@ -120,7 +120,7 @@ bind('ready', function() {
       val: 27}, dt: Date.fromString('29 Apr 2006'), re: re, fn: fn, bin: new Binary('«'),
       col: new Collection({a: 1, b: 'stür'}), undef: undef, nul: null, bool: false};
     var out = [json.stringify(a), json.stringify(a, true)];
-    res.die(out.join('\r\n'), 'text/plain');
+    res.die(out.join('\r\n'));
   });
 
   app('/test/upload', function() {
@@ -139,7 +139,7 @@ bind('ready', function() {
       out.push('<p><a href="/test/dl/' + file.id + '/' + urlEnc(file.attr('name')) + '">' +
         htmlEnc(file.attr('name'))  + '</a></p>');
     });
-    res.die(out.join('\r\n'),'text/html');
+    res.die('text/html', out.join('\r\n'));
   });
 
   app('/test/dl/:id/:name', function(p) {

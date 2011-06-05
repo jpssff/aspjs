@@ -26,7 +26,7 @@ bind('preroute', function() {
     //Render template and send result, ending the request
     render: function(page, obj) {
       var html = templ.render(page, Object.append({}, templ_data, obj));
-      res.die(html, 'text/html');
+      res.die('text/html', html);
     }
 
   });

@@ -25,7 +25,7 @@ function forEach(o, fn) {
 function stackTrace(fn) {
   if (!fn) fn = arguments.caller.callee;
   var list = [];
-  while (fn && list.length < 10 /* && !list.exists(fn)*/) {
+  while (fn && list.length < 10) {
     list.push(fn);
     fn = fn.caller;
   }
@@ -37,24 +37,24 @@ function stackTrace(fn) {
 
 /**
  * Set a global variable.
- * 
+ *
  * @param n
  * @param [val]
  */
 function setGlobal(n, val) {
-	var args = toArray(arguments);
-	if (args.length == 2) {
+  var args = toArray(arguments);
+  if (args.length == 2) {
     if ((/^[a-z_$][0-9a-z_$]*$/i).test(n)) {
       eval(n + " = val");
     }
-		return val;
-	} else {
-		var items = args[0] || {};
+    return val;
+  } else {
+    var items = args[0] || {};
     forEach(items, function(n, val) {
       setGlobal(n, val);
     });
-		return args[0];
-	}
+    return args[0];
+  }
 }
 
 /**
@@ -83,14 +83,10 @@ function getset(obj, prop, default_val) {
  * @returns {Function} Getter/Setter Function
  */
 function fngetset(params, context) {
-  var get = params.get
-    , set = params.set
-    , del = params.del
-    , each = params.each;
-  function gettersetter(n, val){
-    var self = context || this
-      , type = vartype(n)
-      , len = arguments.length;
+  var get = params.get, set = params.set, del = params.del, each = params.each;
+
+  function gettersetter(n, val) {
+    var self = context || this, type = Object.vartype(n), len = arguments.length;
     if (each && type == 'function') {
       return each.call(self, n);
     }
@@ -105,7 +101,8 @@ function fngetset(params, context) {
       return del.call(self, n);
     }
     return set.call(self, n, val);
-  };
+  }
+
   return gettersetter;
 }
 
@@ -160,7 +157,7 @@ function lib_globals() {
     for (var i=0; i<args.length; i++) {
       if (args[i] instanceof Object) {
         if (ret) {
-          Object.each(args[i],function(n, val){
+          Object.each(args[i],function(n, val) {
             ret[n] = val;
           });
         } else {
@@ -176,7 +173,7 @@ function lib_globals() {
     for (var i=0; i<args.length; i++) {
       if (args[i] instanceof Object) {
         if (ret) {
-          Object.each(args[i],function(n, val){
+          Object.each(args[i],function(n, val) {
             if (Object.isPrimitive(val)) {
               ret[n] = val;
             } else
@@ -255,11 +252,7 @@ function lib_globals() {
     });
     return a;
   };
-  /**
-   * @param obj
-   * @param [list]
-   */
-  Object.vartype = function(obj, list) {
+  Object.vartype = function(obj, /**String|Array=*/ list) {
     if (list) {
       list = (list instanceof Array) ? list : String(list).w();
       return list.exists(Object.vartype(obj));
@@ -302,7 +295,7 @@ function lib_globals() {
   if (!Array.prototype.filter)
   Array.prototype.filter = function(fn) {
     var arr = [];
-    Array.prototype.each.call(this, function(i, el){
+    Array.prototype.each.call(this, function(i, el) {
       if (fn(el, i)) arr.push(el);
     });
     return arr;
@@ -310,7 +303,7 @@ function lib_globals() {
   if (!Array.prototype.map)
   Array.prototype.map = function(fn) {
     var arr = [];
-    Array.prototype.each.call(this, function(i, el){
+    Array.prototype.each.call(this, function(i, el) {
       arr.push(fn(el, i));
     });
     return arr;
@@ -330,25 +323,27 @@ function lib_globals() {
   };
   Array.toArray = function(obj) {
     var len = obj.length, arr = new Array(len);
-    for (var i = 0; i < len; i++) arr[i] = obj[i];
+    for (var i = 0; i < len; i++) {
+      arr[i] = obj[i];
+    }
     return arr;
   };
 
-  Function.prototype.bind = function(obj){
+  Function.prototype.bind = function(obj) {
     var fn = this;
-    return function(){ return fn.apply(obj, arguments) };
+    return function() {
+      return fn.apply(obj, arguments);
+    };
   };
-  Function.noop = function(){};
+  Function.noop = function() {};
   
-  Number.parse = function(s, d) {
-    if (!d) d = 0;
+  Number.parse = function(s, /**Number=0*/ d) {
     var i = parseFloat(s);
-    return isFinite(i) ? i : d;
+    return isFinite(i) ? i : d || 0;
   };
-  Number.parseInt = function(s, d) {
-    if (!d) d = 0;
+  Number.parseInt = function(s, /**Number=0*/ d) {
     var i = parseInt(s, 10);
-    return isFinite(i) ? i : d;
+    return isFinite(i) ? i : d || 0;
   };
   Number.random = function(lower, upper) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower;
@@ -393,6 +388,13 @@ function lib_globals() {
   };
   
   String.prototype.replaceAll = function(a, b) {
+    if (arguments.length == 1) {
+      var self = this;
+      Object.each(a, function() {
+        String.prototype.replaceAll.apply(self, arguments);
+      });
+      return self;
+    }
     return String.prototype.replace.call(this, new RegExp(RegExp.escape(a), 'ig'), b);
   };
   String.prototype.trimLeft = function() {
@@ -431,6 +433,7 @@ function lib_globals() {
   String.prototype.w = function() {
     return String.prototype.split.call(this, /[,\s]+/);
   };
+
   String.parse = function(s) {
     return Object.isSet(s) ? String(s) : '';
   };
@@ -455,9 +458,11 @@ function lib_globals() {
     }
   };
   
-  String.htmlEnc = function(s) {
-    s = String(s).replace(/&/g, '&amp;').replace(/>/g, '&gt;')
-      .replace(/</g, '&lt;').replace(/"/g, '&quot;').replace(/\u00a0/g, '&nbsp;');
+  String.htmlEnc = function(s, /**Boolean=true*/ attr) {
+    s = String(s).replaceAll({'&': '&amp;', '>': '&gt;', '<': '&lt;', '\u00a0': '&nbsp;'});
+    if (attr !== false) {
+      s = s.replaceAll('"', '&quot;');
+    }
     return s;
   };
   String.htmlDec = function(s) {
@@ -484,7 +489,7 @@ function lib_globals() {
 
   var REG_DATE_1 = /^(\d{4})-(\d{2})-(\d{2})\s*T?([\d:]+)(\.\d+)?($|[Z\s+-].*)$/i;
   var REG_DATE_2 = /(^|[^\d])(\d{4})-(\d{1,2})-(\d{1,2})($|[^\d])/;
-  Date.fromString = function(str, def) {
+  Date.fromString = function(str, /**String=*/ def) {
     if (str instanceof Date) {
       return new Date(str);
     }
@@ -501,14 +506,14 @@ function lib_globals() {
       return def;
     }
   };
-  Date.fromUTCString = function(str, def) {
+  Date.fromUTCString = function(str, /**String=*/ def) {
     var d = Date.fromString(str, def);
     if (d) {
       return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(),
         d.getMinutes(), d.getSeconds(), d.valueOf() % 1000));
     }
   };
-  Date.getParts = function(d, utc) {
+  Date.getParts = function(d, /**Boolean=false*/ utc) {
     var part = {
       yyyy: (utc) ? d.getUTCFullYear() : d.getFullYear(),
       moy: (utc) ? d.getUTCMonth() : d.getMonth(),
@@ -535,7 +540,7 @@ function lib_globals() {
       return String.parse(part[n]);
     };
   };
-  Date.format = function(d, fmt, utc) {
+  Date.format = function(d, fmt, /**Boolean=false*/ utc) {
     var r, type = Object.vartype(d);
     if (type == 'date' || type == 'number') {
       d = new Date(d);
@@ -550,7 +555,6 @@ function lib_globals() {
     });
     return r;
   };
-  
   RegExp.escape = function(s) {
     return String(s).replace(/([.?*+^$[\]\\(){}-])/g,'\\$1');
   };
@@ -559,7 +563,7 @@ function lib_globals() {
     return new RegExp(o.source,m);
   };
 
-  //"Shorthand" Copies
+  //Shorthand Copies
   vartype = Object.vartype;
   isPrimitive = Object.isPrimitive;
   isSet = Object.isSet;

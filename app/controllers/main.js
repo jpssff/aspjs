@@ -5,7 +5,8 @@
    *
    */
   app('/', function() {
-    res.die('<h1>Home</h1><p>Welcome to the home page.</p>', 'text/html');
+    res.die('text/html', '<h1>Home</h1><p>Welcome to the home page.</p>');
   });
 
 });
+

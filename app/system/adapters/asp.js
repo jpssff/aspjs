@@ -9,7 +9,7 @@
  */
 if (!this.lib_server) this.lib_server = lib_server;
 function lib_server() {
-  
+
   var util = lib('util');
   var json = lib('json');
   var REG_URL = /^([^:\/]+:\/\/)?([^\/]*)([^?]*)(\?|$)(.*)/;
@@ -45,7 +45,7 @@ function lib_server() {
 
   function commitResponse() {
     iis.res.status = res.status;
-    res.headers.each(function(n,val){
+    res.headers.each(function(n, val) {
       switch (n.toLowerCase()) {
         case 'content-type':
           iis.res.contentType = applyCharset(val, res.charset);
@@ -54,12 +54,12 @@ function lib_server() {
           iis.res.cacheControl = String(val);
           break;
         default:
-          iis.res.addHeader(n,val);
+          iis.res.addHeader(n, val);
       }
     });
-    res.cookies.each(function(n,obj){
-      if (vartype(obj) == 'string') {
-        obj = {val:obj};
+    res.cookies.each(function(n, obj) {
+      if (vartype(obj, 'string')) {
+        obj = {val: obj};
       }
       iis.res.cookies(n) = String(obj.val);
       if (obj.exp) {
@@ -96,7 +96,7 @@ function lib_server() {
       getCookies: function() {
         var cookies = {};
         if (iis.req.cookies) {
-          util.enumerate(iis.req.cookies.contents,function(i,key){
+          util.enumerate(iis.req.cookies.contents, function(i, key) {
             cookies[key] = iis.req.cookies(key).item();
           });
         }
@@ -104,11 +104,11 @@ function lib_server() {
       }
     },
     res: {
-      headers: function(){
-        return res.headers.apply(null,arguments);
+      headers: function() {
+        return res.headers.apply(null, arguments);
       },
-      cookies: function(){
-        return res.cookies.apply(null,arguments);
+      cookies: function() {
+        return res.cookies.apply(null, arguments);
       },
       charset: function(s) {
         if (arguments.length) {
@@ -146,7 +146,7 @@ function lib_server() {
         try {
           iis.res.buffer = false;
           upload.sendBinary(sys.mappath(opts.file), true, opts.ctype, !!opts.attachment,
-            '"' + opts.name.replaceAll('"',"'") + '"');
+          '"' + opts.name.replaceAll('"', "'") + '"');
         } catch(e) {
           iis.res.buffer = true;
           throw new Error('Error Serving File "' + opts.path + '"; ' + e.message);
@@ -167,7 +167,7 @@ function lib_server() {
     vars: function(n) {
       return getVar(n);
     },
-    appvars: col_wrap(iis.app,'JScript:',{enc: jsEnc, dec: jsDec})
+    appvars: col_wrap(iis.app, 'JScript:', {enc: jsEnc, dec: jsDec})
   };
 
 
@@ -204,26 +204,26 @@ function lib_server() {
    */
   function processMultiPartBody() {
     var files = util.newParamCollection()
-      , fields = util.newParamCollection()
-      , upload = new ActiveXObject("Persits.Upload")
-      , pid = req.params('x-upload-id') || req.headers('x-upload-id');
+    , fields = util.newParamCollection()
+    , upload = new ActiveXObject("Persits.Upload")
+    , pid = req.params('x-upload-id') || req.headers('x-upload-id');
 
     if (pid) {
       upload.progressid = pid;
     }
     if (app.cfg('upload/max_size')) {
-      upload.setMaxSize(app.cfg('upload/max_size') * 1024,true);
+      upload.setMaxSize(app.cfg('upload/max_size') * 1024, true);
     }
     upload.overwriteFiles = false;
     var fileCount = upload.save(sys.mappath('data/temp/'));
-    for (var i=1;i<=fileCount;i++) {
+    for (var i = 1; i <= fileCount; i++) {
       var file = upload.files(i);
-      files.add(file.name,processUploadedFile(file));
+      files.add(file.name, processUploadedFile(file));
     }
     var fieldCount = upload.form.count;
-    for (var i=1; i<=fieldCount; i++) {
+    for (var i = 1; i <= fieldCount; i++) {
       var f = upload.form(i);
-      fields.add(f.name,f.value);
+      fields.add(f.name, f.value);
     }
     return {files: files, fields: fields};
   }
@@ -231,7 +231,7 @@ function lib_server() {
   /**
    * Save uploaded file to temporary directory and return a file descriptor object containing some
    * key properties of the file.
-   * 
+   *
    * @param {Object} file
    * @returns {Object} File Descriptor
    */
@@ -244,7 +244,7 @@ function lib_server() {
         file.Delete();
       }
     });
-    Object.append(fd,{
+    Object.append(fd, {
       name: file.originalFilename,
       path: sys.path.join('data/temp/', file.filename),
       mimetype: file.contentType,
@@ -271,22 +271,25 @@ function lib_server() {
       return toSafeArray([json.stringify(val)]);
     }
   }
+
   function jsDec(val) {
     if (json && isSafeArray(val) && val.dimensions() == 1 && val.ubound() == 0) {
       return json.parse(val.getItem(0));
     }
     return val;
   }
+
   function isSafeArray(a) {
     if (Object.vartype(a) == 'unknown') {
       return (typeof a.toArray == 'function');
     }
     return false;
   }
+
   function toSafeArray(a) {
     var d = new ActiveXObject("Scripting.Dictionary");
     if (a instanceof Array) {
-      for (var i=0,len=a.length;i<len;i++) d.add(d.Count,a[i]);
+      for (var i = 0,len = a.length; i < len; i++) d.add(d.Count, a[i]);
     }
     return d.Items();
   }
@@ -307,33 +310,37 @@ function lib_server() {
    * @param pre
    * @param proc
    */
-  function col_wrap(col,pre,proc) {
+  function col_wrap(col, pre, proc) {
     var obj = {};
     pre = String.parse(pre);
     proc = proc || {};
-    var enc = proc.enc || function(val){ return val; }
-      , dec = proc.dec || function(val){ return val; };
+    var enc = proc.enc || function(val) {
+      return val;
+    }
+    , dec = proc.dec || function(val) {
+      return val;
+    };
     if (col.contents) {
       col = col.contents;
     }
     if (!col) {
       throw new Error('Invalid ActiveX Collection.');
     }
-    obj.get = function(n){
+    obj.get = function(n) {
       return dec(col(pre + n));
     };
-    obj.set = function(n,val){
+    obj.set = function(n, val) {
       col(pre + n) = enc(val);
       return val;
     };
-    obj.del = function(n){
+    obj.del = function(n) {
       var key = pre + n, val = dec(col(key));
       col.remove(key);
       return val;
     };
-    obj.append = function(o){
-      Object.each(o,function(n,val){
-        obj.set(n,val);
+    obj.append = function(o) {
+      Object.each(o, function(n, val) {
+        obj.set(n, val);
       });
       return obj;
     };
@@ -341,43 +348,43 @@ function lib_server() {
      * Enumerates collection based on regular expression.
      *   sel(/^a(\d)/,function(n,val,cap1){ ... });
      */
-    obj.sel = function(rex,fn){
+    obj.sel = function(rex, fn) {
       var items = {};
-      util.enumerate(col,function(i,key){
+      util.enumerate(col, function(i, key) {
         var matches = key.match(rex);
         if (matches) {
           items[key] = [key,dec(col(key))].append(matches.slice(1));
         }
       });
       if (fn) {
-        Object.each(items,function(n,arr){
-          if (fn.apply(items,arr) === null) {
+        Object.each(items, function(n, arr) {
+          if (fn.apply(items, arr) === null) {
             col.remove(n);
           }
         });
       }
       return items;
     };
-    obj.all = function(){
+    obj.all = function() {
       var items = {};
-      util.enumerate(col,function(i,key){
+      util.enumerate(col, function(i, key) {
         if (key.startsWith(pre)) {
-          items[key.replaceHead(pre,'')] = dec(col(key));
+          items[key.replaceHead(pre, '')] = dec(col(key));
         }
       });
       return items;
     };
-    obj.each = function(fn){
+    obj.each = function(fn) {
       var items = obj.all();
-      Object.each(items,function(n,val){
-        if (fn.call(obj,n,val) === null) {
+      Object.each(items, function(n, val) {
+        if (fn.call(obj, n, val) === null) {
           obj.del(n);
         }
       });
       return obj;
     };
-    obj.clear = function(){
-      obj.each(function(n,val){
+    obj.clear = function() {
+      obj.each(function(n, val) {
         return null;
       });
       return obj;
@@ -398,7 +405,7 @@ function lib_server() {
    *
    */
   function obj_wrap(obj) {
-    function fn(n,val) {
+    function fn(n, val) {
       var type = vartype(n), args = toArray(arguments);
       if (arguments.length == 0) {
         return obj.all();
@@ -415,9 +422,10 @@ function lib_server() {
       if (val === null) {
         return obj.del(n);
       }
-      return obj.set(n,val);
+      return obj.set(n, val);
     }
-    return Object.append(fn,obj);
+
+    return Object.append(fn, obj);
   }
 
 }

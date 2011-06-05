@@ -2,7 +2,7 @@
  * HTTP Response
  *
  * This library abstracts the HTTP response interface exposing getter and setter methods for response status,
- * headers (cache-control, content-type, etc), cookies, charset and cookies.
+ * headers (cache-control, content-type, etc), charset and cookies.
  *
  * Requires: core, lib_globals, lib_server
  * Optional: lib_json, Binary
@@ -35,13 +35,22 @@ function lib_response() {
       trigger('destroy');
       _super.end();
     },
-    die: function(data, type) {
-      res.clear(type);
-      if (global.Binary && data instanceof Binary) {
-        res.writebin(data);
-      } else {
-        res.write(data);
+    die: function() {
+      var args = toArray(arguments), status = '200', ctype = 'text/plain';
+      if (args.length > 1 && /^\d{3}$/.test(args[0])) {
+        status = args.shift();
       }
+      if (args.length > 1 && /^[\w-]+\/[\w-]+$/.test(args[0])) {
+        ctype = args.shift();
+      }
+      res.clear(ctype, status);
+      forEach(args, function(i, data) {
+        if (global.Binary && data instanceof Binary) {
+          res.writebin(data);
+        } else {
+          res.write(data);
+        }
+      });
       res.end();
     },
     redirect: function(url, type) {
@@ -60,7 +69,7 @@ function lib_response() {
       res.end();
     }
   });
-  
+
   function html_redirect(url) {
     var templ = lib('templ')
       , markup = app.cfg('html_redir');
