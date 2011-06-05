@@ -13,6 +13,7 @@
 <script runat="server" language="javascript" src="lib/request.js"></script>
 <script runat="server" language="javascript" src="lib/response.js"></script>
 <script runat="server" language="javascript" src="lib/router.js"></script>
+<script runat="server" language="javascript" src="lib/session.js"></script>
 <script runat="server" language="javascript" src="lib/system.js"></script>
 <script runat="server" language="javascript" src="lib/templ.js"></script>
 <script runat="server" language="javascript" src="lib/util.js"></script>

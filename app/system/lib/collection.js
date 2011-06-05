@@ -1,4 +1,4 @@
-/**
+/*!
  * Collection Class
  *
  * A Collection is a case-insensitive, function-wrapped set of
@@ -15,56 +15,67 @@
  *  product(); //returns object
  *   {item: 'banana', type: 'fruit', 'valueOf': 2.27}
  *  product({price: 2.95, inStock: true}); //append
- *  product(function(n,val){ display(n,val); }); //iterate
+ *  product(function(n, val) { display(n, val); }); //iterate
  *
  */
 if (!this.Collection) this.Collection = Collection;
-function Collection(data) {
-  
+function Collection(data, opts) {
+
   if (!Collection.prototype.access) {
-    Collection.prototype = _Collection_proto();
+    Collection.prototype = Collection__proto();
   }
-  
-  var obj = function() {
-    return obj.access.apply(obj,arguments);
+
+  opts = opts || {};
+
+  var col = function() {
+    return col.access.apply(col, arguments);
   };
-  obj._count = 0;
-  obj._items = {};
-  obj._dirty = false;
-  obj._listeners = {};
+  col._name = String(opts.name);
+  col._count = 0;
+  col._items = {};
+  col._listeners = {};
   
   if (Object.prototype === {}.__proto__) {
-    obj.__proto__ = Collection.prototype;
+    col.__proto__ = Collection.prototype;
   } else {
-    var proto = obj.__proto__ = Collection.prototype;
-    for (var n in proto) if (proto.hasOwnProperty(n)) obj[n] = proto[n];
-    obj['toString'] = proto['toString'];
+    var proto = col.__proto__ = Collection.prototype;
+    for (var n in proto) if (proto.hasOwnProperty(n)) col[n] = proto[n];
+    col['toString'] = proto['toString'];
   }
 
   if (data) {
-    obj.append(data);
+    col.append(data);
   }
-  
-  return obj;
+  col._dirty = false;
+  col._readOnly = !!opts.readOnly;
+
+  return col;
   
 }
 
-function _Collection_proto() {
-  
-  function fn_each(o,f) {
-    for (var n in o) if (fn_exists(o,n)) f.call(o,n,o[n]);
+function Collection__proto() {
+
+  function fn_each(o, f) {
+    for (var n in o) if (fn_exists(o, n)) {
+      f.call(o, n, o[n]);
+    }
     var a = ['constructor','hasOwnProperty','isPrototypeOf','propertyIsEnumerable','toLocaleString','toString','valueOf'];
-    for (var i=0;i<a.length;i++) if (fn_exists(o,a[i])) f.call(o,a[i],o[a[i]]);
+    for (var i = 0; i < a.length; i++) {
+      if (fn_exists(o, a[i])) f.call(o, a[i], o[a[i]]);
+    }
   }
-  function fn_append(o,p) {
+
+  function fn_append(o, p) {
     fn_each(p, function(n, val) {
       o[n] = val;
     });
     return o;
   }
-  function fn_exists(o,n) {
-    return Object.prototype.hasOwnProperty.call(o,n);
+
+  function fn_exists(o, n) {
+    return Object.prototype.hasOwnProperty.call(o, n);
   }
+
   function fn_typeOf(obj) {
     var type = (obj === null) ? 'null' : typeof obj;
     if (obj instanceof Object) {
@@ -72,14 +83,20 @@ function _Collection_proto() {
     }
     return (type == 'object') ? 'unknown' : type;
   }
+
+  function fn_writeError(col) {
+    throw new Error("Collection '" + col._name + "' is read-only and cannot be modified");
+  }
+
   var proto;
   if (Object.prototype === {}.__proto__) {
     proto = Object.create(Function.prototype);
   } else {
     proto = {};
   }
+
   return fn_append(proto, {
-    access: function(p1,p2){
+    access: function(p1, p2) {
       if (arguments.length == 0) {
         return this.toObject();
       } else
@@ -93,10 +110,11 @@ function _Collection_proto() {
             return this.get(p1);
         }
       } else {
-        return (p2 === null) ? this.remove(p1) : this.set(p1,p2);
+        return (p2 === null) ? this.remove(p1) : this.set(p1, p2);
       }
     },
     clear: function() {
+      if (this._readOnly) fn_writeError(this);
       this._count = 0;
       this._items = {};
       this._dirty = true;
@@ -106,15 +124,16 @@ function _Collection_proto() {
       if (fn_typeOf(key) == 'function') return this.each(key);
       key = String(key);
       if (this.exists(key)) {
-        this.trigger('get',key);
+        this.trigger('get', key);
         return this._items[key.toUpperCase()][1];
       }
     },
-    set: function(key,val) {
+    set: function(key, val) {
+      if (this._readOnly) fn_writeError(this);
       key = String(key);
-      this.trigger('set',key,val);
+      this.trigger('set', key, val);
       if (this.exists(key)) {
-        this.trigger('overwrite',key,val);
+        this.trigger('overwrite', key, val);
       } else {
         this._count ++;
       }
@@ -123,10 +142,11 @@ function _Collection_proto() {
       return val;
     },
     remove: function(key) {
+      if (this._readOnly) fn_writeError(this);
       key = String(key);
       var n = key.toUpperCase(), val;
       if (this.exists(key)) {
-        this.trigger('remove',key);
+        this.trigger('remove', key);
         val = this._items[n][1];
         delete this._items[n];
         this._count --;
@@ -135,21 +155,26 @@ function _Collection_proto() {
       return val;
     },
     append: function(obj) {
+      if (this._readOnly) fn_writeError(this);
       var col = this;
       if (obj.__proto__ === Collection.prototype) {
-        obj.each(obj,function(n,val){ col.set(n,val); });
+        obj.each(obj, function(n, val) {
+          col.set(n, val);
+        });
       } else {
-        fn_each(obj,function(n,val){ col.set(n,val); });
+        fn_each(obj, function(n, val) {
+          col.set(n, val);
+        });
       }
       return this;
     },
     exists: function(key) {
-      return fn_exists(this._items,String(key).toUpperCase());
+      return fn_exists(this._items, String(key).toUpperCase());
     },
     count: function() {
       return this._count;
     },
-    dirty: function() {
+    isDirty: function() {
       return this._dirty;
     },
     clearDirty: function() {
@@ -158,34 +183,34 @@ function _Collection_proto() {
     },
     each: function(fn) {
       var o = this._items, a = this.keys();
-      for (var i=0,len=a.length;i<len;i++) {
-        var val = fn.call(this,a[i],o[a[i].toUpperCase()][1]);
-        if (val !== undefined) this.access(a[i],val);
+      for (var i = 0,len = a.length; i < len; i++) {
+        var val = fn.call(this, a[i], o[a[i].toUpperCase()][1]);
+        if (val !== undefined) this.access(a[i], val);
       }
       return this;
     },
     keys: function() {
       var o = this._items, a = [];
-      for (var n in o) if (fn_exists(o,n)) a.push(o[n][0]);
+      for (var n in o) if (fn_exists(o, n)) a.push(o[n][0]);
       return a;
     },
     values: function() {
       var o = this._items, a = [];
-      for (var n in o) if (fn_exists(o,n)) a.push(o[n][1]);
+      for (var n in o) if (fn_exists(o, n)) a.push(o[n][1]);
       return a;
     },
     sort: function() {
       var a = this.keys();
       a.sort();
       var list = {};
-      for (var i=0,len=a.length;i<len;i++) {
+      for (var i = 0, len = a.length; i < len; i++) {
         var n = a[i].toUpperCase();
         list[n] = this._items[n];
       }
       this._items = list;
       return this;
     },
-    on: function(evt,fn) {
+    on: function(evt, fn) {
       var lis = this._listeners;
       if (fn_typeOf(fn) == 'function') {
         if (!lis[evt]) lis[evt] = [];
@@ -194,15 +219,15 @@ function _Collection_proto() {
       return this;
     },
     trigger: function(evt) {
-      var lis = this._listeners;
-      if (lis[evt])
-      for (var i=0;i<lis[evt].length;i++)
-      lis[evt][i].apply(this,Array.prototype.slice.call(arguments,1));
+      var list = this._listeners;
+      if (list[evt])
+        for (var i = 0; i < list[evt].length; i++)
+          list[evt][i].apply(this, Array.prototype.slice.call(arguments, 1));
       return this;
     },
     toObject: function() {
       var o = this._items, obj = {};
-      for (var n in o) if (fn_exists(o,n)) obj[o[n][0]] = o[n][1];
+      for (var n in o) if (fn_exists(o, n)) obj[o[n][0]] = o[n][1];
       return obj;
     },
     toString: function() {

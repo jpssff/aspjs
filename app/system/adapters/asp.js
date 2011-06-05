@@ -53,17 +53,21 @@ function lib_server() {
         case 'cache-control':
           iis.res.cacheControl = String(val);
           break;
+        case 'set-cookie':
+          break;
         default:
           iis.res.addHeader(n, val);
       }
     });
-    res.cookies.each(function(n, obj) {
-      if (vartype(obj, 'string')) {
-        obj = {val: obj};
-      }
-      iis.res.cookies(n) = String(obj.val);
-      if (obj.exp) {
-        iis.res.cookies(n).expires = Date.fromString(obj.exp);
+    res.cookies.each(function(n, cookie) {
+      if (Object.isPrimitive(cookie)) {
+        iis.res.cookies(n) = String(cookie);
+      } else
+      if (vartype(cookie, 'object')) {
+        iis.res.cookies(n) = String(cookie.val);
+        if (cookie.exp) {
+          iis.res.cookies(n).expires = Date.fromString(cookie.exp);
+        }
       }
     });
   }
@@ -96,11 +100,11 @@ function lib_server() {
       getCookies: function() {
         var cookies = {};
         if (iis.req.cookies) {
-          util.enumerate(iis.req.cookies.contents, function(i, key) {
+          util.enumerate(iis.req.cookies, function(i, key) {
             cookies[key] = iis.req.cookies(key).item();
           });
         }
-        return new Collection(cookies);
+        return new Collection(cookies, {name: 'Request Cookies', readOnly: true});
       }
     },
     res: {
@@ -262,7 +266,7 @@ function lib_server() {
   }
 
   /*!
-   * Functions for storing (Encoding/Decoding) data structures within Application Variables
+   * Functions for storing (encoding/decoding) data structures within Application Variables
    */
   function jsEnc(val) {
     if (isPrimitive(val) || !json) {

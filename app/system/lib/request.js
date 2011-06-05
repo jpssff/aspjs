@@ -22,7 +22,7 @@ function lib_request() {
   
   var req;
   return req = {
-    url: function(part){
+    url: function(part) {
       if (part) {
         if (!url_parts) url_parts = server.req.getURLParts();
         return url_parts[part];
@@ -31,7 +31,7 @@ function lib_request() {
         return url;
       }
     },
-    headers: function(n){
+    headers: function(n) {
       if (!headers) headers = server.req.getHeaders();
       if (n) {
         return headers.exists(n) ? headers(n) : '';
@@ -39,7 +39,7 @@ function lib_request() {
         return headers;
       }
     },
-    cookies: function(n){
+    cookies: function(n) {
       if (!cookies) cookies = server.req.getCookies();
       if (n) {
         return cookies.exists(n) ? cookies(n) : '';
@@ -47,7 +47,7 @@ function lib_request() {
         return cookies;
       }
     },
-    method: function(s){
+    method: function(s) {
       var r;
       if (req.headers('content-type')) {
         r = 'POST';

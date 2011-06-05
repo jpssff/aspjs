@@ -483,6 +483,32 @@ function lib_globals() {
     if (a[1].length == 1) a[1] = '0' + a[1];
     return a.join(' ').replace(/UTC$/i, 'GMT');
   };
+  Date.prototype.add = function(parts) {
+    var date = this;
+    if (parts.years) {
+      date.setYear(date.getFullYear() + Number.parseInt(parts.years));
+    }
+    if (parts.months) {
+      date.setMonth(date.getMonth() + Number.parseInt(parts.months));
+    }
+    if (parts.days) {
+      date.setDate(date.getDate() + Number.parseInt(parts.days));
+    }
+    if (parts.hours) {
+      date.setHours(date.getHours() + Number.parseInt(parts.hours));
+    }
+    if (parts.minutes) {
+      date.setMinutes(date.getMinutes() + Number.parseInt(parts.minutes));
+    }
+    if (parts.seconds) {
+      date.setSeconds(date.getSeconds() + Number.parseInt(parts.seconds));
+    }
+    return date;
+  };
+  Date.today = function() {
+    var date = new Date();
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  };
   Date.now = function() {
     return new Date();
   };

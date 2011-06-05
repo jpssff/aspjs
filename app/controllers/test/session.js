@@ -4,19 +4,7 @@ bind('ready', function() {
 
   app('/test/session/run', function() {
 
-    //Initializes session store with default options (specified in config)
-    //var session = Session.init('memory, autosave');
-            //or  Session.init({memory: true, autosave: true});
-
-//    session('name', 'value'); // save to session variable
-//    session('name', {name: 'value', items: [1, 2, '3']}); // save complex data type
-//    session('name'); //= 'value'
-//    session.save(); //flush changes to underlying datastore (app shared memory or database)
-//    session('foo', 'bar');
-//    session.load(); //reload from datastore
-//    session('foo'); //= '' (empty string)
-    
-    module("Basic Requirements");
+    module("Pre-requisites");
 
     test("JSON", function() {
       expect(2);
@@ -38,18 +26,36 @@ bind('ready', function() {
     });
 
     test("Cookies", function() {
-      expect(2);
-      ok(vartype(req.cookies, 'function'), 'Check req.cookies');
-      ok(vartype(res.cookies, 'function'), 'Check res.cookies');
+      expect(4);
+      ok(vartype(req.cookies, 'function'), 'Check req.cookies exists');
+      ok(vartype(res.cookies, 'function'), 'Check res.cookies exists');
+      res.cookies('name', 'value')
+      ok(res.cookies('name'), 'value', 'Check res.cookies can be modified');
+      res.cookies('name', {val: 'value', exp: Date.today().add({months: 6})});
+      var expected = '{"name":{"val":"value","exp":new Date(Date.UTC(2011,11,4,14,0,0,0))}}';
+      ok(JSON.stringify(res.cookies()), expected, 'Check cookies collection serializes correctly');
     });
 
-//    test("Initialization", function() {
-//      expect(4);
-//      ok( Array.prototype.push, "Array.push()" );
-//      ok( Function.prototype.apply, "Function.apply()" );
-//      ok( RegExp, "RegExp" );
-//      ok( jQuery, "jQuery" );
-//    });
+
+    module("Core");
+
+    test("JSON", function() {
+      expect(2);
+
+      //Initializes session store with default options
+      var session = Session.init();
+
+      session('name', 'value'); // save to session variable
+      //session('name', {name: 'value', items: [1, 2, '3']}); // save complex data type
+      //session('name'); //= 'value'
+      //session.save(); //flush changes to underlying datastore (app shared memory or database)
+      //session('foo', 'bar');
+      //session.load(); //reload from datastore
+      //session('foo'); //= '' (empty string)
+
+      equals(session('name'), 'value', 'Check primitive return value');
+      equals(stringified, JSON.stringify(JSON.parse(stringified)), 'Check JSON.stringify(JSON.parse)');
+    });
 
     res.die(qunit.getTestResults());
 
