@@ -117,6 +117,7 @@ function Collection__proto() {
       if (this._readOnly) fn_writeError(this);
       this._count = 0;
       this._items = {};
+      if (!this._dirty) this.trigger('dirty');
       this._dirty = true;
       return this;
     },
@@ -135,9 +136,11 @@ function Collection__proto() {
       if (this.exists(key)) {
         this.trigger('overwrite', key, val);
       } else {
+        this.trigger('add', key, val);
         this._count ++;
       }
       this._items[key.toUpperCase()] = [key,val];
+      if (!this._dirty) this.trigger('dirty');
       this._dirty = true;
       return val;
     },
@@ -151,6 +154,7 @@ function Collection__proto() {
         delete this._items[n];
         this._count --;
       }
+      if (!this._dirty) this.trigger('dirty');
       this._dirty = true;
       return val;
     },

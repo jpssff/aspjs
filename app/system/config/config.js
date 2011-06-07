@@ -28,6 +28,17 @@ function lib_syscfg() {
       max_size: 102400 //=100MB
     },
     
+    //Session Settings
+    //Cookie Types:
+    // longterm - has a far-distant expiry (1 year)
+    // shortterm - discarded when browser is closed
+    session: {
+      autosave: true, //session is automatically saved when the request ends
+      lazyload: true, //data is not loaded until the first value is requested
+      default_type: 'shortterm', //Cookie Type (longterm or shortterm)
+      default_datastore: 'memory'
+    },
+
     //Document Store
     docstore: {
       numeric_id: true
@@ -56,7 +67,7 @@ function lib_syscfg() {
       '<body onload="location.replace(unescape(\'{=escape redir}\'))">',
       '<noscript><p>If you are not redirected, <a href="{=html redir}">Click Here</a> to continue.</p></noscript>',
       '</body>',
-      String.repeat('<' + '!-- padding to prevent IE and Chrome friendly error --' + '>\n',10),
+      String.repeat('\x3c!-- padding to prevent IE and Chrome friendly error --\x3e\n', 10),
       '</html>'
     ].join('\n'),
     
@@ -67,7 +78,7 @@ function lib_syscfg() {
         '<html>',
         '<head><title>404 Not Found</title></head>',
         '<body><h1>404 Not Found</h1><p>The requested resource was not found.</p></body>',
-        String.repeat('<' + '!-- padding to prevent IE and Chrome friendly error --' + '>\n',10),
+        String.repeat('\x3c!-- padding to prevent IE and Chrome friendly error --\x3e\n', 10),
         '</html>'
       ].join('\n')
     }

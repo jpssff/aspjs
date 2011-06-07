@@ -64,9 +64,9 @@ function lib_server() {
         iis.res.cookies(n) = String(cookie);
       } else
       if (vartype(cookie, 'object')) {
-        iis.res.cookies(n) = String(cookie.val);
+        iis.res.cookies(n) = String(cookie.value);
         if (cookie.exp) {
-          iis.res.cookies(n).expires = Date.fromString(cookie.exp);
+          iis.res.cookies(n).expires = Date.fromString(cookie.expiry);
         }
       }
     });
@@ -181,10 +181,11 @@ function lib_server() {
    * @returns {Object} Object containing response data fields
    */
   function newResponse() {
+    var cookies = (res && res.cookies) ? res.cookies : new Collection();
     return {
       status: '200',
       headers: new Collection({'content-type': 'text/plain'}),
-      cookies: new Collection(),
+      cookies: cookies,
       charset: 'utf-8'
     };
   }
@@ -305,9 +306,9 @@ function lib_server() {
    *
    * Creates object with the following methods:
    *   .get('name'); //Get variable by name
-   *   .set('name','value'); //Set variable
+   *   .set('name', 'value'); //Set variable
    *   .del('name'); //Delete variable
-   *   .each(function(n,val){ ... }); //Enumerate
+   *   .each(function(n, val) { ... }); //Enumerate
    *   .clear(); //Delete all
    *
    * @param col

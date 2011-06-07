@@ -29,32 +29,49 @@ bind('ready', function() {
       expect(4);
       ok(vartype(req.cookies, 'function'), 'Check req.cookies exists');
       ok(vartype(res.cookies, 'function'), 'Check res.cookies exists');
-      res.cookies('name', 'value')
-      ok(res.cookies('name'), 'value', 'Check res.cookies can be modified');
-      res.cookies('name', {val: 'value', exp: Date.today().add({months: 6})});
-      var expected = '{"name":{"val":"value","exp":new Date(Date.UTC(2011,11,4,14,0,0,0))}}';
+      res.cookies('testCookie', 'testValue')
+      ok(res.cookies('testCookie'), 'testValue', 'Check res.cookies can be modified');
+      res.cookies('testCookie2', {value: 'testValue2', expiry: Date.fromUTCString('2029/10/31')});
+      var expected = '{"testCookie2":{"value":"testValue2","expiry":new Date(Date.UTC(2029,9,31,0,0,0,0))}}';
       ok(JSON.stringify(res.cookies()), expected, 'Check cookies collection serializes correctly');
+      //Remove Test Cookies
+      res.cookies('testCookie', null);
+      res.cookies('testCookie2', null);
     });
 
 
     module("Core");
 
-    test("JSON", function() {
-      expect(2);
+    test("Session Load", function() {
+      expect(6);
 
-      //Initializes session store with default options
-      var session = Session.init();
+      var session = Session.init('namespace:testing expiry:10m');
 
-      session('name', 'value'); // save to session variable
-      //session('name', {name: 'value', items: [1, 2, '3']}); // save complex data type
-      //session('name'); //= 'value'
-      //session.save(); //flush changes to underlying datastore (app shared memory or database)
-      //session('foo', 'bar');
-      //session.load(); //reload from datastore
-      //session('foo'); //= '' (empty string)
+      var test = session('test');
+      ok(vartype(test, 'undefined'), 'Check non-existant item');
 
-      equals(session('name'), 'value', 'Check primitive return value');
-      equals(stringified, JSON.stringify(JSON.parse(stringified)), 'Check JSON.stringify(JSON.parse)');
+      var token = session.getToken();
+      ok(JSON.stringify(req.cookies()).indexOf(token) > 0 || JSON.stringify(res.cookies()).indexOf(token) > 0, 'Check for Session Token in Cookies');
+
+      // save complex data type
+      session('name', {name: 'value', items: [1, 2, '3'], string: 'unicøde'});
+      equals(JSON.stringify(session('name')), '{"name":"value","items":[1,2,"3"],"string":"unic\\u00f8de"}', 'Check non-primitive was stored');
+
+//      session.reload();
+//      ok(vartype(session('name'), 'undefined'), 'Check session was reloaded');
+
+      session('name', 'unicøde');
+      equals(session('name').length, 7, 'Check unicode string was stored correctly');
+
+      var obj = {};
+      server.appvars.each(function(n, val) {
+        obj[n] = val;
+      });
+      res.die(obj);
+
+      session.clear();
+      ok(vartype(session('name'), 'undefined'), 'Check session was cleared');
+
     });
 
     res.die(qunit.getTestResults());
