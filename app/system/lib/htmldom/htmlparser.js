@@ -19,7 +19,8 @@ if (!this.lib_htmlparser) this.lib_htmlparser = lib_htmlparser;
 function lib_htmlparser() {
 
   // Regular Expressions for parsing tags and attributes
-  var RE_DOCTYPE = /<!DOCTYPE(\s+(".*?"|\S+))*(\[(<.*?>|[^\]]*)\])?\s*>/i
+  var RE_DOCTYPE = /<!DOCTYPE\s+("[^"]*"|[^>]*)>/i
+    //, RE_DOCTYPE = /<!DOCTYPE(\s+(".*?"|\S+))*(\[(<.*?>|[^\]]*)\])?\s*>/i
     , RE_DOCTYPE_PART = /\s+(".*?"|\[(?:<.*?>|[^\]]*)\]|\S+)/ig
     , RE_TRIM_QUOTES = /(^"|"$)/g
     , RE_START_TAG = /^<([\w:-]+)((?:\s+[\w:-]+(?:\s*=\s*(?:(?:"[^"]*")|(?:'[^']*')|[^>\s]+))?)*)\s*(\/?)>/
@@ -148,6 +149,7 @@ function lib_htmlparser() {
     }
 
     function parseStartTag(tag, tagName, rest, unary) {
+      tagName = tagName.toLowerCase();
       if (block[tagName]) {
         while (stack.last() && inline[stack.last()]) {
           parseEndTag('', stack.last());

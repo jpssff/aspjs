@@ -7,32 +7,43 @@ function lib_net() {
      * Request a remote resource using HTTP
      *
      */
-    httpreq: function(req) {
-      var res = {}
-        , xhr = new ActiveXObject("Msxml2.ServerXMLHTTP");
-      if (req.type == 'post') {
-        req.head['Content-Type'] = 'application/x-www-form-urlencoded';
+    httpRequest: function(req) {
+      if (vartype(req) == 'string') {
+        req = {url: req};
       }
-      xhr.open(req.type.toUpperCase(),req.url,false);
-      forEach(req.head,function(n,val){
-        xhr.setRequestHeader(n,val);
+      var xhr = new ActiveXObject("Msxml2.ServerXMLHTTP");
+      if (String(req.type).toUpperCase() == 'POST') {
+        req.type = 'POST';
+        req.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+      } else {
+        req.type = 'GET';
+      }
+      xhr.open(req.type, req.url, false);
+      forEach(req.headers, function(n, val) {
+        xhr.setRequestHeader(n, val);
       });
-      for (var i=0;i<3;i++) {
+      for (var i = 0; i < 3; i++) {
+        var res = {};
         try {
-          if (req.type == 'post' && req.data){
+          if (req.type == 'POST' && req.data) {
             xhr.send(util.buildQueryString(req.data));
           } else {
             xhr.send();
           }
         } catch(e) {
-          res.error = e.number + '; ' + e.description;
+          res.error = e.description;
           sys.log('Error Requesting: ' + req.url + '', 'Error: ' + res.error, 'err-httpreq');
         }
         if (!res.error) {
           res.status = String.parse(xhr.status).w()[0];
           res.headers = new Collection(util.parseHeaders(xhr.getAllResponseHeaders()));
+          //TODO: Detect Text Encoding (Charset)
           res.ctype = (res.headers('Content-Type')) ? res.headers('Content-Type').split(';')[0] : 'application/octet-stream';
           res.body = new Binary(xhr.responseBody);
+          //res.toString = res.body.toString.bind(res.body);
+          res.toString = function() {
+            return this.body.toString.apply(this.body, arguments);
+          };
           break;
         }
       }

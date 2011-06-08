@@ -275,9 +275,9 @@ function lib_xmldom() {
   };
 
   XNode.prototype.setAttribute = function(name, value) {
-    var oldAttr;
+    var oldAttr, nameLower = String(name).toLowerCase();
     for (var i = 0; i < this.attributes.length; ++i) {
-      if (this.attributes[i].nodeName == name) {
+      if (this.attributes[i].nodeName.toLowerCase() == nameLower) {
         oldAttr = this.attributes[i];
         break;
       }
@@ -296,8 +296,9 @@ function lib_xmldom() {
   };
 
   XNode.prototype.getAttribute = function(name) {
+    name = String(name).toLowerCase();
     for (var i = 0; i < this.attributes.length; ++i) {
-      if (this.attributes[i].nodeName == name) {
+      if (this.attributes[i].nodeName.toLowerCase() == name) {
         return this.attributes[i].nodeValue;
       }
     }
@@ -305,8 +306,9 @@ function lib_xmldom() {
   };
 
   XNode.prototype.hasAttribute = function(name) {
+    name = String(name).toLowerCase();
     for (var i = 0; i < this.attributes.length; ++i) {
-      if (this.attributes[i].nodeName == name) {
+      if (this.attributes[i].nodeName.toLowerCase() == name) {
         return true;
       }
     }
@@ -314,10 +316,11 @@ function lib_xmldom() {
   };
 
   XNode.prototype.removeAttribute = function(name) {
+    name = String(name).toLowerCase();
     var a = [], val;
     for (var i = 0; i < this.attributes.length; ++i) {
-      if (this.attributes[i].nodeName == name) {
-        val == this.attributes[i].nodeValue;
+      if (this.attributes[i].nodeName.toLowerCase() == name) {
+        val = this.attributes[i].nodeValue;
       } else {
         a.push(this.attributes[i]);
       }
@@ -339,7 +342,7 @@ function lib_xmldom() {
       name = String(name).toLowerCase();
       domTraverseElements(this, function(node) {
         if (self == node) return;
-        if (node.nodeName.toLowerCase() == name) {
+        if (node.nodeName == name) {
           ret.push(node);
         }
       }, null);
@@ -348,10 +351,12 @@ function lib_xmldom() {
   };
 
   XNode.prototype.getElementsByAttribute = function(name, val) {
+    val = String(val).toLowerCase();
     var ret = [], self = this;
     domTraverseElements(this, function(node) {
       if (self === node) return;
-      if (node.getAttribute(name) == val) {
+      var attr = node.getAttribute(name);
+      if (attr && attr.toLowerCase() == val) {
         ret.push(node);
       }
     }, null);
@@ -360,9 +365,11 @@ function lib_xmldom() {
 
   XNode.prototype.getElementById = function(id) {
 //    return this.ownerDocument.elementsById[id];
+    id = String(id).toLowerCase();
     var ret = null;
     domTraverseElements(this, function(node) {
-      if (node.getAttribute('id') == id) {
+      var attr = node.getAttribute('id');
+      if (attr && attr.toLowerCase() == id) {
         ret = node;
         return false;
       }
