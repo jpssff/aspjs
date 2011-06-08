@@ -36,16 +36,16 @@ function lib_docstore() {
    * on disk and contain collections, which contain documents.
    *
    */
-  function DocStore(name,cfg) {
+  function DocStore(name, cfg) {
     var self = this;
     this.name = name;
-    this.cfg = Object.append({},sys_cfg,cfg);
-    this.db = msa.open(name,dbInit);
+    this.cfg = Object.append({}, sys_cfg, cfg);
+    this.db = msa.open(name, dbInit);
     var collections = {}
       , db = this.db
       , q = "SELECT * FROM [col] WHERE [status] = 'active'";
-    db.query(q,function(rec){
-      collections[rec.col_name] = new Collection(self,rec.col_id,rec.col_name);
+    db.query(q, function(rec) {
+      collections[rec.col_name] = new Collection(self, rec.col_id, rec.col_name);
     });
     this._all = collections;
   }
@@ -204,9 +204,10 @@ function lib_docstore() {
    * Helper Functions
    *
    */
-  function createDoc(col,ref,data) {
-    return new Document(col,{id:ref.doc_num,guid:ref.guid,dbid:ref.doc_id,created:ref.created},data);
+  function createDoc(col, ref, data) {
+    return new Document(col, {id: ref.doc_num, guid: ref.guid, dbid: ref.doc_id, created: ref.created}, data);
   }
+
   function dbInit(conn) {
     var q = "CREATE TABLE [col] ([col_id] INTEGER IDENTITY(123,1) CONSTRAINT [pk_col_id] PRIMARY KEY, [col_name] TEXT(255), [status] TEXT(50))";
     conn.exec(q);
@@ -218,9 +219,9 @@ function lib_docstore() {
     conn.exec(q);
   }
   
-  function fn_each(o,fn) {
-    Object.each(o,function(n,val,i){
-      if (n != '_id') return fn.call(o,n,val,i);
+  function fn_each(o, fn) {
+    Object.each(o, function(n, val, i) {
+      if (n != '_id') return fn.call(o, n, val, i);
     });
   }
   

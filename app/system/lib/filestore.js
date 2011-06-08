@@ -40,7 +40,8 @@ function lib_filestore() {
    * @param {Object} rec DocStore Record (document) containing file details
    */
   function File(rec) {
-    if (!(this instanceof File)) return new File(rec);
+    //Disabled to make IDE happy
+    //if (!(this instanceof File)) return new File(rec);
     this.id = rec.__meta.guid;
     this._rec = rec;
   }

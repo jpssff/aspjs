@@ -18,7 +18,12 @@ function lib_appcfg() {
         offset:10 * 60
       }
     },
-    
+
+    //Session Settings
+    session: {
+      default_datastore: 'database'
+    },
+
     //Email Notifications
     notify:{
       //default from address

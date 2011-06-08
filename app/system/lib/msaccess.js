@@ -16,11 +16,11 @@ function lib_msaccess() {
   var util = lib('util');
   var msaccess, fs = sys.fs, connections = {};
   
-  function Connection(name,db_file) {
+  function Connection(name, db_file) {
     this._file = db_file;
     this._cstr = 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source="' + sys.mappath(db_file) + '"';
     var conn;
-    if (Object.exists(connections,name)) {
+    if (Object.exists(connections, name)) {
       conn = connections[name];
     } else {
       conn = new ActiveXObject("ADODB.Connection");
@@ -43,7 +43,7 @@ function lib_msaccess() {
   }
   
   Connection.prototype = {
-    query: function(str,params,func) {
+    query: function(str, params, func) {
       if (arguments.length == 1) {
         params = [];
       }
@@ -51,29 +51,29 @@ function lib_msaccess() {
         func = params;
         params = [];
       }
-      var rs, conn = this._conn, sql = fn_BuildSQL(str,params);
+      var rs, conn = this._conn, sql = fn_BuildSQL(str, params);
       //Build Query Object
       var query = function(func) {
         if (func) return query.each(func);
       };
-      query.sql = function(){
+      query.sql = function() {
         return sql;
       };
       query.each = function(func) {
         try {
           rs = conn.execute(sql);
         } catch (e) {
-          throw(new Error('SQL Statement Could not be executed. ' + e.description + '\r\n' + sql));
+          throw new Error('SQL Statement Could not be executed. ' + e.description + '\r\n' + sql);
         }
         var abort = false, i = 0;
         //TODO: Performance Tune (looping vs. get all)
         if (rs.state) {
           while (!rs.eof && !abort) {
             var rec = {};
-            util.enumerate(rs.fields,function(i,field){
+            util.enumerate(rs.fields, function(i, field) {
               rec[field.name] = fn_fromADO(field.value);
             });
-            abort = ( func(rec,i++) === false );
+            abort = ( func(rec, i++) === false );
             rs.movenext();
           }
           rs.close();
@@ -82,7 +82,7 @@ function lib_msaccess() {
       };
       query.getOne = function() {
         var rec;
-        query.each(function(r){
+        query.each(function(r) {
           rec = r;
           return false;
         });
@@ -90,7 +90,7 @@ function lib_msaccess() {
       };
       query.getAll = function() {
         var arr = [];
-        query.each(function(r){
+        query.each(function(r) {
           arr.push(r);
         });
         return arr;
@@ -101,20 +101,27 @@ function lib_msaccess() {
       }
       return query;
     },
-    exec: function(str,params,b) {
-      var i, conn = this._conn, sql = fn_BuildSQL(str,params);
+    exec: function(str, params, b) {
+      var i, conn = this._conn, sql = fn_BuildSQL(str, params), rs;
       try {
-        conn.execute(sql,i,128);
+        if (b) {
+          i = executeSqlAndReturnNumRowsAffected(conn, sql);
+        } else {
+          conn.execute(sql, i, 128);
+        }
       } catch (e) {
-        throw(new Error('SQL Statement Could not be executed. ' + e.description + '\r\n' + sql));
+        throw new Error('SQL Statement Could not be executed. ' + e.description + '\r\n' + sql);
       }
       if (b) {
         if (String(sql).startsWith('INSERT')) {
           sql = 'SELECT @@IDENTITY AS [val]';
         } else {
-          sql = 'SELECT @@ROWCOUNT AS [val]';
+          //sql = 'SELECT @@ROWCOUNT AS [val]';
+          return Number.parseInt(i);
         }
-        this.query(sql,function(rec){ i = rec.val })
+        this.query(sql, function(rec) {
+          i = rec.val
+        });
         return Number.parseInt(i);
       }
     },
@@ -124,18 +131,18 @@ function lib_msaccess() {
     }
   };
   
-  function fn_BuildSQL(q,arr) {
-    q = String(q), now = Date.now();
+  function fn_BuildSQL(q, arr) {
+    q = String(q),now = Date.now();
     var re = /('(''|[^'])*'|\[(\\.|[^\]])*\]|\$\d+|[A-Z_]+\(\))/gim;
     arr = arr || [];
-    q = q.replace(re,function(s){
+    q = q.replace(re, function(s) {
       if (s == "NOW()") {
         return '#' + fn_SQLDate(now) + '#';
       }
       if (s == "NOW_UTC()") {
-        return '#' + fn_SQLDate(now,true) + '#';
+        return '#' + fn_SQLDate(now, true) + '#';
       }
-      var c = s.substr(0,1);
+      var c = s.substr(0, 1);
       if (c == "$") {
         //Value Placeholder
         var i = Number.parseInt(s.substr(1));
@@ -146,10 +153,10 @@ function lib_msaccess() {
       }
       return s;
     });
-    q = q.replace(/CAST_HEX\('([^']+)'\)/ig,'0x$1');
-    q = q.replace(/CAST_DATE\('([^']+)'\)/ig,'#$1#');
-    q = q.replace(/CAST_GUID\('(\{[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\})'\)/ig,'{guid $1}');
-    q = q.replace(/CAST_GUID\('([\da-f]{8})([\da-f]{4})([\da-f]{4})([\da-f]{4})([\da-f]{12})'\)/ig,'{guid {$1-$2-$3-$4-$5}}');
+    q = q.replace(/CAST_HEX\('([^']+)'\)/ig, '0x$1');
+    q = q.replace(/CAST_DATE\('([^']+)'\)/ig, '#$1#');
+    q = q.replace(/CAST_GUID\('(\{[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\})'\)/ig, '{guid $1}');
+    q = q.replace(/CAST_GUID\('([\da-f]{8})([\da-f]{4})([\da-f]{4})([\da-f]{4})([\da-f]{12})'\)/ig, '{guid {$1-$2-$3-$4-$5}}');
     return q;
   }
   
@@ -160,29 +167,29 @@ function lib_msaccess() {
       case 'null':
       case 'undefined':
         r = "NULL";
-      break;
+        break;
       case 'date':
         r = "'" + fn_SQLDate(v) + "'";
-      break;
+        break;
       case 'number':
         r = (isFinite(v)) ? v.toString() : "NULL";
-      break;
+        break;
       case 'boolean':
         r = (v) ? "1" : "0";
-      break;
+        break;
       default:
         r = "'" + fn_SQLEsc(v) + "'";
-      break;
+        break;
     }
     return r;
-  };
+  }
   
-  function fn_SQLDate(d,utc) {
-    return Date.format(d,"{yyyy}-{mm}-{dd} {HH}:{nn}:{ss}",utc);
+  function fn_SQLDate(d, utc) {
+    return Date.format(d, "{yyyy}-{mm}-{dd} {HH}:{nn}:{ss}", utc);
   }
   
   function fn_SQLEsc(str) {
-    return String(str).replace(/'/g,"''");
+    return String(str).replace(/'/g, "''");
   }
   
   //Convert from ADO Data Type
@@ -192,24 +199,23 @@ function lib_msaccess() {
     }
     return o;
   }
-  
-  function fn_open(name,fn_init) {
-    var file = '~/data/db/' + fs.escape(name) + '.db';
-    var conn = new Connection(name,file);
+
+  function fn_open(name, fn_init) {
+    var file = '~/data/db/' + fs.escape(name) + '.mdb';
+    var conn = new Connection(name, file);
     if (conn.isNew && fn_init) {
       fn_init(conn);
     }
     return conn;
   }
-  
-  bind('destroy',function() {
-    Object.each(connections,function(name,conn){
+
+  bind('destroy', function() {
+    Object.each(connections, function(name, conn) {
       if (conn.state != 0) conn.close();
     });
   });
-  
-  
-  
+
+
   msaccess = {
     open:fn_open
   };

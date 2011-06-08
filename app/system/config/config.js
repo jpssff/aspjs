@@ -33,8 +33,6 @@ function lib_syscfg() {
     // longterm - has a far-distant expiry (1 year)
     // shortterm - discarded when browser is closed
     session: {
-      autosave: true, //session is automatically saved when the request ends
-      lazyload: true, //data is not loaded until the first value is requested
       default_type: 'shortterm', //Cookie Type (longterm or shortterm)
       default_datastore: 'memory'
     },

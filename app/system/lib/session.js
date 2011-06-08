@@ -44,6 +44,7 @@ function lib_session() {
   var RE_TOKEN = /^[0-9a-f]{32}$/i;
 
   var cache = {}, json = lib('json');
+  var datastore = (app.cfg('session/default_datastore') == 'database') ? 'database' : 'memory';
 
   function getCookieName(type) {
     if (type == 'longterm') {
@@ -75,10 +76,11 @@ function lib_session() {
         res.cookies(key, token);
       }
     }
+    var session = cache[type] = {token: token};
     bind('destroy', function() {
-      inst.flush();
+      controllers[datastore].saveAll(session);
     });
-    return cache[type] = {token: token};
+    return session;
   }
 
   function newCollection(session, data) {
@@ -102,10 +104,15 @@ function lib_session() {
         if (!session.namespaces) session.namespaces = {};
         return session.namespaces[inst.namespace] = newCollection(session, data);
       },
-      'save': function(session, inst) {
-        var collection = session.namespaces[inst.namespace];
+      'saveAll': function(session) {
+        var self = controllers.memory;
+        forEach(session.namespaces, function(namespace, collection) {
+          self.save(session, namespace, collection);
+        });
+      },
+      'save': function(session, namespace, collection) {
         if (collection && collection.isDirty()) {
-          server.appvars('session:' + session.token + ':' + inst.namespace, collection.toObject());
+          server.appvars('session:' + session.token + ':' + namespace, collection.toObject());
           collection.clearDirty();
         }
         if (!session.lastAccess) {
@@ -115,14 +122,69 @@ function lib_session() {
       }
     },
     database: {
-      'load': function() {
-
+      'load': function(session, inst) {
+        var self = controllers.database;
+        var db = self.db || (self.db = lib('msaccess').open(app.cfg('session/database') || 'session', dbInit));
+        var token = session.token, data;
+        if (!session.lastAccess) {
+          var meta = db.query("SELECT * FROM [session] WHERE [guid] = CAST_GUID($1)", [token]).getOne();
+          if (meta) {
+            session.lastAccess = meta.last_access;
+          }
+        }
+        if (session.lastAccess && (!inst.oldest || inst.oldest < session.lastAccess)) {
+          var rec = db.query("SELECT * FROM [session_data] WHERE [guid] = CAST_GUID($1) AND [namespace] = $2", [token, inst.namespace]).getOne();
+          if (rec) {
+            data = json.parse(rec.data);
+          }
+        }
+        if (!data) {
+          data = {};
+        }
+        if (!session.namespaces) session.namespaces = {};
+        return session.namespaces[inst.namespace] = newCollection(session, data);
       },
-      'save': function() {
-
+      'saveAll': function(session) {
+        var self = controllers.database;
+        forEach(session.namespaces, function(namespace, collection) {
+          self.save(session, namespace, collection);
+        });
+      },
+      'save': function(session, namespace, collection) {
+        var self = controllers.database;
+        var db = self.db || (self.db = lib('msaccess').open(app.cfg('session/database') || 'session', dbInit));
+        //Save data if collection has been modified
+        if (collection && collection.isDirty()) {
+          var stringified = json.stringify(collection.toObject());
+          var sql = "UPDATE [session_data] SET [data] = $3 WHERE [guid] = CAST_GUID($1) AND [namespace] = $2";
+          var num = db.exec(sql, [session.token, namespace, stringified], true);
+          if (!num) {
+            sql = "INSERT INTO [session_data] ([guid], [namespace], [data]) VALUES (CAST_GUID($1), $2, $3)";
+            db.exec(sql, [session.token, namespace, stringified]);
+          }
+          collection.clearDirty();
+        }
+        //Update Last-Accessed (whether we saved any data or not)
+        if (!session.lastAccessUpdated) {
+          var sql = "UPDATE [session] SET [last_access] = NOW_UTC() WHERE [guid] = CAST_GUID($1)";
+          var num = db.exec(sql, [session.token], true);
+          if (!num) {
+            sql = "INSERT INTO [session] ([guid], [ip_addr], [http_ua], [created], [last_access]) VALUES (CAST_GUID($1), $2, $3, NOW_UTC(), NOW_UTC())";
+            db.exec(sql, [session.token, server.vars('ipaddr'), req.headers('user-agent')]);
+          }
+          session.lastAccess = Date.now();
+          session.lastAccessUpdated = true;
+        }
       }
     }
   };
+
+  function dbInit(conn) {
+    var q = "CREATE TABLE [session] ([guid] GUID CONSTRAINT [pk_guid] PRIMARY KEY, [ip_addr] TEXT(15), [http_ua] MEMO, [created] DATETIME, [last_access] DATETIME)";
+    conn.exec(q);
+    var q = "CREATE TABLE [session_data] ([id] INTEGER IDENTITY(1234,1) CONSTRAINT [pk_id] PRIMARY KEY, [guid] GUID, [namespace] TEXT(255), [data] MEMO)";
+    conn.exec(q);
+  }
 
   function Session(opts) {
     this.opts = opts;
@@ -139,12 +201,10 @@ function lib_session() {
         param[u] = 0 - Number.parseInt(m[1]);
         this.oldest = Date.now().add(param);
       }
-      this.datastore = (app.cfg('session/default_datastore') == 'database') ? 'database' : 'memory';
-      //this.load();
     },
     load: function() {
       var session = getSessionObject(this);
-      return controllers[this.datastore].load(session, this);
+      return controllers[datastore].load(session, this);
     },
     getCollection: function() {
       var session = getSessionObject(this);
@@ -166,8 +226,8 @@ function lib_session() {
     },
     flush: function() {
       var session = getSessionObject(this);
-      if (session.namespaces) {
-        controllers[this.datastore].save(session, this);
+      if (session.namespaces && session.namespaces[this.namespace]) {
+        controllers[datastore].save(session, this.namespace, session.namespaces[this.namespace]);
       }
     }
   };
