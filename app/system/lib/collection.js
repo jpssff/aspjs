@@ -30,7 +30,6 @@ function Collection(data, opts) {
   var col = function() {
     return col.access.apply(col, arguments);
   };
-  col._name = String(opts.name);
   col._count = 0;
   col._items = {};
   col._listeners = {};
@@ -46,8 +45,19 @@ function Collection(data, opts) {
   if (data) {
     col.append(data);
   }
+  if (data && opts.allowReset) {
+    col.reset = function() {
+      col.clear();
+      col.append(data);
+      col._dirty = false;
+    };
+  }
   col._dirty = false;
-  col._readOnly = !!opts.readOnly;
+  if (opts.readOnly) {
+    col.on('modify', function() {
+      throw new Error("Collection '" + opts.name + "' is read-only and cannot be modified");
+    });
+  }
 
   return col;
   
@@ -84,10 +94,6 @@ function Collection__proto() {
     return (type == 'object') ? 'unknown' : type;
   }
 
-  function fn_writeError(col) {
-    throw new Error("Collection '" + col._name + "' is read-only and cannot be modified");
-  }
-
   var proto;
   if (Object.prototype === {}.__proto__) {
     proto = Object.create(Function.prototype);
@@ -114,7 +120,7 @@ function Collection__proto() {
       }
     },
     clear: function() {
-      if (this._readOnly) fn_writeError(this);
+      this.trigger('modify');
       this._count = 0;
       this._items = {};
       if (!this._dirty) this.trigger('dirty');
@@ -130,7 +136,7 @@ function Collection__proto() {
       }
     },
     set: function(key, val) {
-      if (this._readOnly) fn_writeError(this);
+      this.trigger('modify');
       key = String(key);
       this.trigger('set', key, val);
       if (this.exists(key)) {
@@ -145,7 +151,7 @@ function Collection__proto() {
       return val;
     },
     remove: function(key) {
-      if (this._readOnly) fn_writeError(this);
+      this.trigger('dirty');
       key = String(key);
       var n = key.toUpperCase(), val;
       if (this.exists(key)) {
@@ -159,7 +165,6 @@ function Collection__proto() {
       return val;
     },
     append: function(obj) {
-      if (this._readOnly) fn_writeError(this);
       var col = this;
       if (obj.__proto__ === Collection.prototype) {
         obj.each(obj, function(n, val) {

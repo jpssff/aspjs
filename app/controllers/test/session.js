@@ -43,7 +43,7 @@ bind('ready', function() {
     module("Core");
 
     test("Session Load", function() {
-      expect(6);
+      expect(8);
 
       var session = Session.init('namespace:testing expiry:10m');
 
@@ -54,23 +54,29 @@ bind('ready', function() {
       ok(JSON.stringify(req.cookies()).indexOf(token) > 0 || JSON.stringify(res.cookies()).indexOf(token) > 0, 'Check for Session Token in Cookies');
 
       // save complex data type
-      session('name', {name: 'value', items: [1, 2, '3'], string: 'unicøde'});
-      equals(JSON.stringify(session('name')), '{"name":"value","items":[1,2,"3"],"string":"unic\\u00f8de"}', 'Check non-primitive was stored');
+      session('item1', {name: 'value', items: [1, 2, '3'], string: 'unicøde'});
+      equals(JSON.stringify(session('item1')), '{"name":"value","items":[1,2,"3"],"string":"unic\\u00f8de"}', 'Check non-primitive was stored');
 
-//      session.reload();
-//      ok(vartype(session('name'), 'undefined'), 'Check session was reloaded');
+      session.reload();
+      ok(vartype(session('item1'), 'undefined'), 'Check session was reloaded');
 
-      session('name', 'unicøde');
-      equals(session('name').length, 7, 'Check unicode string was stored correctly');
+      session('item2', 'unicøde');
+      equals(session('item2').length, 7, 'Check unicode string was stored correctly');
 
-      var obj = {};
-      server.appvars.each(function(n, val) {
-        obj[n] = val;
-      });
-      res.die(obj);
+      session.flush();
+      equals(session('item2'), 'unicøde', 'Check session item after flush');
+
+      session.reload();
+      equals(session('item2'), 'unicøde', 'Check session item after flush and reload');
+
+      //var obj = {};
+      //server.appvars.each(function(n, val) {
+      //  obj[n] = val;
+      //});
+      //res.die(obj);
 
       session.clear();
-      ok(vartype(session('name'), 'undefined'), 'Check session was cleared');
+      ok(vartype(session('item2'), 'undefined'), 'Check session was cleared');
 
     });
 

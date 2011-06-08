@@ -82,39 +82,43 @@ function lib_session() {
   }
 
   function newCollection(session, data) {
-    var collection = new Collection(data);
-    collection.on('dirty', function() {
-      session.isDirty = true;
-    });
-    return collection;
+    return new Collection(data);
   }
 
   var controllers = {
     memory: {
-      'load': function(session) {
+      'load': function(session, inst) {
         var token = session.token;
-        session.data = server.appvars('session:' + token);
+        var data = server.appvars('session:' + token + ':' + inst.namespace);
         session.lastAccess = server.appvars('session:last-access:' + token);
-        if (session.data && session.lastAccess) {
+        if (session.lastAccess) {
           server.appvars('session:last-access:' + token, Date.now());
-        } else {
-          session.data = {};
         }
-        return session;
+        if (session.lastAccess && (!inst.oldest || inst.oldest < session.lastAccess)) {
+          data = data || {};
+        } else {
+          data = {};
+        }
+        if (!session.namespaces) session.namespaces = {};
+        return session.namespaces[inst.namespace] = newCollection(session, data);
       },
-      'save': function(session) {
-        server.appvars('session:' + session.token, session.data);
+      'save': function(session, inst) {
+        var collection = session.namespaces[inst.namespace];
+        if (collection && collection.isDirty()) {
+          server.appvars('session:' + session.token + ':' + inst.namespace, collection.toObject());
+          collection.clearDirty();
+        }
         if (!session.lastAccess) {
           session.lastAccess = Date.now();
           server.appvars('session:last-access:' + session.token, session.lastAccess);
-        };
+        }
       }
     },
     database: {
-      'load': function(token) {
+      'load': function() {
 
       },
-      'save': function(token, data) {
+      'save': function() {
 
       }
     }
@@ -139,34 +143,18 @@ function lib_session() {
       //this.load();
     },
     load: function() {
-      //load session data from data-store
-      var session = getSessionObject(this), data;
-      controllers[this.datastore].load(session);
-      if (session.lastAccess && (!this.oldest || this.oldest < session.lastAccess)) {
-        data = session.data;
-      }
-      if (data) {
-        forEach(Object.keys(data), function(i, namespace) {
-          data[namespace] = newCollection(session, data[namespace]);
-        });
-      } else {
-        data = {};
-      }
-      return session.data = data;
+      var session = getSessionObject(this);
+      return controllers[this.datastore].load(session, this);
     },
     getCollection: function() {
       var session = getSessionObject(this);
-      var namespaces = session.data || this.load();
-      return  namespaces[this.namespace] || (namespaces[this.namespace] = newCollection(session, {}));
+      return session.namespaces && session.namespaces[this.namespace] || this.load();
     },
     reload: function() {
-      //TODO: Only reload for this namespace
       var session = getSessionObject(this);
-      if (session.data) {
-        session.data = null;
-        session.isDirty = false;
+      if (session.namespaces) {
+        session.namespaces[this.namespace] = null;
       }
-      //this.load();
     },
     access: function() {
       var collection = this.getCollection();
@@ -178,8 +166,8 @@ function lib_session() {
     },
     flush: function() {
       var session = getSessionObject(this);
-      if (session.data && session.isDirty) {
-        controllers[this.datastore].save(session);
+      if (session.namespaces) {
+        controllers[this.datastore].save(session, this);
       }
     }
   };
