@@ -4,7 +4,7 @@ bind('ready', function() {
 
   app('/test/session/run', function() {
 
-    module("Pre-requisites");
+    testSuite("Pre-requisites");
 
     test("JSON", function() {
       expect(2);
@@ -40,7 +40,7 @@ bind('ready', function() {
     });
 
 
-    module("Core");
+    testSuite("Core");
 
     test("Session Load", function() {
       expect(8);

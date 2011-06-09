@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<component id="a72dd9da-0e2b-10c8-3e66-6b9916af4844">
+<registration progid="WSC.Test"/>
+
+<public>
+  <method name="create" internalName="createObjectInstance" />
+</public>
+
+<script language="javascript" src="test.js"></script>
+<script language="javascript" src="test/helper.js"></script>
+
+</component>

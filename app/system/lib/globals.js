@@ -3,7 +3,11 @@
  *
  */
 
-//These will become shorthand for Object.vartype, Array.toArray, String.urlEnc, etc
+/**
+ * These will become shorthand for Object.vartype, Array.toArray, String.urlEnc, etc
+ * NOTE: Comment out for compatibility with CommonJS (becomes implied globals)
+ *
+ */
 var vartype, isPrimitive, isSet, toArray, urlEnc, urlDec, htmlEnc, htmlDec;
 
 /**
@@ -32,7 +36,7 @@ function stackTrace(fn) {
   list = list.map(function(fn) {
     return '' + fn;
   });
-  res.die(list.length + '\r\n' + list.join('\r\n\r\n'));
+  res.die(list.join('\r\n\r\n'));
 }
 
 /**
@@ -109,7 +113,7 @@ function fngetset(params, context) {
 /**
  * Extend built-in objects
  *
- * Some of this code is inspired by or based on ECMAScript 5 and/or various open-source JavasScript
+ * Some of these methods are loosely based on ECMAScript 5 and/or various open-source JavasScript
  * libraries.
  *
  */
@@ -603,11 +607,12 @@ function lib_globals() {
 }
 
 /*!
- * Compatibility for v8cgi
+ * Compatibility for CommonJS
  */
 if (typeof exports != 'undefined') {
   exports.forEach = forEach;
   exports.stackTrace = stackTrace;
+  exports.setGlobal = setGlobal;
   exports.getset = getset;
   exports.fngetset = fngetset;
 }

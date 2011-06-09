@@ -131,8 +131,8 @@ function lib_qunit() {
 
   var QUnit = {
 
-    // call on start of module test to prepend name to all tests
-    module: function(name, testEnvironment) {
+    // call on start of test suite to prepend name to all tests
+    testSuite: function(name, testEnvironment) {
       config.currentModule = name;
       config.currentModuleTestEnviroment = testEnvironment;
     },
@@ -274,7 +274,7 @@ function lib_qunit() {
   QUnit.same = QUnit.deepEqual;
 
   // Expose the API as global variables
-  //module, test, expect, ok, equal, notEqual, deepEqual, notDeepEqual, strictEqual, notStrictEqual,
+  //testSuite, test, expect, ok, equal, notEqual, deepEqual, notDeepEqual, strictEqual, notStrictEqual,
   // raises, [equals], [same]
   setGlobal(QUnit);
 

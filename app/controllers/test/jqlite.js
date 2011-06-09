@@ -25,7 +25,7 @@ bind('ready', function() {
 
     reset();
 
-    module("core");
+    testSuite("core");
     test("Basic requirements", function() {
       expect(4);
       ok( Array.prototype.push, "Array.push()" );
@@ -408,7 +408,7 @@ bind('ready', function() {
     });
 
 
-    module("selector");
+    testSuite("selector");
 
     test("element", function() {
       expect(18);
@@ -739,7 +739,7 @@ bind('ready', function() {
     });
 
 
-    module("traversing");
+    testSuite("traversing");
 
     test("find(String)", function() {
       expect(2);
@@ -1063,7 +1063,7 @@ bind('ready', function() {
     });
 
 
-    module("manipulation");
+    testSuite("manipulation");
 
     function bareObj(value) {
       return value;

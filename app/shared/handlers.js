@@ -58,7 +58,7 @@ bind('no-route', function() {
  * modifies this.response which gets passed down the event chain to the last handler.
  *
  */
-bind(':404',function(){
+bind('!404',function(){
 
 //  //Log Requested URL
 //  if (!req.url('path').match(/\/(favicon\.ico|robots\.txt)$/)) {
