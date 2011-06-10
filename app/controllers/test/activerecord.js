@@ -1,30 +1,27 @@
 bind('ready', function() {
 
   app('/test/active-record', function(p) {
-    var out = [];
-    var ActiveRecord = lib('activerecord');
-    ActiveRecord.connect(ActiveRecord.Adapters.Access);
-    var User = ActiveRecord.create('users', {
-      username: '',
-      password: '',
-      post_count: 0,
-      profile: ''
-    }, {
-      getProfileWordCount: function () {
-        return this.get('profile').split(/\s+/).length;
-      }
+    var User = Models.User;
+
+    var simon = User.create({
+      name: "Simon",
+      username: "simon",
+      password: "asdf"
+    });
+    simon.set('password', 'abc');
+    var result = simon.save();
+
+    if (!result) {
+      res.die('Error saving user.', simon.getErrors());
+    }
+
+    User.update(simon.id, {
+      name: 'Simon Sturmer'
     });
 
-    var jessica = User.create({
-      username: "Jessica",
-      password: "rabbit"
-    });
-    jessica.set('password', 'rabbit123');
-    jessica.save();
-    //jessica.destroy();
+    //simon.destroy();
 
-    res.die(jessica);
-    //res.die([req.method(), req.url('path'), req.params()]);
+    res.die(simon);
   });
 
 });

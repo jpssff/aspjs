@@ -8,6 +8,7 @@
 <script runat="server" language="javascript" src="lib/filestore.js"></script>
 <script runat="server" language="javascript" src="lib/globals.js"></script>
 <script runat="server" language="javascript" src="lib/json.js"></script>
+<script runat="server" language="javascript" src="lib/model.js"></script>
 <script runat="server" language="javascript" src="lib/msaccess.js"></script>
 <script runat="server" language="javascript" src="lib/net.js"></script>
 <script runat="server" language="javascript" src="lib/request.js"></script>

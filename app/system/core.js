@@ -142,6 +142,7 @@ function app_init() {
   if (req) {
     req.router = lib('router');
   }
+  app.model = lib('model');
   app.util = lib('util');
   res.clear();
   trigger('ready');

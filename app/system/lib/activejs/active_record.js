@@ -15,7 +15,7 @@ function lib_activerecord() {
     Models: {},
     ClassMethods: {},
     InstanceMethods: {},
-    create: function create(options, fields, methods) {
+    create: function(options, fields, methods) {
       if (!ActiveRecord.connection) throw ActiveRecord.Errors.ConnectionNotEstablished.getErrorString();
       if (typeof options === "string") options = {
         tableName: options
@@ -25,7 +25,7 @@ function lib_activerecord() {
         var model_name = ActiveSupport.camelize(ActiveSupport.Inflector.singularize(options.tableName) || options.tableName);
         options.modelName = model_name.charAt(0).toUpperCase() + model_name.substring(1)
       }
-      model = ActiveRecord.Models[options.modelName] = function initialize(data) {
+      model = ActiveRecord.Models[options.modelName] = function(data) {
         this._object = {};
         for (var key in data) this.set(key, data[key], true);
         this._errors = [];
@@ -85,12 +85,12 @@ function lib_activerecord() {
   ActiveEvent.extend(ActiveRecord);
   ActiveRecord.eventNames = ["afterInitialize", "afterFind", "beforeSave", "afterSave", "beforeCreate", "afterCreate", "beforeDestroy", "afterDestroy"];
   (function () {
-    for (var i = 0; i < ActiveRecord.eventNames.length; ++i) ActiveRecord.ClassMethods[ActiveRecord.eventNames[i]] = ActiveRecord.InstanceMethods[ActiveRecord.eventNames[i]] = ActiveSupport.curry(function event_name_delegator(event_name, observer) {
+    for (var i = 0; i < ActiveRecord.eventNames.length; ++i) ActiveRecord.ClassMethods[ActiveRecord.eventNames[i]] = ActiveRecord.InstanceMethods[ActiveRecord.eventNames[i]] = ActiveSupport.curry(function(event_name, observer) {
       return this.observe(event_name, observer)
     }, ActiveRecord.eventNames[i])
   })();
   ActiveRecord.old_observe = ActiveRecord.observe;
-  ActiveRecord.observe = function observe(event_name, observer) {
+  ActiveRecord.observe = function(event_name, observer) {
     for (var i = 0; i < ActiveRecord.eventNames.length; ++i) if (ActiveRecord.eventNames[i] === event_name) {
       var observers = [];
       var model_observer;
@@ -104,7 +104,7 @@ function lib_activerecord() {
     return ActiveRecord.old_observe(event_name, observer)
   };
   (function () {
-    for (var i = 0; i < ActiveRecord.eventNames.length; ++i) ActiveRecord[ActiveRecord.eventNames[i]] = ActiveSupport.curry(function event_name_delegator(event_name, observer) {
+    for (var i = 0; i < ActiveRecord.eventNames.length; ++i) ActiveRecord[ActiveRecord.eventNames[i]] = ActiveSupport.curry(function(event_name, observer) {
       ActiveRecord.observe(event_name, observer)
     }, ActiveRecord.eventNames[i])
   })();
@@ -115,38 +115,38 @@ function lib_activerecord() {
   };
   ActiveRecord.Errors = Errors;
   ActiveSupport.extend(ActiveRecord.InstanceMethods, {
-    set: function set(key, value, suppress_notifications) {
+    set: function(key, value, suppress_notifications) {
       if (typeof this[key] !== "function") this[key] = value;
       this._object[key] = value;
       if (!suppress_notifications) if (this._observers && "set" in this._observers) this.notify("set", key, value)
     },
-    get: function get(key) {
+    get: function(key) {
       return this._object[key]
     },
-    toObject: function toObject(callback) {
+    toObject: function(callback) {
       var response = ActiveSupport.clone(this._object);
       if (callback) response = callback(response);
       return response
     },
-    keys: function keys() {
+    keys: function() {
       var keys_array = [];
       for (var key_name in this._object) keys_array.push(key_name);
       return keys_array
     },
-    values: function values() {
+    values: function() {
       var values_array = [];
       for (var key_name in this._object) values_array.push(this._object[key_name]);
       return values_array
     },
-    updateAttribute: function updateAttribute(key, value) {
+    updateAttribute: function(key, value) {
       this.set(key, value);
       return this.save()
     },
-    updateAttributes: function updateAttributes(attributes) {
+    updateAttributes: function(attributes) {
       for (var key in attributes) this.set(key, attributes[key]);
       return this.save()
     },
-    reload: function reload() {
+    reload: function() {
       if (this._id === undefined) return false;
       var record = this.constructor.get(this._id);
       if (!record) return false;
@@ -155,7 +155,7 @@ function lib_activerecord() {
       for (var key in raw) this.set(key, raw[key]);
       return true
     },
-    save: function save(force_created_mode) {
+    save: function(force_created_mode) {
       this._validate();
       if (!this.isValid()) return false;
       for (var key in this.constructor.fields) if (!this.constructor.fields[key].primaryKey) this.set(key, ActiveRecord.connection.fieldIn(this.constructor.fields[key], this.get(key)), true);
@@ -179,7 +179,7 @@ function lib_activerecord() {
       this.notify("afterSave");
       return this
     },
-    destroy: function destroy() {
+    destroy: function() {
       if (this._id === undefined) return false;
       if (this.notify("beforeDestroy") === false) return false;
       ActiveRecord.connection.deleteEntity(this.tableName, this.constructor.primaryKeyName, this._id);
@@ -187,15 +187,15 @@ function lib_activerecord() {
       if (this.notify("afterDestroy") === false) return false;
       return true
     },
-    toSerializableObject: function toSerializableObject(callback) {
+    toSerializableObject: function(callback) {
       return this.toObject(callback)
     },
-    toJSON: function toJSON(object_to_inject) {
+    toJSON: function(object_to_inject) {
       return ActiveSupport.extend(this.toSerializableObject(), object_to_inject || {})
     }
   });
   ActiveSupport.extend(ActiveRecord.ClassMethods, {
-    find: function find(params) {
+    find: function(params) {
       var result;
       if (params === 0) return false;
       if (!params) params = {};
@@ -214,7 +214,7 @@ function lib_activerecord() {
           result = ActiveRecord.connection.findEntitiesById(this.tableName, this.primaryKeyName, ids)
         } else result = ActiveRecord.connection.findEntities(this.tableName, params);
         var response = [];
-        if (result) result.iterate(ActiveSupport.bind(function result_iterator(row) {
+        if (result) result.iterate(ActiveSupport.bind(function(row) {
           response.push(this.build(row))
         }, this));
         this.resultSetFromArray(response, params);
@@ -222,7 +222,7 @@ function lib_activerecord() {
         return response
       }
     },
-    destroy: function destroy(id) {
+    destroy: function(id) {
       if (id == "all") {
         var instances = this.find({
           all: true
@@ -244,7 +244,7 @@ function lib_activerecord() {
         return instance.destroy()
       }
     },
-    build: function build(data) {
+    build: function(data) {
       if (ActiveSupport.isArray(data)) {
         var records = [];
         for (var i = 0; i < data.length; ++i) {
@@ -261,7 +261,7 @@ function lib_activerecord() {
         return record
       }
     },
-    create: function create(data) {
+    create: function(data) {
       if (ActiveSupport.isArray(data)) {
         var records = [];
         for (var i = 0; i < data.length; ++i) {
@@ -276,7 +276,7 @@ function lib_activerecord() {
         return record
       }
     },
-    update: function update(id, attributes) {
+    update: function(id, attributes) {
       if (ActiveSupport.isArray(id)) {
         var attributes_is_array = ActiveSupport.isArray(attributes);
         var results = [];
@@ -293,10 +293,10 @@ function lib_activerecord() {
         return record
       }
     },
-    updateAll: function updateAll(updates, conditions) {
+    updateAll: function(updates, conditions) {
       ActiveRecord.connection.updateMultitpleEntities(this.tableName, updates, conditions)
     },
-    resultSetFromArray: function resultSetFromArray(result_set, params) {
+    resultSetFromArray: function(result_set, params) {
       if (!params) params = {};
       for (var method_name in ResultSet.InstanceMethods) result_set[method_name] = ActiveSupport.curry(ResultSet.InstanceMethods[method_name], result_set, params, this);
       if (params.synchronize) Synchronization.synchronizeResultSet(this, params, result_set);
@@ -304,38 +304,38 @@ function lib_activerecord() {
     }
   });
   ActiveSupport.extend(ActiveRecord.ClassMethods, {
-    processCalculationParams: function processCalculationParams(operation, params) {
+    processCalculationParams: function(operation, params) {
       if (!params) params = {};
       if (typeof params === "string") params = {
         where: params
       };
       return params
     },
-    performCalculation: function performCalculation(operation, params, sql_fragment) {
+    performCalculation: function(operation, params, sql_fragment) {
       if (params && params.synchronize) return Synchronization.synchronizeCalculation(this, operation, params);
       else return ActiveRecord.connection.calculateEntities(this.tableName, this.processCalculationParams(operation, params), sql_fragment)
     },
-    count: function count(params) {
+    count: function(params) {
       return this.performCalculation("count", params, "COUNT(*)")
     },
-    average: function average(column_name, params) {
+    average: function(column_name, params) {
       return this.performCalculation("average", params, "AVG(" + column_name + ")")
     },
-    max: function max(column_name, params) {
+    max: function(column_name, params) {
       return this.performCalculation("max", params, "MAX(" + column_name + ")")
     },
-    min: function min(column_name, params) {
+    min: function(column_name, params) {
       return this.performCalculation("min", params, "MIN(" + column_name + ")")
     },
-    sum: function sum(column_name, params) {
+    sum: function(column_name, params) {
       return this.performCalculation("sum", params, "SUM(" + column_name + ")")
     },
-    first: function first() {
+    first: function() {
       return this.find({
         first: true
       })
     },
-    last: function last() {
+    last: function() {
       return this.find({
         first: true,
         order: this.primaryKeyName + " DESC"
@@ -345,7 +345,7 @@ function lib_activerecord() {
   var Adapters = {};
   ActiveRecord.adapters = [];
   ActiveRecord.connection = null;
-  ActiveRecord.connect = function connect(adapter) {
+  ActiveRecord.connect = function(adapter) {
     if (!adapter) {
       var connection = Adapters.Auto.connect.apply(Adapters.Auto, ActiveSupport.arrayFrom(arguments).slice(1));
       if (connection) ActiveRecord.connection = connection;
@@ -358,15 +358,15 @@ function lib_activerecord() {
     ActiveEvent.extend(ActiveRecord.connection);
     if (!ActiveRecord.connection.preventConnectedNotification) ActiveRecord.notify("connected")
   };
-  ActiveRecord.execute = function execute() {
+  ActiveRecord.execute = function() {
     if (!ActiveRecord.connection) throw ActiveRecord.Errors.ConnectionNotEstablished.getErrorString();
     return ActiveRecord.connection.executeSQL.apply(ActiveRecord.connection, arguments)
   };
-  ActiveRecord.escape = function escape(argument, supress_quotes) {
+  ActiveRecord.escape = function(argument, supress_quotes) {
     var quote = supress_quotes ? "" : '"';
     return typeof argument == "number" ? argument : quote + String(argument).replace(/\"/g, '\\"').replace(/\\/g, "\\\\").replace(/\0/g, "\\0") + quote
   };
-  ActiveRecord.transaction = function transaction(proceed, error) {
+  ActiveRecord.transaction = function(proceed, error) {
     try {
       ActiveRecord.connection.transaction(proceed)
     } catch (e) {
@@ -375,16 +375,22 @@ function lib_activerecord() {
     }
   };
   ActiveRecord.ClassMethods.transaction = ActiveRecord.transaction;
-  Adapters.defaultResultSetIterator = function defaultResultSetIterator(iterator) {
-    if (typeof iterator === "number") if (this.rows[iterator]) return ActiveSupport.clone(this.rows[iterator]);
-    else return false;
-    else for (var i = 0; i < this.rows.length; ++i) {
-      var row = ActiveSupport.clone(this.rows[i]);
-      iterator(row)
+  Adapters.defaultResultSetIterator = function(iterator) {
+    if (typeof iterator === "number") {
+      if (this[iterator]) {
+        return ActiveSupport.clone(this[iterator]);
+      } else {
+        return false;
+      }
+    } else {
+      for (var i = 0; i < this.length; ++i) {
+        var row = ActiveSupport.clone(this[i]);
+        iterator(row)
+      }
     }
   };
   Adapters.InstanceMethods = {
-    setValueFromFieldIfValueIsNull: function setValueFromFieldIfValueIsNull(field, value) {
+    setValueFromFieldIfValueIsNull: function(field, value) {
       if (value === null || typeof value === "undefined") if (Migrations.objectIsFieldDefinition(field)) {
         var default_value = this.getDefaultValueFromFieldDefinition(field);
         if (typeof default_value === "undefined") throw Errors.InvalidFieldType.getErrorString(field ? field.type || "[object]" : "false");
@@ -392,22 +398,22 @@ function lib_activerecord() {
       } else return field;
       return value
     },
-    getColumnDefinitionFragmentFromKeyAndColumns: function getColumnDefinitionFragmentFromKeyAndColumns(key, columns) {
+    getColumnDefinitionFragmentFromKeyAndColumns: function(key, columns) {
       return this.quoteIdentifier(key) + (typeof columns[key] === "object" && typeof columns[key].type !== "undefined" ? columns[key].type : this.getDefaultColumnDefinitionFragmentFromValue(columns[key]))
     },
-    getDefaultColumnDefinitionFragmentFromValue: function getDefaultColumnDefinitionFragmentFromValue(value) {
+    getDefaultColumnDefinitionFragmentFromValue: function(value) {
       if (typeof value === "string") return "VARCHAR(255)";
       if (typeof value === "number") return "INT";
       if (typeof value == "boolean") return "TINYINT(1)";
       return "TEXT"
     },
-    getDefaultValueFromFieldDefinition: function getDefaultValueFromFieldDefinition(field) {
+    getDefaultValueFromFieldDefinition: function(field) {
       return field.value ? field.value : Migrations.fieldTypesWithDefaultValues[field.type ? field.type.replace(/\(.*/g, "").toLowerCase() : ""]
     },
-    quoteIdentifier: function quoteIdentifier(name) {
+    quoteIdentifier: function(name) {
       return '"' + name + '"'
     },
-    log: function log() {
+    log: function() {
       if (!ActiveRecord.logging) return;
       if (arguments[0]) arguments[0] = "ActiveRecord: " + arguments[0];
       return ActiveSupport.log.apply(ActiveSupport, arguments || {})
@@ -416,7 +422,7 @@ function lib_activerecord() {
   ActiveRecord.Adapters = Adapters;
   Adapters.SQL = {
     schemaLess: false,
-    insertEntity: function insertEntity(table, primary_key_name, data) {
+    insertEntity: function(table, primary_key_name, data) {
       var keys = ActiveSupport.keys(data).sort();
       var values = [];
       var args = [];
@@ -434,7 +440,7 @@ function lib_activerecord() {
       this.notify("created", table, id, data_with_id);
       return response
     },
-    updateMultitpleEntities: function updateMultitpleEntities(table, updates, conditions) {
+    updateMultitpleEntities: function(table, updates, conditions) {
       var args = [];
       if (typeof updates !== "string") {
         var values = [];
@@ -448,7 +454,7 @@ function lib_activerecord() {
       args.unshift("UPDATE " + table + " SET " + updates + this.buildWhereSQLFragment(conditions, args));
       return this.executeSQL.apply(this, args)
     },
-    updateEntity: function updateEntity(table, primary_key_name, id, data) {
+    updateEntity: function(table, primary_key_name, id, data) {
       var keys = ActiveSupport.keys(data).sort();
       var args = [];
       var values = [];
@@ -463,22 +469,22 @@ function lib_activerecord() {
       this.notify("updated", table, id, data);
       return response
     },
-    calculateEntities: function calculateEntities(table, params, operation) {
-      var process_count_query_result = function process_count_query_result(response) {
+    calculateEntities: function(table, params, operation) {
+      var process_count_query_result = function(response) {
           if (!response) return 0;
           return parseInt(ActiveRecord.connection.iterableFromResultSet(response).iterate(0)["calculation"], 10)
           };
       var args = this.buildSQLArguments(table, params, operation);
       return process_count_query_result(this.executeSQL.apply(this, args))
     },
-    deleteEntity: function deleteEntity(table, primary_key_name, id) {
+    deleteEntity: function(table, primary_key_name, id) {
       var args, response;
       if (id === "all") {
         args = ["DELETE FROM " + table];
         var ids = [];
         var ids_result_set = this.executeSQL("SELECT " + this.quoteIdentifier(primary_key_name) + " FROM " + table);
         if (!ids_result_set) return null;
-        this.iterableFromResultSet(ids_result_set).iterate(function id_collector_iterator(row) {
+        this.iterableFromResultSet(ids_result_set).iterate(function(row) {
           ids.push(row[primary_key_name])
         });
         response = this.executeSQL.apply(this, args);
@@ -491,12 +497,12 @@ function lib_activerecord() {
         return response
       }
     },
-    findEntitiesById: function findEntityById(table, primary_key_name, ids) {
+    findEntitiesById: function(table, primary_key_name, ids) {
       var response = this.executeSQL.apply(this, ["SELECT * FROM " + table + " WHERE " + this.quoteIdentifier(primary_key_name) + " IN (" + ids.join(",") + ")"]);
       if (!response) return false;
       else return ActiveRecord.connection.iterableFromResultSet(response)
     },
-    findEntities: function findEntities(table, params) {
+    findEntities: function(table, params) {
       var args;
       if (typeof table === "string" && !table.match(/^\d+$/) && typeof params != "object") args = arguments;
       else args = this.buildSQLArguments(table, params, false);
@@ -513,13 +519,13 @@ function lib_activerecord() {
         } else return iterable_response
       }
     },
-    buildSQLArguments: function buildSQLArguments(table, params, calculation) {
+    buildSQLArguments: function(table, params, calculation) {
       var args = [];
       var sql = "SELECT " + (calculation ? calculation + " AS calculation" : params.select ? params.select.join(",") : "*") + " FROM " + table + this.buildWhereSQLFragment(params.where, args) + (params.joins ? " " + params.joins : "") + (params.group ? " GROUP BY " + params.group : "") + (params.order ? " ORDER BY " + params.order : "") + (params.offset && params.limit ? " LIMIT " + params.offset + "," + params.limit : "") + (!params.offset && params.limit ? " LIMIT " + params.limit : "");
       args.unshift(sql);
       return args
     },
-    buildWhereSQLFragment: function buildWhereSQLFragment(fragment, args) {
+    buildWhereSQLFragment: function(fragment, args) {
       var where, keys, i;
       if (fragment && ActiveSupport.isArray(fragment)) {
         for (i = 1; i < fragment.length; ++i) args.push(fragment[i]);
@@ -540,18 +546,18 @@ function lib_activerecord() {
       else where = "";
       return where
     },
-    dropTable: function dropTable(table_name) {
+    dropTable: function(table_name) {
       return this.executeSQL("DROP TABLE IF EXISTS " + table_name)
     },
-    addIndex: function addIndex(table_name, column_names, options) {},
-    renameTable: function renameTable(old_table_name, new_table_name) {
+    addIndex: function(table_name, column_names, options) {},
+    renameTable: function(old_table_name, new_table_name) {
       this.executeSQL("ALTER TABLE " + old_table_name + " RENAME TO " + new_table_name)
     },
-    removeIndex: function removeIndex(table_name, index_name) {},
-    addColumn: function addColumn(table_name, column_name, data_type) {
+    removeIndex: function(table_name, index_name) {},
+    addColumn: function(table_name, column_name, data_type) {
       return this.executeSQL("ALTER TABLE " + table_name + " ADD COLUMN " + this.getColumnDefinitionFragmentFromKeyAndColumns(key, columns))
     },
-    fieldIn: function fieldIn(field, value) {
+    fieldIn: function(field, value) {
       if (value && value instanceof Date) return ActiveSupport.dateFormat(value, "yyyy-mm-dd HH:MM:ss");
       if (Migrations.objectIsFieldDefinition(field)) field = this.getDefaultValueFromFieldDefinition(field);
       value = this.setValueFromFieldIfValueIsNull(field, value);
@@ -560,7 +566,7 @@ function lib_activerecord() {
       if (typeof field === "boolean") return String(parseInt(Number(value), 10));
       if (typeof value === "object" && !Migrations.objectIsFieldDefinition(field)) return ActiveSupport.JSON.stringify(value)
     },
-    fieldOut: function fieldOut(field, value) {
+    fieldOut: function(field, value) {
       if (Migrations.objectIsFieldDefinition(field)) {
         if (typeof value == "string" && /date/.test(field.type.toLowerCase())) return ActiveSupport.dateFromDateTime(value);
         field = this.getDefaultValueFromFieldDefinition(field)
@@ -579,7 +585,7 @@ function lib_activerecord() {
       if ((typeof value === "string" || typeof value === "object") && typeof field === "object" && (typeof field.length !== "undefined" || typeof field.type === "undefined")) if (typeof value === "string") return ActiveSupport.JSON.parse(value);
       else return value
     },
-    transaction: function transaction(proceed) {
+    transaction: function(proceed) {
       try {
         ActiveRecord.connection.executeSQL("BEGIN");
         proceed();
@@ -591,7 +597,7 @@ function lib_activerecord() {
     }
   };
   Adapters.Auto = {};
-  Adapters.Auto.connect = function connect() {
+  Adapters.Auto.connect = function() {
     var defaultAdapter;
     for (var n in Adapters) {
       if (Adapters.hasOwnProperty(n) && Adapters[n] && Adapters[n].isDefault) defaultAdapter = Adapters[n];
@@ -675,7 +681,7 @@ function lib_activerecord() {
     this.typeName = null;
     this.text = text
   }
-  Lexeme.prototype.toString = function toString() {
+  Lexeme.prototype.toString = function() {
     if (this.typeName) return "[" + this.typeName + "]~" + this.text + "~";
     else return "[" + this.type + "]~" + this.text + "~"
   };
@@ -683,13 +689,13 @@ function lib_activerecord() {
   function WhereLexer() {
     this.setSource(null)
   }
-  WhereLexer.prototype.setSource = function setSource(source) {
+  WhereLexer.prototype.setSource = function(source) {
     this.source = source;
     this.offset = 0;
     this.length = source !== null ? source.length : 0;
     currentLexeme = null
   };
-  WhereLexer.prototype.advance = function advance() {
+  WhereLexer.prototype.advance = function() {
     var inWhitespace = true;
     var result = null;
     while (inWhitespace) {
@@ -727,7 +733,7 @@ function lib_activerecord() {
     this.operator = operator;
     this.rhs = rhs
   }
-  BinaryOperatorNode.prototype.execute = function execute(row, functionProvider) {
+  BinaryOperatorNode.prototype.execute = function(row, functionProvider) {
     var result = null;
     var lhs = this.lhs.execute(row, functionProvider);
     if (this.operator == IN) {
@@ -776,7 +782,7 @@ function lib_activerecord() {
   function IdentifierNode(identifier) {
     this.identifier = identifier
   }
-  IdentifierNode.prototype.execute = function execute(row, functionProvider) {
+  IdentifierNode.prototype.execute = function(row, functionProvider) {
     return row[this.identifier]
   };
 
@@ -784,7 +790,7 @@ function lib_activerecord() {
     this.name = name;
     this.args = args
   }
-  FunctionNode.prototype.execute = function execute(row, functionProvider) {
+  FunctionNode.prototype.execute = function(row, functionProvider) {
     var args = new Array(this.args.length);
     for (var i = 0; i < this.args.length; i++) args[i] = this.args[i].execute(row, functionProvider);
     return functionProvider(this.name, row, args)
@@ -793,13 +799,13 @@ function lib_activerecord() {
   function ScalarNode(value) {
     this.value = value
   }
-  ScalarNode.prototype.execute = function execute(row, functionProvider) {
+  ScalarNode.prototype.execute = function(row, functionProvider) {
     return this.value
   };
-  WhereParser = function WhereParser() {
+  WhereParser = function() {
     this._lexer = new WhereLexer
   };
-  WhereParser.prototype.parse = function parse(source) {
+  WhereParser.prototype.parse = function(source) {
     var result = null;
     currentLexeme = null;
     this._lexer.setSource(source);
@@ -818,7 +824,7 @@ function lib_activerecord() {
     }
     return result
   };
-  WhereParser.prototype.parseInExpression = function parseInExpression() {
+  WhereParser.prototype.parseInExpression = function() {
     var result = this.parseOrExpression();
     while (currentLexeme !== null && currentLexeme.type === IN) {
       this._lexer.advance();
@@ -838,7 +844,7 @@ function lib_activerecord() {
     }
     return result
   };
-  WhereParser.prototype.parseOrExpression = function parseOrExpression() {
+  WhereParser.prototype.parseOrExpression = function() {
     var result = this.parseAndExpression();
     while (currentLexeme !== null && currentLexeme.type === OR) {
       this._lexer.advance();
@@ -847,7 +853,7 @@ function lib_activerecord() {
     }
     return result
   };
-  WhereParser.prototype.parseAndExpression = function parseAndExpression() {
+  WhereParser.prototype.parseAndExpression = function() {
     var result = this.parseEqualityExpression();
     while (currentLexeme !== null && currentLexeme.type === AND) {
       this._lexer.advance();
@@ -856,7 +862,7 @@ function lib_activerecord() {
     }
     return result
   };
-  WhereParser.prototype.parseEqualityExpression = function parseEqualityExpression() {
+  WhereParser.prototype.parseEqualityExpression = function() {
     var result = this.parseRelationalExpression();
     if (currentLexeme !== null) {
       var type = currentLexeme.type;
@@ -888,7 +894,7 @@ function lib_activerecord() {
     }
     return result
   };
-  WhereParser.prototype.parseMemberExpression = function parseMemberExpression() {
+  WhereParser.prototype.parseMemberExpression = function() {
     var result = null;
     if (currentLexeme !== null) switch (currentLexeme.type) {
     case IDENTIFIER:
@@ -936,7 +942,7 @@ function lib_activerecord() {
   };
   ActiveRecord.WhereParser = WhereParser;
   var Finders = {
-    mergeOptions: function mergeOptions(field_name, value, options) {
+    mergeOptions: function(field_name, value, options) {
       if (!options) options = {};
       options = ActiveSupport.clone(options);
       if (options.where) options.where[field_name] = value;
@@ -946,15 +952,15 @@ function lib_activerecord() {
       }
       return options
     },
-    generateFindByField: function generateFindByField(klass, field_name) {
-      klass["findBy" + ActiveSupport.camelize(field_name, true)] = ActiveSupport.curry(function generated_find_by_field_delegator(klass, field_name, value, options) {
+    generateFindByField: function(klass, field_name) {
+      klass["findBy" + ActiveSupport.camelize(field_name, true)] = ActiveSupport.curry(function(klass, field_name, value, options) {
         return klass.find(ActiveSupport.extend(Finders.mergeOptions(field_name, value, options), {
           first: true
         }))
       }, klass, field_name)
     },
-    generateFindAllByField: function generateFindAllByField(klass, field_name) {
-      klass["findAllBy" + ActiveSupport.camelize(field_name, true)] = ActiveSupport.curry(function generated_find_all_by_field_delegator(klass, field_name, value, options) {
+    generateFindAllByField: function(klass, field_name) {
+      klass["findAllBy" + ActiveSupport.camelize(field_name, true)] = ActiveSupport.curry(function(klass, field_name, value, options) {
         return klass.find(ActiveSupport.extend(Finders.mergeOptions(field_name, value, options), {
           all: true
         }))
@@ -963,7 +969,7 @@ function lib_activerecord() {
   };
   ActiveRecord.Finders = Finders;
   var Indicies = {
-    initializeIndicies: function initializeIndicies(storage) {
+    initializeIndicies: function(storage) {
       var model_name, model, table_name, index_name, index, index_callbacks, id;
       for (model_name in ActiveRecord.Models) {
         model = ActiveRecord.Models[model_name];
@@ -978,15 +984,15 @@ function lib_activerecord() {
       }
     }
   };
-  ActiveRecord.ClassMethods.addIndex = function addIndex(name, index, callbacks) {
+  ActiveRecord.ClassMethods.addIndex = function(name, index, callbacks) {
     if (!callbacks) if (typeof index == "string") {
       var key_name = index;
       index = {};
       callbacks = {
-        afterSave: function afterSaveIndexCallback(index, item) {
+        afterSave: function(index, item) {
           index[item[key_name]] = item.id
         },
-        afterDestroy: function afterDestroyIndexCallback(index, item) {
+        afterDestroy: function(index, item) {
           delete index[item[key_name]]
         }
       }
@@ -1000,14 +1006,14 @@ function lib_activerecord() {
     this.indexed[name] = index || {};
     this.indexingCallbacks[name] = callbacks;
     this.indexingCallbackObservers[name] = {};
-    this.indexingCallbackObservers[name].afterSave = this.observe("afterSave", ActiveSupport.bind(function afterSaveIndexObserver(instance) {
+    this.indexingCallbackObservers[name].afterSave = this.observe("afterSave", ActiveSupport.bind(function(instance) {
       callbacks.afterSave(this.indexed[name], instance.toObject())
     }, this));
-    this.indexingCallbackObservers[name].afterDestroy = this.observe("afterDestroy", ActiveSupport.bind(function afterDestroyIndexObserver(instance) {
+    this.indexingCallbackObservers[name].afterDestroy = this.observe("afterDestroy", ActiveSupport.bind(function(instance) {
       callbacks.afterDestroy(this.indexed[name], instance.toObject())
     }, this))
   };
-  ActiveRecord.ClassMethods.removeIndex = function removeIndex(name) {
+  ActiveRecord.ClassMethods.removeIndex = function(name) {
     this.stopObserving("afterSave", this.indexingCallbackObservers[name].afterSave);
     this.stopObserving("afterDestroy", this.indexingCallbackObservers[name].afterDestroy);
     delete this.indexingCallbacks[name];
@@ -1016,19 +1022,19 @@ function lib_activerecord() {
   ActiveRecord.Indicies = Indicies;
   var ResultSet = {};
   ResultSet.InstanceMethods = {
-    reload: function reload(result_set, params, model) {
+    reload: function(result_set, params, model) {
       result_set.length = 0;
       var new_response = model.find(ActiveSupport.extend(ActiveSupport.clone(params), {
         synchronize: false
       }));
       for (var i = 0; i < new_response.length; ++i) result_set.push(new_response[i])
     },
-    toArray: function toArray(result_set, params, model) {
+    toArray: function(result_set, params, model) {
       var items = [];
       for (var i = 0; i < result_set.length; ++i) items.push(result_set[i].toObject());
       return items
     },
-    toJSON: function toJSON(result_set, params, model) {
+    toJSON: function(result_set, params, model) {
       var items = [];
       for (var i = 0; i < result_set.length; ++i) items.push(result_set[i].toSerializableObject());
       return items
@@ -1048,7 +1054,7 @@ function lib_activerecord() {
     }
   };
   ActiveRecord.Relationships = Relationships;
-  ActiveRecord.ClassMethods.hasOne = function hasOne(related_model_name, options) {
+  ActiveRecord.ClassMethods.hasOne = function(related_model_name, options) {
     this.relationships.push(["hasOne", related_model_name, options]);
     if (related_model_name && related_model_name.modelName) related_model_name = related_model_name.modelName;
     if (!options) options = {};
@@ -1057,27 +1063,27 @@ function lib_activerecord() {
     var foreign_key = Relationships.normalizeForeignKey(options.foreignKey, Relationships.normalizeModelName(related_model_name));
     var class_methods = {};
     var instance_methods = {};
-    instance_methods["get" + relationship_name] = ActiveSupport.curry(function getRelated(related_model_name, foreign_key) {
+    instance_methods["get" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key) {
       var id = this.get(foreign_key);
       if (id) return ActiveRecord.Models[related_model_name].get(id);
       else return false
     }, related_model_name, foreign_key);
-    class_methods["build" + relationship_name] = instance_methods["build" + relationship_name] = ActiveSupport.curry(function buildRelated(related_model_name, foreign_key, params) {
+    class_methods["build" + relationship_name] = instance_methods["build" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key, params) {
       return ActiveRecord.Models[related_model_name].build(params || {})
     }, related_model_name, foreign_key);
-    instance_methods["create" + relationship_name] = ActiveSupport.curry(function createRelated(related_model_name, foreign_key, params) {
+    instance_methods["create" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key, params) {
       var record = ActiveRecord.Models[related_model_name].create(params || {});
       if (this.get(this.constructor.primaryKeyName)) this.updateAttribute(foreign_key, record.get(record.constructor.primaryKeyName));
       return record
     }, related_model_name, foreign_key);
     ActiveSupport.extend(this.prototype, instance_methods);
     ActiveSupport.extend(this, class_methods);
-    if (options.dependent) this.observe("afterDestroy", function destroyRelatedDependent(record) {
+    if (options.dependent) this.observe("afterDestroy", function(record) {
       var child = record["get" + relationship_name]();
       if (child) child.destroy()
     })
   };
-  ActiveRecord.ClassMethods.hasMany = function hasMany(related_model_name, options) {
+  ActiveRecord.ClassMethods.hasMany = function(related_model_name, options) {
     this.relationships.push(["hasMany", related_model_name, options]);
     if (related_model_name && related_model_name.modelName) related_model_name = related_model_name.modelName;
     if (!options) options = {};
@@ -1089,26 +1095,26 @@ function lib_activerecord() {
     var instance_methods = {};
     if (options.through) {
       var through_model_name = Relationships.normalizeModelName(options.through);
-      instance_methods["get" + relationship_name + "List"] = ActiveSupport.curry(function getRelatedListForThrough(through_model_name, related_model_name, foreign_key, params) {
+      instance_methods["get" + relationship_name + "List"] = ActiveSupport.curry(function(through_model_name, related_model_name, foreign_key, params) {
         var related_list = this["get" + through_model_name + "List"]();
         var ids = [];
         var response = [];
         for (var i = 0; i < related_list.length; ++i) response.push(related_list[i]["get" + related_model_name]());
         return response
       }, through_model_name, related_model_name, foreign_key);
-      instance_methods["get" + relationship_name + "Count"] = ActiveSupport.curry(function getRelatedCountForThrough(through_model_name, related_model_name, foreign_key, params) {
+      instance_methods["get" + relationship_name + "Count"] = ActiveSupport.curry(function(through_model_name, related_model_name, foreign_key, params) {
         if (!params) params = {};
         if (!params.where) params.where = {};
         params.where[foreign_key] = this.get(this.constructor.primaryKeyName);
         return ActiveRecord.Models[through_model_name].count(params)
       }, through_model_name, related_model_name, foreign_key)
     } else {
-      instance_methods["destroy" + relationship_name] = class_methods["destroy" + relationship_name] = ActiveSupport.curry(function destroyRelated(related_model_name, foreign_key, params) {
+      instance_methods["destroy" + relationship_name] = class_methods["destroy" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key, params) {
         var record = ActiveRecord.Models[related_model_name].find(params && typeof params.get === "function" ? params.get(params.constructor.primaryKeyName) : params);
         if (record) return record.destroy();
         else return false
       }, related_model_name, foreign_key);
-      instance_methods["get" + relationship_name + "List"] = ActiveSupport.curry(function getRelatedList(related_model_name, foreign_key, params) {
+      instance_methods["get" + relationship_name + "List"] = ActiveSupport.curry(function(related_model_name, foreign_key, params) {
         var id = this.get(this.constructor.primaryKeyName);
         if (!id) return this.constructor.resultSetFromArray([]);
         if (!params) params = {};
@@ -1119,7 +1125,7 @@ function lib_activerecord() {
         params.all = true;
         return ActiveRecord.Models[related_model_name].find(params)
       }, related_model_name, foreign_key);
-      instance_methods["get" + relationship_name + "Count"] = ActiveSupport.curry(function getRelatedCount(related_model_name, foreign_key, params) {
+      instance_methods["get" + relationship_name + "Count"] = ActiveSupport.curry(function(related_model_name, foreign_key, params) {
         var id = this.get(this.constructor.primaryKeyName);
         if (!id) return 0;
         if (!params) params = {};
@@ -1127,13 +1133,13 @@ function lib_activerecord() {
         params.where[foreign_key] = id;
         return ActiveRecord.Models[related_model_name].count(params)
       }, related_model_name, foreign_key);
-      instance_methods["build" + relationship_name] = ActiveSupport.curry(function buildRelated(related_model_name, foreign_key, params) {
+      instance_methods["build" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key, params) {
         var id = this.get(this.constructor.primaryKeyName);
         if (!params) params = {};
         params[foreign_key] = id;
         return ActiveRecord.Models[related_model_name].build(params)
       }, related_model_name, foreign_key);
-      instance_methods["create" + relationship_name] = ActiveSupport.curry(function createRelated(related_model_name, foreign_key, params) {
+      instance_methods["create" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key, params) {
         var id = this.get(this.constructor.primaryKeyName);
         if (!params) params = {};
         params[foreign_key] = id;
@@ -1142,13 +1148,13 @@ function lib_activerecord() {
     }
     ActiveSupport.extend(this.prototype, instance_methods);
     ActiveSupport.extend(this, class_methods);
-    if (options.dependent) this.observe("afterDestroy", function destroyDependentChildren(record) {
+    if (options.dependent) this.observe("afterDestroy", function(record) {
       var list = record["get" + relationship_name + "List"]();
       ActiveRecord.connection.log("Relationships.hasMany destroy " + list.length + " dependent " + related_model_name + " children of " + record.modelName);
       for (var i = 0; i < list.length; ++i) list[i].destroy()
     })
   };
-  ActiveRecord.ClassMethods.belongsTo = function belongsTo(related_model_name, options) {
+  ActiveRecord.ClassMethods.belongsTo = function(related_model_name, options) {
     this.relationships.push(["belongsTo", related_model_name, options]);
     if (related_model_name && related_model_name.modelName) related_model_name = related_model_name.modelName;
     if (!options) options = {};
@@ -1157,17 +1163,17 @@ function lib_activerecord() {
     var foreign_key = Relationships.normalizeForeignKey(options.foreignKey, related_model_name);
     var class_methods = {};
     var instance_methods = {};
-    instance_methods["get" + relationship_name] = ActiveSupport.curry(function getRelated(related_model_name, foreign_key) {
+    instance_methods["get" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key) {
       var id = this.get(foreign_key);
       if (id) return ActiveRecord.Models[related_model_name].get(id);
       else return false
     }, related_model_name, foreign_key);
-    instance_methods["build" + relationship_name] = class_methods["build" + relationship_name] = ActiveSupport.curry(function buildRelated(related_model_name, foreign_key, params) {
+    instance_methods["build" + relationship_name] = class_methods["build" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key, params) {
       var record = ActiveRecord.Models[related_model_name].build(params || {});
       if (options.counter) record[options.counter] = 1;
       return record
     }, related_model_name, foreign_key);
-    instance_methods["create" + relationship_name] = ActiveSupport.curry(function createRelated(related_model_name, foreign_key, params) {
+    instance_methods["create" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key, params) {
       var record = this["build" + related_model_name](params);
       if (record.save() && this.get(this.constructor.primaryKeyName)) this.updateAttribute(foreign_key, record.get(record.constructor.primaryKeyName));
       return record
@@ -1175,7 +1181,7 @@ function lib_activerecord() {
     ActiveSupport.extend(this.prototype, instance_methods);
     ActiveSupport.extend(this, class_methods);
     if (options.counter) {
-      this.observe("afterDestroy", function decrementBelongsToCounter(record) {
+      this.observe("afterDestroy", function(record) {
         var child = record["get" + relationship_name]();
         if (child) {
           var current_value = child.get(options.counter);
@@ -1183,7 +1189,7 @@ function lib_activerecord() {
           child.updateAttribute(options.counter, Math.max(0, parseInt(current_value, 10) - 1))
         }
       });
-      this.observe("afterCreate", function incrementBelongsToCounter(record) {
+      this.observe("afterCreate", function(record) {
         var child = record["get" + relationship_name]();
         if (child) {
           var current_value = child.get(options.counter);
@@ -1226,7 +1232,7 @@ function lib_activerecord() {
       "set": ""
     },
     migrations: {},
-    migrate: function migrate(target) {
+    migrate: function(target) {
       if (typeof target === "undefined" || target === false) target = Migrations.max();
       Migrations.setup();
       ActiveRecord.connection.log("Migrations.migrate(" + target + ") start.");
@@ -1260,11 +1266,11 @@ function lib_activerecord() {
       });
       ActiveRecord.connection.log("Migrations.migrate(" + target + ") finished.")
     },
-    current: function current() {
+    current: function() {
       Migrations.setup();
       return Migrations.Meta.max("version") || 0
     },
-    max: function max() {
+    max: function() {
       var max_val = 0;
       for (var key_name in Migrations.migrations) {
         key_name = parseInt(key_name, 10);
@@ -1272,7 +1278,7 @@ function lib_activerecord() {
       }
       return max_val
     },
-    setup: function setMigrationsTable() {
+    setup: function() {
       if (!Migrations.Meta) {
         Migrations.Meta = ActiveRecord.create("schema_migrations", {
           version: 0
@@ -1280,13 +1286,13 @@ function lib_activerecord() {
         delete ActiveRecord.Models.SchemaMigrations
       }
     },
-    collectBelowIndex: function collectBelowIndex(index, target) {
+    collectBelowIndex: function(index, target) {
       return [[index, Migrations.migrations[index]]].concat(Migrations.collectMigrations(index, target + 1, "down"))
     },
-    collectAboveIndex: function collectAboveIndex(index, target) {
+    collectAboveIndex: function(index, target) {
       return Migrations.collectMigrations(index, target, "up")
     },
-    collectMigrations: function collectMigrations(index, target, direction) {
+    collectMigrations: function(index, target, direction) {
       var keys = [];
       for (var key_name in Migrations.migrations) {
         key_name = parseInt(key_name, 10);
@@ -1301,48 +1307,48 @@ function lib_activerecord() {
       }
       return migrations
     },
-    objectIsFieldDefinition: function objectIsFieldDefinition(object) {
+    objectIsFieldDefinition: function(object) {
       return typeof object === "object" && ActiveSupport.keys(object).length === 2 && "type" in object && "value" in object
     },
     Schema: {
-      createTable: function createTable(table_name, columns) {
+      createTable: function(table_name, columns) {
         return ActiveRecord.connection.createTable(table_name, columns)
       },
-      dropTable: function dropTable(table_name) {
+      dropTable: function(table_name) {
         return ActiveRecord.connection.dropTable(table_name)
       },
-      addColumn: function addColumn(table_name, column_name, data_type) {
+      addColumn: function(table_name, column_name, data_type) {
         return ActiveRecord.connection.addColumn(table_name, column_name, data_type)
       },
-      dropColumn: function removeColumn(table_name, column_name) {
+      dropColumn: function(table_name, column_name) {
         return ActiveRecord.connection.dropColumn(table_name, column_name)
       },
-      addIndex: function addIndex(table_name, column_names, options) {
+      addIndex: function(table_name, column_names, options) {
         return ActiveRecord.connection.addIndex(table_name, column_names, options)
       },
-      removeIndex: function removeIndex(table_name, index_name) {
+      removeIndex: function(table_name, index_name) {
         return ActiveRecord.connection.removeIndex(table_name, index_name)
       }
     }
   };
   ActiveRecord.Migrations = Migrations;
   ActiveSupport.extend(ActiveRecord.ClassMethods, {
-    addValidator: function addValidator(validator) {
+    addValidator: function(validator) {
       if (!this._validators) this._validators = [];
       this._validators.push(validator)
     },
-    validatesPresenceOf: function validatesPresenceOf(field, options) {
+    validatesPresenceOf: function(field, options) {
       options = ActiveSupport.extend({}, options || {});
-      this.addValidator(function validates_presence_of_callback() {
+      this.addValidator(function() {
         if (!this.get(field) || this.get(field) === "") this.addError(options.message || field + " is not present.", field)
       })
     },
-    validatesLengthOf: function validatesLengthOf(field, options) {
+    validatesLengthOf: function(field, options) {
       options = ActiveSupport.extend({
         min: 1,
         max: 9999
       }, options || {});
-      this.addValidator(function validates_length_of_callback() {
+      this.addValidator(function() {
         var value = String(this.get(field));
         if (value.length < options.min) this.addError(options.message || field + " is too short.", field);
         if (value.length > options.max) this.addError(options.message || field + " is too long.", field)
@@ -1350,20 +1356,20 @@ function lib_activerecord() {
     }
   });
   ActiveSupport.extend(ActiveRecord.InstanceMethods, {
-    addError: function addError(str, field) {
+    addError: function(str, field) {
       var error = null;
       if (field) {
         error = [str, field];
-        error.toString = function toString() {
+        error.toString = function() {
           return field ? field + ": " + str : str
         }
       } else error = str;
       this._errors.push(error)
     },
-    isValid: function isValid() {
+    isValid: function() {
       return this._errors.length === 0
     },
-    _validate: function _validate() {
+    _validate: function() {
       this._errors = [];
       var validators = this.getValidators();
       for (var i = 0; i < validators.length; ++i) validators[i].apply(this);
@@ -1371,10 +1377,10 @@ function lib_activerecord() {
       ActiveRecord.connection.log("ActiveRecord.validate() " + String(this._errors.length === 0) + (this._errors.length > 0 ? ". Errors: " + String(this._errors) : ""));
       return this._errors.length === 0
     },
-    getValidators: function getValidators() {
+    getValidators: function() {
       return this.constructor._validators || []
     },
-    getErrors: function getErrors() {
+    getErrors: function() {
       return this._errors
     }
   });
@@ -1383,13 +1389,13 @@ function lib_activerecord() {
   Synchronization.calculationNotifications = {};
   Synchronization.resultSetNotifications = {};
   Synchronization.notifications = {};
-  Synchronization.setupNotifications = function setupNotifications(record) {
+  Synchronization.setupNotifications = function(record) {
     if (!record.get(record.constructor.primaryKeyName)) return false;
     if (!Synchronization.notifications[record.tableName]) Synchronization.notifications[record.tableName] = {};
     if (!Synchronization.notifications[record.tableName][record[record.constructor.primaryKeyName]]) Synchronization.notifications[record.tableName][record[record.constructor.primaryKeyName]] = {};
     return true
   };
-  Synchronization.triggerSynchronizationNotifications = function triggerSynchronizationNotifications(record, event_name) {
+  Synchronization.triggerSynchronizationNotifications = function(record, event_name) {
     var found_records, internal_count_id;
     if (!Synchronization.setupNotifications(record)) return false;
     if (event_name === "afterSave") {
@@ -1431,41 +1437,41 @@ function lib_activerecord() {
     }
   };
   ActiveSupport.extend(ActiveRecord.InstanceMethods, {
-    synchronize: function synchronize() {
+    synchronize: function() {
       if (!this.isSynchronized) {
         this.isSynchronized = true;
         Synchronization.setupNotifications(this);
         Synchronization.notifications[this.tableName][this[this.constructor.primaryKeyName]][this.internalCount] = this
       }
     },
-    stop: function stop() {
+    stop: function() {
       Synchronization.setupNotifications(this);
       Synchronization.notifications[this.tableName][this[this.constructor.primaryKeyName]][this.internalCount] = null;
       delete Synchronization.notifications[this.tableName][this[this.constructor.primaryKeyName]][this.internalCount]
     }
   });
   Synchronization.synchronizedCalculationCount = 0;
-  Synchronization.synchronizeCalculation = function synchronizeCalculation(klass, operation, params) {
+  Synchronization.synchronizeCalculation = function(klass, operation, params) {
     ++Synchronization.synchronizedCalculationCount;
     var callback = params.synchronize;
     var callback_params = ActiveSupport.clone(params);
     delete callback_params.synchronize;
     if (!Synchronization.calculationNotifications[klass.tableName]) Synchronization.calculationNotifications[klass.tableName] = {};
-    Synchronization.calculationNotifications[klass.tableName][Synchronization.synchronizedCalculationCount] = function calculation_synchronization_executer_generator(klass, operation, params, callback) {
-      return function calculation_synchronization_executer() {
+    Synchronization.calculationNotifications[klass.tableName][Synchronization.synchronizedCalculationCount] = function(klass, operation, params, callback) {
+      return function() {
         callback(klass[operation](callback_params))
       }
     }(klass, operation, params, callback);
     Synchronization.calculationNotifications[klass.tableName][Synchronization.synchronizedCalculationCount]();
-    return function calculation_synchronization_stop_generator(table_name, synchronized_calculation_count) {
-      return function calculation_synchronization_stop() {
+    return function(table_name, synchronized_calculation_count) {
+      return function() {
         Synchronization.calculationNotifications[table_name][synchronized_calculation_count] = null;
         delete Synchronization.calculationNotifications[table_name][synchronized_calculation_count]
       }
     }(klass.tableName, Synchronization.synchronizedCalculationCount)
   };
   Synchronization.synchronizedResultSetCount = 0;
-  Synchronization.synchronizeResultSet = function synchronizeResultSet(klass, params, result_set) {
+  Synchronization.synchronizeResultSet = function(klass, params, result_set) {
     ++Synchronization.synchronizedResultSetCount;
     if (!Synchronization.resultSetNotifications[klass.tableName]) Synchronization.resultSetNotifications[klass.tableName] = {};
     Synchronization.resultSetNotifications[klass.tableName][Synchronization.synchronizedResultSetCount] = {
@@ -1473,15 +1479,15 @@ function lib_activerecord() {
       params: params
     };
     for (var i = 0; i < result_set.length; ++i) result_set[i].synchronize();
-    result_set.stop = function result_set_synchronization_stop_generator(table_name, synchronized_result_set_count) {
-      return function stop() {
+    result_set.stop = function(table_name, synchronized_result_set_count) {
+      return function() {
         for (var i = 0; i < this.length; ++i) this[i].stop();
         Synchronization.resultSetNotifications[table_name][synchronized_result_set_count] = null;
         delete Synchronization.resultSetNotifications[table_name][synchronized_result_set_count]
       }
     }(klass.tableName, Synchronization.synchronizedResultSetCount)
   };
-  Synchronization.spliceArgumentsFromResultSetDiff = function spliceArgumentsFromResultSetDiff(a, b, event_name) {
+  Synchronization.spliceArgumentsFromResultSetDiff = function(a, b, event_name) {
     var diffs = [];
     if (event_name === "afterCreate") for (var i = 0; i < b.length; ++i) {
       if (!a[i] || a[i] && a[i][a[i].constructor.primaryKeyName] !== b[i][b[i].constructor.primaryKeyName]) {
@@ -1503,7 +1509,7 @@ function lib_activerecord() {
    *
    */
   Adapters.SQLite = ActiveSupport.extend(ActiveSupport.clone(Adapters.SQL), {
-    createTable: function createTable(table_name, columns) {
+    createTable: function(table_name, columns) {
       var keys = ActiveSupport.keys(columns);
       var fragments = [];
       for (var i = 0; i < keys.length; ++i) {
@@ -1515,8 +1521,8 @@ function lib_activerecord() {
       }
       return this.executeSQL("CREATE TABLE IF NOT EXISTS " + table_name + " (" + fragments.join(",") + ")")
     },
-    dropColumn: function dropColumn(table_name, column_name) {
-      this.transaction(ActiveSupport.bind(function drop_column_transaction() {
+    dropColumn: function(table_name, column_name) {
+      this.transaction(ActiveSupport.bind(function() {
         var description = ActiveRecord.connection.iterableFromResultSet(ActiveRecord.connection.executeSQL('SELECT * FROM sqlite_master WHERE tbl_name = "' + table_name + '"')).iterate(0);
         var temp_table_name = "temp_" + table_name;
         ActiveRecord.execute(description["sql"].replace(new RegExp('^CREATE\\s+TABLE\\s+' + table_name), "CREATE TABLE " + temp_table_name).replace(new RegExp('(,|\\()\\s*' + column_name + '[\\s\\w]+(\\)|,)'), function () {
@@ -1544,10 +1550,10 @@ function lib_activerecord() {
       },
       executeSQL: function(sql) {
         var params = ActiveSupport.arrayFrom(arguments).slice(1);
-        var i = 0;
-        sql = sql.replace(/\?/g, function() {
-          return '$' + (++i);
-        });
+        //var i = 0;
+        //sql = sql.replace(/\?/g, function() {
+        //  return '$' + (++i);
+        //});
         ActiveRecord.connection.log("Adapters.Access.executeSQL: " + sql + " [" + params.join(',') + "]");
         var query = ActiveRecord.Adapters.Access.db.query(sql, params);
         return query.getAll();
@@ -1594,7 +1600,7 @@ function lib_activerecord() {
       options = {};
     }
     var msa = lib('msaccess');
-    var name = options.name || 'main';
+    var name = options.database || 'application';
     ActiveRecord.Adapters.Access.db = msa.open(name);
     return new ActiveRecord.Adapters.Access();
   };

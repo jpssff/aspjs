@@ -132,8 +132,8 @@ function lib_msaccess() {
   };
   
   function fn_BuildSQL(q, arr) {
-    q = String(q),now = Date.now();
-    var re = /('(''|[^'])*'|\[(\\.|[^\]])*\]|\$\d+|[A-Z_]+\(\))/gim;
+    q = String(q),now = Date.now(), i = 0;
+    var re = /('(''|[^'])*'|\[(\\.|[^\]])*\]|\$\d+|\?|[A-Z_]+\(\))/gim;
     arr = arr || [];
     q = q.replace(re, function(s) {
       if (s == "NOW()") {
@@ -144,8 +144,11 @@ function lib_msaccess() {
       }
       var c = s.substr(0, 1);
       if (c == "$") {
-        //Value Placeholder
-        var i = Number.parseInt(s.substr(1));
+        i = Number.parseInt(s.substr(1));
+        s = fn_SQLVal(arr[i - 1]);
+      } else
+      if (c == "?") {
+        i ++;
         s = fn_SQLVal(arr[i - 1]);
       } else
       if (c == "'") {
@@ -153,6 +156,7 @@ function lib_msaccess() {
       }
       return s;
     });
+    q = q.replace(/SELECT\s+(.*?)\s+LIMIT\s+(\d+)/ig, 'SELECT TOP $2 $1');
     q = q.replace(/CAST_HEX\('([^']+)'\)/ig, '0x$1');
     q = q.replace(/CAST_DATE\('([^']+)'\)/ig, '#$1#');
     q = q.replace(/CAST_GUID\('(\{[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\})'\)/ig, '{guid $1}');

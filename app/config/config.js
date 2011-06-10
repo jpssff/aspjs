@@ -1,7 +1,7 @@
 /**
- * Application Specific Configuration. This function
- * should return an object of key/value pairs that
- * is specific to this application or deployment.
+ * Application Specific Configuration.
+ *
+ * This function should return an set of key/value pairs specific to this application or deployment.
  *
  */
 if (!this.lib_appcfg) this.lib_appcfg = lib_appcfg;
@@ -12,10 +12,10 @@ function lib_appcfg() {
     app_title: "Web Application",
     
     //Defaults
-    defaults:{
+    defaults: {
       //Timezone Offset
-      timezone:{
-        offset:10 * 60
+      timezone: {
+        offset: 10 * 60
       }
     },
 
@@ -25,15 +25,15 @@ function lib_appcfg() {
     },
 
     //Email Notifications
-    notify:{
+    notify: {
       //default from address
-      'from':'Simon Sturmer <simon.sturmer@gmail.com>',
+      'from': 'Simon Sturmer <simon.sturmer@gmail.com>',
       //webmaster receives error reports
-      'webmaster':'simon.sturmer@gmail.com',
+      'webmaster': 'simon.sturmer@gmail.com',
       //admin receives member, signup and other notifications
-      'admin':'simon.sturmer@gmail.com',
+      'admin': 'simon.sturmer@gmail.com',
       //default receives all other notifications
-      'default':'simon.sturmer@gmail.com'
+      'default': 'simon.sturmer@gmail.com'
     },
     
     //Email Relay
@@ -53,9 +53,8 @@ function lib_appcfg() {
     
     //301 Redirects (Processed before any routes)
     redir: {
-      '/admin/':'/admin'
+      '/admin/': '/admin'
     }
     
-    //end of config options
   };
 }
