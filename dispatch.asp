@@ -13,6 +13,7 @@
  *
  */
 dispatch({
+  "/admin": "admin",
   "/test": {
     "controller": "test",
     "inc": "qunit.js"

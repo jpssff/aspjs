@@ -8,7 +8,7 @@ bind('ready', function() {
       username: "simon",
       password: "asdf"
     });
-    simon.set('password', 'abc');
+    simon.set('password', 'abc1234');
     var result = simon.save();
 
     if (!result) {

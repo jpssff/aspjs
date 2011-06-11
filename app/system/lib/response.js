@@ -17,7 +17,11 @@ function lib_response() {
     clear: function(type, status) {
       _super.clear();
       if (type) {
-        res.headers('content-type', type);
+        if (type.match(/\/json$/) && !(/XMLHttpRequest/i).test(req.headers('x-requested-with'))) {
+          res.headers('content-type', 'text/plain');
+        } else {
+          res.headers('content-type', type);
+        }
       }
       if (status) {
         res.status(status);

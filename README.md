@@ -5,25 +5,25 @@ concerns". It is designed to abstract database access, file system operations, r
 sessions, templating and other server-side concepts into clean, functional Javascript interfaces.
 
 ## Features
-+ Powerful Request Routing (Sinatra-style)
++ Request Routing (Sinatra-style)
 + Clean Code Separation
-+ No Inline Code / <% %> tags
-+ CommonJS-like Modules
++ Modules System similar to CommonJS
 + Event-based Request Processing
 + Rich Templating Engine (based on normal-template from [Nitro](/gmosx/nitro))
 + ActiveRecord (based on [Aptana's ActiveJS](/aptana/activejs))
 + Helper functions for:
-  - date parsing/formatting
+  - date parsing/manipulating/formatting
   - sending email
   - handling binary data
   - charset conversion
++ Server-Side HTML Parsing, including DOM layer and jQuery port
 
 ## Description
 Asp-JS focuses on separating business logic from presentation (view) and achieves this in several ways
 commonly found in other web frameworks (request routing, templating, event listeners,
 callback functions, etc).
 
-This framework is influenced by other server-side Javascript frameworks such as [v8cgi]
+This framework bears influence from other server-side Javascript frameworks such as [v8cgi]
 (http://code.google.com/p/v8cgi/), [Jaxer](http://jaxer.org/), [Connect]
 (http://senchalabs.github.com/connect/) and client-side libraries like [jQuery](http://jquery.com/)
 and [Underscore](http://documentcloud.github.com/underscore/) which should be apparant in
@@ -98,8 +98,8 @@ res.redirect('/success');
 
 ##Application Structure
 Application code (business logic) goes in controller files in _/app/controllers/_  and helper files
-in _/app/code/_. Templates go in _/app/views/_ and configuration (JSON format) goes in
-_/app/config/config.js_.
+in _/app/shared/_. Models are defined in _/app/models/_. Templates go in _/app/views/_ and
+configuration (JSON format) goes in _/app/config/config.js_.
 
 Data files (db, uploads, logs, etc.) reside in /app/data/ and all framework code (besides bootstrap
 code) is found in /app/system/.

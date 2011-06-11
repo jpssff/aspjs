@@ -73,7 +73,7 @@ function lib_server() {
   }
 
   function applyCharset(ctype, charset) {
-    return (/^text\//i.exec(ctype)) ? ctype + '; charset=' + charset : ctype;
+    return (/^text\/|\/json$/i.exec(ctype)) ? ctype + '; charset=' + charset : ctype;
   }
 
   return {
@@ -93,6 +93,9 @@ function lib_server() {
         var ctype = iis.req.servervariables('content_type').item() || '';
         if (ctype.match(/multipart/i)) {
           return processMultiPartBody();
+        } else
+        if (ctype.match(/application\/json/i)) {
+          return processJSONBody();
         } else {
           return processFormBody();
         }
@@ -188,6 +191,21 @@ function lib_server() {
       cookies: cookies,
       charset: 'utf-8'
     };
+  }
+
+
+  /**
+   * Process Request Body where Content-Type is "application/json"
+   *
+   * @returns {Object} Object containing form fields (collection)
+   */
+  function processJSONBody() {
+    var json = lib('json'), fields = {};
+    var data = new Binary(iis.req.binaryRead(iis.req.totalBytes));
+    try {
+      fields = json.parse(data.toString());
+    } catch(e) {}
+    return {fields: new Collection(fields)};
   }
 
 
