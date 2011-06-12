@@ -103,7 +103,6 @@ function lib_json() {
     t = t.replace(rvalidbraces,'');
     if (rvalidchars.test(t)) {
       try {
-        app.trycount = (app.trycount || 0) + 1;
         return (new Function('return ' + s))();
       } catch(e) {}
     }

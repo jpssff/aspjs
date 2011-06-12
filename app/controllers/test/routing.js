@@ -1,5 +1,11 @@
 bind('ready', function() {
 
+  app('/test/send-file', function() {
+    res.headers('content-type', 'text/plain');
+    res.sendFile({file: 'system/data/test/jqlite.html'});
+    res.die('FAIL');
+  });
+
   app('/test/suite', function() {
     var templ = lib('templ');
     var html = templ.render('test/test-suite');

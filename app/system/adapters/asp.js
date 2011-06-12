@@ -73,7 +73,7 @@ function lib_server() {
   }
 
   function applyCharset(ctype, charset) {
-    return (/^text\/|\/json$/i.exec(ctype)) ? ctype + '; charset=' + charset : ctype;
+    return (charset && /^text\/|\/json$/i.exec(ctype)) ? ctype + '; charset=' + charset : ctype;
   }
 
   return {
@@ -148,11 +148,16 @@ function lib_server() {
         iis.res.binaryWrite(b.readBin());
       },
       sendFile: function(opts) {
+        if (Object.isPrimitive(opts)) opts = {file: String(opts)};
+        if (!opts.ctype) opts.ctype = res.headers('content-type');
+        opts.ctype = applyCharset(opts.ctype, opts.charset || res.charset);
+        if (!opts.name) opts.name = opts.file.split('/').pop();
+        opts.path = sys.mappath(opts.file);
         commitResponse();
         var upload = new ActiveXObject("Persits.Upload");
         try {
           iis.res.buffer = false;
-          upload.sendBinary(sys.mappath(opts.file), true, opts.ctype, !!opts.attachment,
+          upload.sendBinary(opts.path, true, opts.ctype, !!opts.attachment,
           '"' + opts.name.replaceAll('"', "'") + '"');
         } catch(e) {
           iis.res.buffer = true;
@@ -187,7 +192,7 @@ function lib_server() {
     var cookies = (res && res.cookies) ? res.cookies : new Collection();
     return {
       status: '200',
-      headers: new Collection({'content-type': 'text/plain'}),
+      headers: new Collection({'Content-Type': 'text/plain'}),
       cookies: cookies,
       charset: 'utf-8'
     };

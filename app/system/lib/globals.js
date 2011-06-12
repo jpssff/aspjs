@@ -455,7 +455,6 @@ function lib_globals() {
   String.urlDec = function(s) {
     s = String(s).replace(/\+/g, ' ');
     try {
-      app.trycount = (app.trycount || 0) + 1;
       return decodeURIComponent(s);
     } catch(e) {
       return unescape(s);

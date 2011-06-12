@@ -59,13 +59,13 @@ function buildControllerStubs(map) {
     if (!cfg[name]) cfg[name] = {};
     Object.append(cfg[name], controller);
   });
-  var stat = sys.fs.stat('build');
+  var stat = sys.fs.stat('~/build');
   forEach(stat._files, function(i, file) {
     if (!file.name.startsWith('_')) {
       file._delete();
     }
   });
-  var stat = sys.fs.stat('controllers', true);
+  var stat = sys.fs.stat('~/controllers', true);
   forEach(stat._folders, function(i, folder) {
     var list = [], name = folder.name;
     forEach(folder.files, function(i, filename) {

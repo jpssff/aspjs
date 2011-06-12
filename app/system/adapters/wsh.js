@@ -34,7 +34,7 @@ function lib_server() {
 
   function commitResponse() {
     var ctype = res.headers('content-type');
-    res.headers('content-type', applyCharset(ctype, res.charset));
+    res.headers('Content-Type', applyCharset(ctype, res.charset));
     var cookies = {};
     res.cookies.each(function(n, cookie) {
       if (Object.isPrimitive(cookie)) {
@@ -49,11 +49,11 @@ function lib_server() {
       }
     });
     res.cookies = cookies;
-    wsh.stdout.write(shellEnc(json.stringify(res, true)));
+    wsh.stdout.write(json.stringify(res, true));
   }
 
   function applyCharset(ctype, charset) {
-    return (/^text\/|\/json$/i.exec(ctype)) ? ctype + '; charset=' + charset : ctype;
+    return (charset && /^text\/|\/json$/i.exec(ctype)) ? ctype + '; charset=' + charset : ctype;
   }
 
   function encodeMessage(msg) {
@@ -144,8 +144,16 @@ function lib_server() {
         res.body.push({data: b.toString('base64'), encoding: 'base64'});
       },
       sendFile: function(opts) {
-        //TODO: Set content-type, content-disposition (filename, attachment?)
-        res.body = {sendFile: sys.path(opts.file)};
+        if (Object.isPrimitive(opts)) opts = {file: String(opts)};
+        if (!opts.name) opts.name = opts.file.split('/').pop();
+        if (opts.ctype) res.headers('Content-Type', applyCharset(opts.ctype, opts.charset));
+        var cdisp = 'filename="' + opts.name.replaceAll('"', "'") + '"';
+        if (opts.attachment) {
+          cdisp = 'attachment;' + cdisp
+        }
+        res.headers('Content-Disposition', cdisp);
+        opts.path = sys.path(opts.file);
+        res.body = {sendFile: opts.path};
         commitResponse();
         wsh.quit();
       },
@@ -198,7 +206,7 @@ function lib_server() {
     var cookies = (res && res.cookies) ? res.cookies : new Collection();
     return {
       status: '200',
-      headers: new Collection({'content-type': 'text/plain', 'cache-control': 'private'}),
+      headers: new Collection({'Content-Type': 'text/plain', 'Cache-Control': 'private'}),
       cookies: cookies,
       charset: 'utf-8',
       body: []

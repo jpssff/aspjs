@@ -2,6 +2,15 @@ bind('ready', function() {
 
   var qunit = lib('qunit'), Session = lib('session'), JSON = lib('json');
 
+  app('/test/cookie', function() {
+    var cookies = {
+      firstName: 'Simon',
+      lastName: '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
+    };
+    res.cookies(cookies);
+    res.die('Cookies Set: ', cookies);
+  });
+
   app('/test/session/run', function() {
 
     testSuite("Pre-requisites");
