@@ -93,8 +93,11 @@ function lib_server() {
       getPostData: function() {
         var postdata = req_data.postdata || {};
         if (/json/.test(req_data.headers['content-type'])) {
-          forEach(postdata, function(n, val) {
-            postdata[n] = json.parse(val);
+          forEach(postdata.fields, function(n, val) {
+            //try {
+            //  val = json.parse(val);
+            //} catch(e) {}
+            postdata.fields[n] = val;
           });
         }
         var files = postdata.files && util.newParamCollection(postdata.files);
