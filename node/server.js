@@ -5,7 +5,7 @@ require.paths.unshift(__dirname + '/lib');
 require.paths.unshift(__dirname + '/support');
 
 //Library Modules
-var dispatch = require('dispatch');
+var gateway = require('gateway');
 var connect = require('connect');
 var form = require('connect-form');
 
@@ -37,7 +37,7 @@ connect(
     }
   },
   //Dispatch to Request Handler
-  dispatch.getHandler(scriptEngine),
+  gateway.getHandler(scriptEngine),
   //Not Found
   function(req, res){
     res.statusCode = 404;

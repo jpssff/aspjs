@@ -5,6 +5,7 @@ var util = require('./util'),
     File = require('./file'),
     MultipartParser = require('./multipart_parser').MultipartParser,
     QuerystringParser = require('./querystring_parser').QuerystringParser,
+    JSONParser = require('./json_parser').JSONParser,
     StringDecoder = require('string_decoder').StringDecoder,
     EventEmitter = require('events').EventEmitter;
 
@@ -224,6 +225,11 @@ IncomingForm.prototype._parseContentType = function() {
     return;
   }
 
+  if (this.headers['content-type'].match(/json/i)) {
+    this._initJSONencoded();
+    return;
+  }
+
   if (this.headers['content-type'].match(/multipart/i)) {
     var m;
     if (m = this.headers['content-type'].match(/boundary=(?:"([^"]+)"|([^;]+))/i)) {
@@ -332,6 +338,24 @@ IncomingForm.prototype._initUrlencoded = function() {
   this.type = 'urlencoded';
 
   var parser = new QuerystringParser()
+    , self = this;
+
+  parser.onField = function(key, val) {
+    self.emit('field', key, val);
+  };
+
+  parser.onEnd = function() {
+    self.ended = true;
+    self._maybeEnd();
+  };
+
+  this._parser = parser;
+};
+
+IncomingForm.prototype._initJSONencoded = function() {
+  this.type = 'json';
+
+  var parser = new JSONParser()
     , self = this;
 
   parser.onField = function(key, val) {

@@ -31,8 +31,8 @@ bind('ready', function() {
       ok(vartype(res.cookies, 'function'), 'Check res.cookies exists');
       res.cookies('testCookie', 'testValue')
       ok(res.cookies('testCookie'), 'testValue', 'Check res.cookies can be modified');
-      res.cookies('testCookie2', {value: 'testValue2', expiry: Date.fromUTCString('2029/10/31')});
-      var expected = '{"testCookie2":{"value":"testValue2","expiry":new Date(Date.UTC(2029,9,31,0,0,0,0))}}';
+      res.cookies('testCookie2', {value: 'testValue2', expires: Date.fromUTCString('2029/10/31')});
+      var expected = '{"testCookie2":{"value":"testValue2","expires":new Date(Date.UTC(2029,9,31,0,0,0,0))}}';
       ok(JSON.stringify(res.cookies()), expected, 'Check cookies collection serializes correctly');
       //Remove Test Cookies
       res.cookies('testCookie', null);
@@ -45,7 +45,7 @@ bind('ready', function() {
     test("Session Load", function() {
       expect(8);
 
-      var session = Session.init('namespace:testing expiry:10m');
+      var session = Session.init('namespace:testing expires:10m');
 
       var test = session('test');
       ok(vartype(test, 'undefined'), 'Check non-existant item');

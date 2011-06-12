@@ -66,7 +66,7 @@ function lib_server() {
       if (vartype(cookie, 'object')) {
         iis.res.cookies(n) = String(cookie.value);
         if (cookie.exp) {
-          iis.res.cookies(n).expires = Date.fromString(cookie.expiry);
+          iis.res.cookies(n).expires = Date.fromString(cookie.expires);
         }
       }
     });

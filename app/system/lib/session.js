@@ -6,7 +6,7 @@
  * var session = lib('session').init(); //Create new session instance
  *
  * Arguments can be passed into the init method with a comma/space separated list of options:
- * var session = lib('session').init('longterm expiry:30d');
+ * var session = lib('session').init('longterm expires:30d');
  *
  * Cookie Types:
  *  longterm - has an explicit (far-distant) expiry so it is preserved between visits
@@ -16,17 +16,17 @@
  * Each instance of a session can have a specific expiry that is different from it's underlying
  * cookie expiry. The cookie expiry represents an upper bound (a session of a given type can not
  * expire *later* than the cookie it uses) but you can explicitly specify an expiry for your data.
- * The format is expiry:[number][d/h/m] (days/hours/minutes).
+ * The format is expires:[number][d/h/m] (days/hours/minutes).
  *
- * var session = lib('session').init('expiry:30m'); //Short-term session that expires in 30 minutes
+ * var session = lib('session').init('expires:30m'); //Short-term session that expires in 30 minutes
  *
  * Namespacing:
  * Session Data can be namespaced to avoid collisions and to allow data within different namespaces to
- * have different expiry. For example, a login controller may save its data to a session instance with
- * namespace 'auth' and a 30 minute expiry, while another controller may store it's session data with a
- * different namespace and longer expiry.
+ * have different expires. For example, a login controller may save its data to a session instance with
+ * namespace 'auth' and a 30 minute expires, while another controller may store it's session data with a
+ * different namespace and longer expires.
  *
- * var session = lib('session').init('namespace:auth expiry:30m');
+ * var session = lib('session').init('namespace:auth expires:30m');
  *
  * Note:
  * Instances with different cookie-types are automatically in different namespaces.
@@ -71,7 +71,7 @@ function lib_session() {
     if (!token || type == 'longterm') {
       token = token || generateSessionToken();
       if (type == 'longterm') {
-        res.cookies(key, {value: token, expiry: Date.today().add({months: 12})});
+        res.cookies(key, {value: token, expires: Date.today().add({months: 12})});
       } else {
         res.cookies(key, token);
       }
@@ -196,7 +196,7 @@ function lib_session() {
       this.type = (this.opts.longterm) ? 'longterm' : 'shortterm';
       this.namespace = this.opts.namespace || '';
       var m, units = {d: 'days', h: 'hours', m: 'minutes'};
-      if (this.opts.expiry && (m = this.opts.expiry.match(/^(\d+)([dhm])$/))) {
+      if (this.opts.expires && (m = this.opts.expires.match(/^(\d+)([dhm])$/))) {
         var u = units[m[2]], param = {};
         param[u] = 0 - Number.parseInt(m[1]);
         this.oldest = Date.now().add(param);

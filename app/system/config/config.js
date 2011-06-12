@@ -30,7 +30,7 @@ function lib_syscfg() {
     
     //Session Settings
     //Cookie Types:
-    // longterm - has a far-distant expiry (1 year)
+    // longterm - has a far-distant expires (1 year)
     // shortterm - discarded when browser is closed
     session: {
       default_type: 'shortterm', //Cookie Type (longterm or shortterm)

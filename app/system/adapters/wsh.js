@@ -21,7 +21,7 @@ function lib_server() {
   if (args.length != 1) {
     throw new Error('Invalid Command Line Arguments');
   }
-  var req_json = urlDec(args(0).replace(/`/g, '"'));
+  var req_json = shellDec(args(0));
   var req_data = json.parse(req_json);
 
   var vars = {
@@ -36,35 +36,37 @@ function lib_server() {
     var ctype = res.headers('content-type');
     res.headers('content-type', applyCharset(ctype, res.charset));
     var cookies = {};
-    res.cookies.each(function(n,obj){
-      if (vartype(obj) == 'string') {
-        obj = {val:obj};
+    res.cookies.each(function(n, cookie) {
+      if (Object.isPrimitive(cookie)) {
+        cookie = {value: cookie};
       }
-      if (obj.exp) {
-        obj.exp = Date.fromString(obj.exp);
+      if (vartype(cookie, 'object')) {
+        cookie.value = String.parse(cookie.value);
+        if (cookie.expires) {
+          cookie.expires = Date.fromString(cookie.expires);
+        }
+        cookies[n] = cookie;
       }
-      cookies[n] = obj;
     });
     res.cookies = cookies;
-    res.body = res.body.join('');
-    wsh.stdout.write(shellEnc(json.stringify(res,true)));
+    wsh.stdout.write(shellEnc(json.stringify(res, true)));
   }
 
   function applyCharset(ctype, charset) {
-    return (/^text\//i.exec(ctype)) ? ctype + '; charset=' + charset : ctype;
+    return (/^text\/|\/json$/i.exec(ctype)) ? ctype + '; charset=' + charset : ctype;
   }
 
   function encodeMessage(msg) {
-    return '<<' + shellEnc(json.stringify(msg, true)) + '>>';
+    return json.stringify(msg, true) + '\n';
   }
 
-  function shellEnc(str) {
-    return str.replace(/[^{}[\]]+/g, function(s){
-      return encodeURI(s);
-    })
-    .replace(/\+/g, '%2B')
-    .replace(/%20/g, '+')
-    .replace(/%22/g, '`');
+  function shellDec(str) {
+    str = String(str).replace(/`/g, '"').replace(/\+/g, ' ');
+    try {
+      return decodeURIComponent(str);
+    } catch(e) {
+      return unescape(str);
+    }
   }
 
   function mapPath(s) {
@@ -90,9 +92,14 @@ function lib_server() {
       },
       getPostData: function() {
         var postdata = req_data.postdata || {};
+        if (/json/.test(req_data.headers['content-type'])) {
+          forEach(postdata, function(n, val) {
+            postdata[n] = json.parse(val);
+          });
+        }
         var files = postdata.files && util.newParamCollection(postdata.files);
         if (files) {
-          files.each(function(n,fd){
+          files.each(function(n, fd) {
             files(n, processUploadedFile(fd));
           });
         }
@@ -103,11 +110,11 @@ function lib_server() {
       }
     },
     res: {
-      headers: function(){
-        return res.headers.apply(null,arguments);
+      headers: function() {
+        return res.headers.apply(null, arguments);
       },
-      cookies: function(){
-        return res.cookies.apply(null,arguments);
+      cookies: function() {
+        return res.cookies.apply(null, arguments);
       },
       charset: function(s) {
         if (arguments.length) {
@@ -131,13 +138,16 @@ function lib_server() {
         res = newResponse();
       },
       write: function(s) {
-        //res.body.push({data: s, encoding: 'utf8'});
-        res.body.push(s);
+        res.body.push({data: s});
       },
       writebin: function(b) {
-        //TODO: Implement Binary Response
-        //res.body.push({data: b.toString('hex'), encoding: 'hex'});
-        throw new Error('Binary Response not implemented in WSH');
+        res.body.push({data: b.toString('base64'), encoding: 'base64'});
+      },
+      sendFile: function(opts) {
+        //TODO: Set content-type, content-disposition (filename, attachment?)
+        res.body = {sendFile: sys.path(opts.file)};
+        commitResponse();
+        wsh.quit();
       },
       end: function() {
         commitResponse();
@@ -148,7 +158,7 @@ function lib_server() {
       return mapPath(s);
     },
     exec: function(s) {
-      throw new Error('WSH Script Execution not Implemented');
+      throw new Error('Script Execution not Implemented in WSH');
     },
     vars: function(n) {
       return vars[n] || '';
@@ -166,11 +176,11 @@ function lib_server() {
         } catch(e) {}
         return val;
       },
-      set: function(n,val) {
+      set: function(n, val) {
         var msg = {
           action: 'app_var_get',
           name: n,
-          value: json.stringify(val,true)
+          value: json.stringify(val, true)
         };
         wsh.stdout.write(encodeMessage(msg));
         wsh.stdin.readLine();
@@ -185,10 +195,11 @@ function lib_server() {
    * @returns {Object} Object containing response data fields
    */
   function newResponse() {
+    var cookies = (res && res.cookies) ? res.cookies : new Collection();
     return {
       status: '200',
       headers: new Collection({'content-type': 'text/plain', 'cache-control': 'private'}),
-      cookies: new Collection(),
+      cookies: cookies,
       charset: 'utf-8',
       body: []
     };
@@ -212,7 +223,7 @@ function lib_server() {
         sys.fs.deleteFile(f.path);
       }
     });
-    Object.append(fd,{
+    Object.append(fd, {
       name: f.name,
       path: f.path,
       mimetype: f.type,

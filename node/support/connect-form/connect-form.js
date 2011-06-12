@@ -50,7 +50,7 @@ var formidable = require('formidable');
  * @api public
  */
 
-module.exports = function(options){
+module.exports = function(options) {
   options = options || {};
   return function(req, res, next){
     if (formRequest(req)) {
@@ -79,6 +79,7 @@ function formRequest(req) {
     && (req.method === 'POST'
     || req.method === 'PUT')
     && (~contentType.indexOf('multipart/form-data')
+    ||  ~contentType.indexOf('application/json')
     ||  ~contentType.indexOf('urlencoded'));
 }
 
