@@ -13,9 +13,13 @@ function lib_model() {
 
   setGlobal({Models: Models, ActiveRecord: ActiveRecord});
 
-  var connected = false;
-  function connect() {
-    ActiveRecord.connect(ActiveRecord.Adapters.Access, {database: 'appdata'});
+  var connections = {};
+  function connect(database) {
+    database = database || 'appdata';
+    if (!connections[database]) {
+      connections[database] = ActiveRecord.connect(ActiveRecord.Adapters.Access, {database: database});
+    }
+    return connections[database];
   }
 
   function model() {
@@ -39,7 +43,7 @@ function lib_model() {
   };
 
   model.create = function(name, def) {
-    if (!connected) connect();
+    connect(def.database);
     ActiveRecord.create({tableName: def.table, modelName: name}, def.properties, def.methods, def.callback);
   };
 
