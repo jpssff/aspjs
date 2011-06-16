@@ -6,91 +6,50 @@
  */
 if (!this.lib_activesupport) this.lib_activesupport = lib_activesupport;
 function lib_activesupport() {
-  var ActiveSupport, JSON = lib('json');
+  var ActiveSupport;
 
   ActiveSupport = {
-    log: function log() {
-      if (typeof console !== "undefined") {
-        console.log.apply(console, arguments);
-      }
-    },
-    createError: function createError(message) {
+    createError: function(message) {
       return {
-        getErrorString: function getErrorString() {
+        getErrorString: function() {
           var output = String(message);
           for (var i = 0; i < arguments.length; ++i) output = output.replace(/\%/, arguments[i].toString ? arguments[i].toString() : String(arguments[i]));
           return output
         }
       }
     },
-    arrayFrom: function arrayFrom(object) {
-      if (!object) return [];
-      var length = object.length || 0;
-      var results = new Array(length);
-      while (length--) results[length] = object[length];
-      return results
-    },
-    isArray: function isArray(object) {
-      return object && typeof object == "object" && "length" in object && "splice" in object && "join" in object
-    },
-    indexOf: function indexOf(array, item, i) {
-      if (Array.prototype.indexOf) return array.indexOf(item, i);
-      i = i || 0;
-      var length = array.length;
-      if (i < 0) i = length + i;
-      for (; i < length; i++) if (array[i] === item) return i;
-      return -1
-    },
-    without: function without(arr) {
-      var values = ActiveSupport.arrayFrom(arguments).slice(1);
+    without: function(arr) {
+      var values = toArray(arguments).slice(1);
       var response = [];
-      for (var i = 0; i < arr.length; i++) if (!(ActiveSupport.indexOf(values, arr[i]) > -1)) response.push(arr[i]);
+      for (var i = 0; i < arr.length; i++) if (!(values.indexOf(arr[i]) > -1)) response.push(arr[i]);
       return response
     },
-    map: function map(array, iterator, context) {
+    map: function(array, iterator, context) {
       var length = array.length;
       context = context || window;
       var response = new Array(length);
       for (var i = 0; i < length; ++i) if (array[i]) response[i] = iterator.call(context, array[i], i, array);
       return response
     },
-    bind: function bind(func, object) {
+    bind: function(func, object) {
       if (typeof object == "undefined") return func;
-      if (arguments.length < 3) return function bound() {
+      return function() {
         return func.apply(object, arguments)
       };
-      else {
-        var args = ActiveSupport.arrayFrom(arguments);
-        args.shift();
-        args.shift();
-        return function bound() {
-          return func.apply(object, args.concat(ActiveSupport.arrayFrom(arguments)))
-        }
-      }
     },
-    curry: function curry(func) {
+    curry: function(func) {
       if (arguments.length == 1) return func;
-      var args = ActiveSupport.arrayFrom(arguments).slice(1);
-      return function curried() {
-        return func.apply(this, args.concat(ActiveSupport.arrayFrom(arguments)))
+      var args = toArray(arguments).slice(1);
+      return function() {
+        return func.apply(this, args.concat(toArray(arguments)))
       }
     },
-    wrap: function wrap(func, wrapper) {
-      return function wrapped() {
-        return wrapper.apply(this, [ActiveSupport.bind(func, this)].concat(ActiveSupport.arrayFrom(arguments)))
+    wrap: function(func, wrapper) {
+      return function() {
+        return wrapper.apply(this, [ActiveSupport.bind(func, this)].concat(toArray(arguments)))
       }
     },
-    keys: function keys(object) {
-      var keys_array = [];
-      for (var property_name in object) keys_array.push(property_name);
-      return keys_array
-    },
-    values: function values(object) {
-      var values_array = [];
-      for (var property_name in object) values_array.push(object[property_name]);
-      return values_array
-    },
-    underscore: function underscore(str) {
+    underscore: function(str) {
       return str.replace(/::/g, "/").replace(/([A-Z]+)([A-Z][a-z])/g, function (match) {
         match = match.split("");
         return match[0] + "_" + match[1]
@@ -99,7 +58,7 @@ function lib_activesupport() {
         return match[0] + "_" + match[1]
       }).replace(/-/g, "_").toLowerCase()
     },
-    camelize: function camelize(str, capitalize) {
+    camelize: function(str, capitalize) {
       var camelized, parts = str.replace(/\_/g, "-").split("-"),
           len = parts.length;
       if (len === 1) if (capitalize) return parts[0].charAt(0).toUpperCase() + parts[0].substring(1);
@@ -110,17 +69,14 @@ function lib_activesupport() {
       if (capitalize) return camelized.charAt(0).toUpperCase() + camelized.substring(1);
       else return camelized
     },
-    trim: function trim(str) {
-      return (str || "").replace(/^\s+|\s+$/g, "")
-    },
-    extend: function extend(destination, source) {
+    extend: function(destination, source) {
       for (var property in source) destination[property] = source[property];
       return destination
     },
-    clone: function clone(object) {
+    clone: function(object) {
       return ActiveSupport.extend({}, object)
     }
-  }
+  };
 
   ActiveSupport.Inflector = {
     Inflections: {
@@ -178,7 +134,7 @@ function lib_activesupport() {
       ],
       uncountable: ["sheep", "fish", "series", "species", "money", "rice", "information", "info", "equipment", "media"]
     },
-    ordinalize: function ordinalize(number) {
+    ordinalize: function(number) {
       if (11 <= parseInt(number, 10) % 100 && parseInt(number, 10) % 100 <= 13) return number + "th";
       else switch (parseInt(number, 10) % 10) {
       case 1:
@@ -191,7 +147,7 @@ function lib_activesupport() {
         return number + "th"
       }
     },
-    pluralize: function pluralize(word) {
+    pluralize: function(word) {
       var i, lc = word.toLowerCase();
       for (i = 0; i < ActiveSupport.Inflector.Inflections.uncountable.length; i++) {
         var uncountable = ActiveSupport.Inflector.Inflections.uncountable[i];
@@ -209,7 +165,7 @@ function lib_activesupport() {
       }
       return word
     },
-    singularize: function singularize(word) {
+    singularize: function(word) {
       var i, lc = word.toLowerCase();
       for (i = 0; i < ActiveSupport.Inflector.Inflections.uncountable.length; i++) {
         var uncountable = ActiveSupport.Inflector.Inflections.uncountable[i];
@@ -228,99 +184,6 @@ function lib_activesupport() {
       return word
     }
   };
-
-  ActiveSupport.dateFromDateTime = function dateFromDateTime(date_time) {
-    var parts = date_time.replace(/^([0-9]{2,4})-([0-1][0-9])-([0-3][0-9]) (?:([0-2][0-9]):([0-5][0-9]):([0-5][0-9]))?$/, "$1 $2 $3 $4 $5 $6").split(" ");
-    return new Date(parts[0], parts[1] - 1, parts[2], parts[3], parts[4], parts[5])
-  };
-  ActiveSupport.dateFormat = function date_format_wrapper() {
-    var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HhMsTt])\1?|[LloSZ]|"[^"]*"|'[^']*'/g,
-        timezone = /\b(?:[PMCEA][SDP]T|(?:Pacific|Mountain|Central|Eastern|Atlantic) (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)(?:[\-\+]\d{4})?)\b/g,
-        timezoneClip = /[^\-\+\dA-Z]/g,
-        pad = function (val, len) {
-          val = String(val);
-          len = len || 2;
-          while (val.length < len) val = "0" + val;
-          return val
-        };
-    var dateFormat = function dateFormat(date, mask, utc) {
-      var dF = dateFormat;
-      if (arguments.length === 1 && (typeof date === "string" || date instanceof String) && !/\d/.test(date)) {
-        mask = date;
-        date = undefined
-      }
-      date = date ? new Date(date) : new Date;
-      if (isNaN(date)) throw new SyntaxError("invalid date");
-      mask = String(dF.masks[mask] || mask || dF.masks["default"]);
-      if (mask.slice(0, 4) === "UTC:") {
-        mask = mask.slice(4);
-        utc = true
-      }
-      var _ = utc ? "getUTC" : "get",
-          d = date[_ + "Date"](),
-          D = date[_ + "Day"](),
-          m = date[_ + "Month"](),
-          y = date[_ + "FullYear"](),
-          H = date[_ + "Hours"](),
-          M = date[_ + "Minutes"](),
-          s = date[_ + "Seconds"](),
-          L = date[_ + "Milliseconds"](),
-          o = utc ? 0 : date.getTimezoneOffset(),
-          flags = {
-            d: d,
-            dd: pad(d),
-            ddd: dF.i18n.dayNames[D],
-            dddd: dF.i18n.dayNames[D + 7],
-            m: m + 1,
-            mm: pad(m + 1),
-            mmm: dF.i18n.monthNames[m],
-            mmmm: dF.i18n.monthNames[m + 12],
-            yy: String(y).slice(2),
-            yyyy: y,
-            h: H % 12 || 12,
-            hh: pad(H % 12 || 12),
-            H: H,
-            HH: pad(H),
-            M: M,
-            MM: pad(M),
-            s: s,
-            ss: pad(s),
-            l: pad(L, 3),
-            L: pad(L > 99 ? Math.round(L / 10) : L),
-            t: H < 12 ? "a" : "p",
-            tt: H < 12 ? "am" : "pm",
-            T: H < 12 ? "A" : "P",
-            TT: H < 12 ? "AM" : "PM",
-            Z: utc ? "UTC" : (String(date).match(timezone) || [""]).pop().replace(timezoneClip, ""),
-            o: (o > 0 ? "-" : "+") + pad(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4),
-            S: ["th", "st", "nd", "rd"][d % 10 > 3 ? 0 : (d % 100 - d % 10 !== 10) * d % 10]
-          };
-      return mask.replace(token, function ($0) {
-        return $0 in flags ? flags[$0] : $0.slice(1, $0.length - 1)
-      })
-    };
-    dateFormat.masks = {
-      "default": "ddd mmm dd yyyy HH:MM:ss",
-      shortDate: "m/d/yy",
-      mediumDate: "mmm d, yyyy",
-      longDate: "mmmm d, yyyy",
-      fullDate: "dddd, mmmm d, yyyy",
-      shortTime: "h:MM TT",
-      mediumTime: "h:MM:ss TT",
-      longTime: "h:MM:ss TT Z",
-      isoDate: "yyyy-mm-dd",
-      isoTime: "HH:MM:ss",
-      isoDateTime: "yyyy-mm-dd'T'HH:MM:ss",
-      MySQL: "yyyy-mm-dd HH:MM:ss",
-      isoUtcDateTime: "UTC:yyyy-mm-dd'T'HH:MM:ss'Z'"
-    };
-    dateFormat.i18n = {
-      dayNames: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      monthNames: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
-    };
-    return dateFormat
-  }();
-  ActiveSupport.JSON = JSON;
 
   return ActiveSupport;
 }

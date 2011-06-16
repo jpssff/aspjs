@@ -139,9 +139,6 @@ function lib_msaccess() {
       if (s == "NOW()") {
         return '#' + fn_SQLDate(now) + '#';
       }
-      if (s == "NOW_UTC()") {
-        return '#' + fn_SQLDate(now, true) + '#';
-      }
       var c = s.substr(0, 1);
       if (c == "$") {
         i = Number.parseInt(s.substr(1));
@@ -157,8 +154,10 @@ function lib_msaccess() {
       return s;
     });
     q = q.replace(/SELECT\s+(.*?)\s+LIMIT\s+(\d+)/ig, 'SELECT TOP $2 $1');
-    q = q.replace(/CAST_HEX\('([^']+)'\)/ig, '0x$1');
-    q = q.replace(/CAST_DATE\('([^']+)'\)/ig, '#$1#');
+    q = q.replace(/CAST_HEX\('((?:[0-9a-f]{2})+)'\)/ig, '0x$1');
+    q = q.replace(/CAST_DATE\('(.+?)'\)/ig, function(_, date) {
+      return fn_SQLVal(Date.fromString(date));
+    });
     q = q.replace(/CAST_GUID\('(\{[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}\})'\)/ig, '{guid $1}');
     q = q.replace(/CAST_GUID\('([\da-f]{8})([\da-f]{4})([\da-f]{4})([\da-f]{4})([\da-f]{12})'\)/ig, '{guid {$1-$2-$3-$4-$5}}');
     return q;
@@ -173,7 +172,7 @@ function lib_msaccess() {
         r = "NULL";
         break;
       case 'date':
-        r = "'" + fn_SQLDate(v) + "'";
+        r = "#" + fn_SQLDate(v) + "#";
         break;
       case 'number':
         r = (isFinite(v)) ? v.toString() : "NULL";
@@ -188,8 +187,9 @@ function lib_msaccess() {
     return r;
   }
   
-  function fn_SQLDate(d, utc) {
-    return Date.format(d, "{yyyy}-{mm}-{dd} {HH}:{nn}:{ss}", utc);
+  function fn_SQLDate(d) {
+    //Dates are stored in DB as UTC
+    return Date.format(d, "{yyyy}-{mm}-{dd} {HH}:{nn}:{ss}", true);
   }
   
   function fn_SQLEsc(str) {
@@ -199,7 +199,8 @@ function lib_msaccess() {
   //Convert from ADO Data Type
   function fn_fromADO(o) {
     if (typeof o == 'date') {
-      return new Date(Date.parse(o));
+      //Dates are stored in DB as UTC
+      return Date.fromUTCString(o);
     }
     return o;
   }

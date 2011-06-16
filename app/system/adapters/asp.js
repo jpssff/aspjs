@@ -322,6 +322,43 @@ function lib_server() {
     return d.Items();
   }
 
+
+  /**
+   * Creates shorthand function for reading and manipulating a wrapped ActiveX collection.
+   *
+   * Returns function (fn) that is used as follows:
+   *   fn('name'); //Get variable by name
+   *   fn('name','value'); //Set variable
+   *   fn('name',null); //Delete variable
+   *   fn(function(n,val){ ... }); //Enumerate
+   *   fn(); //Get all
+   *   fn.clear(); //Delete all
+   *
+   */
+  function obj_wrap(obj) {
+    function fn(n, val) {
+      var type = vartype(n), args = toArray(arguments);
+      if (arguments.length == 0) {
+        return obj.all();
+      }
+      if (type == 'function') {
+        return obj.each(n);
+      }
+      if (type == 'object') {
+        return obj.append(n);
+      }
+      if (arguments.length == 1) {
+        return obj.get(n);
+      }
+      if (val === null) {
+        return obj.del(n);
+      }
+      return obj.set(n, val);
+    }
+
+    return Object.append(fn, obj);
+  }
+
   /**
    * Wrapper object for getting, setting and enumerating ActiveX collection. Optional Prefix parameter
    * can be used to store variable names so as not to conflict with other scripts. Optional Processor
@@ -420,40 +457,73 @@ function lib_server() {
     return obj_wrap(obj);
   }
 
-  /**
-   * Creates shorthand function for reading and manipulating a wrapped ActiveX collection.
-   *
-   * Returns function (fn) that is used as follows:
-   *   fn('name'); //Get variable by name
-   *   fn('name','value'); //Set variable
-   *   fn('name',null); //Delete variable
-   *   fn(function(n,val){ ... }); //Enumerate
-   *   fn(); //Get all
-   *   fn.clear(); //Delete all
-   *
-   */
-  function obj_wrap(obj) {
-    function fn(n, val) {
-      var type = vartype(n), args = toArray(arguments);
-      if (arguments.length == 0) {
-        return obj.all();
-      }
-      if (type == 'function') {
-        return obj.each(n);
-      }
-      if (type == 'object') {
-        return obj.append(n);
-      }
-      if (arguments.length == 1) {
-        return obj.get(n);
-      }
-      if (val === null) {
-        return obj.del(n);
-      }
-      return obj.set(n, val);
+}
+
+/**
+ * Build Controller Stubs
+ * Creates one or more files in ~/build/ to be executed as controller stub.
+ *
+ * @param map
+ */
+function buildControllerStubs(map) {
+  var sys = lib('system'), stubs = [], cfg = {};
+  forEach(map, function(_, controller) {
+    var name = controller.controller || String(controller);
+    if (!cfg[name]) cfg[name] = {};
+    Object.append(cfg[name], controller);
+  });
+  var stat = sys.fs.stat('~/build');
+  forEach(stat._files, function(i, file) {
+    if (!file.name.startsWith('_')) {
+      file._delete();
     }
+  });
+  var stat = sys.fs.stat('~/controllers', true);
+  forEach(stat._folders, function(i, folder) {
+    var list = [], name = folder.name;
+    forEach(folder.files, function(i, filename) {
+      if (!filename.startsWith('_')) {
+        list.push(folder.name + '/' + filename);
+      }
+    });
+    buildControllerStub(name, list, cfg);
+    stubs.push(name);
+  });
+  forEach(stat.files, function(i, filename) {
+    var name = filename.replace(/\.(.*?)$/, '');
+    if (!stubs.exists(name)) {
+      buildControllerStub(name, [filename], cfg);
+      stubs.push(name);
+    }
+  });
+  return stubs;
+}
 
-    return Object.append(fn, obj);
+/**
+ * Build Controller Stub
+ *
+ * Helper function for buildControllerStubs to create a stub from template located at ~/stub.asp
+ *
+ * @param name
+ * @param scripts
+ */
+function buildControllerStub(name, scripts, cfg) {
+  var sys = lib('system'), self = buildControllerStub;
+  var templ = self.templ || (self.templ = sys.readTextFile('stub.asp'));
+  var stub = String(templ), deps = [];
+  if (cfg && cfg[name] && cfg[name].inc) {
+    deps = deps.concat(cfg[name].inc.w());
   }
-
+  stub = stub.replace(/<script.*?(controller\.js).*?><\/script>/i, function(tag, path) {
+    var tags = [];
+    forEach(deps, function(i, script) {
+      tags.push(tag.replace(/[^"]+\.js/, __approot + 'system/lib/' + script));
+    });
+    forEach(scripts, function(i, script) {
+      tags.push(tag.replace(path, script));
+    });
+    return tags.join('\r\n');
+  });
+  stub = stub.replaceAll(__approot, '../');
+  sys.writeTextToFile('build/' + name + '.asp', stub);
 }

@@ -93,7 +93,7 @@ function lib_filestore() {
         }
         var i = 365 * 24 * 3600;
         res.headers('Cache-Control', 'public, max-age=' + String(i));
-        res.headers('Expires', new Date(__now + i * 1000).toGMTString());
+        res.headers('Expires', new Date(__date.valueOf() + i * 1000).toGMTString());
         res.headers('Last-Modified', file.attr('created').toGMTString());
         res.headers('ETag', '"' + file.attr('hash') + '"');
       }

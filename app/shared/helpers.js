@@ -1,34 +1,75 @@
 /*
  * Helper Functions
- * These are attached to the router's data object to be used within handlers and controller functions.
- * Members of this object are accessible using "this" keyword inside routing handlers.
+ *
+ * Attaches helper functions to the router's context for quick access later. Items are later
+ * accessible using "this" keyword inside routing event handlers.
  * 
  */
-bind('preroute', function() {
+bind('pre-route', function() {
 
-  var data = this, templ = lib('templ');
+  var self = this;
   
-  //data passed to template (see render function)
-  var templ_data = {
-    http_host: req.headers('host'),
-    http_referrer: req.headers('referrer')
-  };
-  if (req.msg) {
-    templ_data.msg_text = req.msg.msg_text;
-    templ_data.err_text = req.msg.err_text;
-  }
-  
-  Object.append(data, {
+  Object.append(self, {
     
-    templ: templ,
-    templ_data: templ_data,
+    session: lib('session').init('shortterm namespace:auth'),
 
-    //Render template and send result, ending the request
-    render: function(page, obj) {
-      var html = templ.render(page, Object.append({}, templ_data, obj));
-      res.die('text/html', html);
+    isXHR: function() {
+      return (String(req.headers('x-requested-with')).toLowerCase() == 'xmlhttprequest');
+    },
+
+    error: function(message) {
+      if (self.isXHR()) {
+        res.die('application/json', {success: false, error: message});
+      } else {
+        res.die('Error: ' + message);
+      }
     }
 
   });
+
+});
+
+
+/*!
+ * Other Handlers (run before or after request routing).
+ *
+ */
+bind('pre-route', function() {
+
+  var url = req.url('path');
+  if (url.startsWith('/admin/') && !url.match(/\/log(in|out)$/)) {
+    if (!this.session('user')) {
+      this.error('Unauthorized');
+    }
+  }
+
+});
+
+
+/*!
+ * The no-route event fires after all routes have been processed (assuming none have called
+ * stop(), thrown an error or ended the request) but before the 404 event.
+ *
+ */
+bind('no-route', function() {
+
+  var url = req.url('path');
+  if (url.length > 1 && url.endsWith('/')) {
+    res.redir(url.replaceTail('/', ''));
+  }
+
+});
+
+
+/**
+ * This handler is attached *before* the default 404 handler (note the preceding !) It
+ * can modify this.response (which is used further down the event chain).
+ *
+ */
+bind('!404',function() {
+
+  if (this.isXHR()) {
+    this.response = {type: 'application/json', body: {success: false, error: '404 Not Found'}};
+  }
 
 });

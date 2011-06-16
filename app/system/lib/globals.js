@@ -23,23 +23,6 @@ function forEach(o, fn) {
 }
 
 /**
- * Function to output a stack trace
- *
- */
-function stackTrace(fn) {
-  if (!fn) fn = arguments.caller.callee;
-  var list = [];
-  while (fn && list.length < 10) {
-    list.push(fn);
-    fn = fn.caller;
-  }
-  list = list.map(function(fn) {
-    return '' + fn;
-  });
-  res.die(list.join('\r\n\r\n'));
-}
-
-/**
  * Set a global variable.
  *
  * @param n
@@ -59,22 +42,6 @@ function setGlobal(n, val) {
     });
     return args[0];
   }
-}
-
-/**
- * Get a member of an object or set it if it doesn't exist
- * This basically replaces lines like:
- * # val = obj.prop || (obj.prop = default_val);
- *
- * @param {Object} obj
- * @param {String} prop
- * @param {Object} default_val
- */
-function getset(obj, prop, default_val) {
-  if (!Object.exists(obj, prop)) {
-    obj[prop] = default_val;
-  }
-  return obj[prop];
 }
 
 /**
@@ -161,7 +128,7 @@ function lib_globals() {
     for (var i=0; i<args.length; i++) {
       if (args[i] instanceof Object) {
         if (ret) {
-          Object.each(args[i],function(n, val) {
+          Object.each(args[i], function(n, val) {
             ret[n] = val;
           });
         } else {
@@ -517,16 +484,16 @@ function lib_globals() {
   };
 
   var REG_DATE_1 = /^(\d{4})-(\d{2})-(\d{2})\s*T?([\d:]+)(\.\d+)?($|[Z\s+-].*)$/i;
-  var REG_DATE_2 = /(^|[^\d])(\d{4})-(\d{1,2})-(\d{1,2})($|[^\d])/;
+  var REG_DATE_2 = /\b(\d{4})-(\d{1,2})-(\d{1,2})\b/;
   Date.fromString = function(str, /**String=*/ def) {
     if (str instanceof Date) {
       return new Date(str);
     }
     str = String(str);
     //ISO 8601 / JSON-style date: "2008-12-13T16:08:32Z"
-    str = str.replace(REG_DATE_1, '$2/$3/$1 $4$6');
-    //YYYY-M-D
-    str = str.replace(REG_DATE_2, '$1$2/$3/$4$5');
+    str = str.replace(REG_DATE_1, '$1/$2/$3 $4$6');
+    //YYYY-MM-DD
+    str = str.replace(REG_DATE_2, '$1/$2/$3');
     var i = Date.parse(str);
     if (isFinite(i)) {
       return new Date(i);
@@ -610,8 +577,6 @@ function lib_globals() {
  */
 if (typeof exports != 'undefined') {
   exports.forEach = forEach;
-  exports.stackTrace = stackTrace;
   exports.setGlobal = setGlobal;
-  exports.getset = getset;
   exports.fngetset = fngetset;
 }

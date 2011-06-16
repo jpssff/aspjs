@@ -6,16 +6,21 @@
  */
 if (!this.lib_activerecord) this.lib_activerecord = lib_activerecord;
 function lib_activerecord() {
-  var ActiveSupport = lib("activesupport"), ActiveEvent = lib("activeevent"), ActiveRecord;
+  var JSON = lib('json')
+    , ActiveSupport = lib("activesupport")
+    , ActiveEvent = lib("activeevent")
+    , ActiveRecord;
+  var __now = new Date();
 
   ActiveRecord = {
     logging: false,
     autoMigrate: true,
     internalCounter: 0,
     Models: {},
+    ModelsByTableName: {},
     ClassMethods: {},
     InstanceMethods: {},
-    create: function(options, fields, methods) {
+    create: function(options, fields, methods, callback) {
       if (!ActiveRecord.connection) throw ActiveRecord.Errors.ConnectionNotEstablished.getErrorString();
       if (typeof options === "string") options = {
         tableName: options
@@ -30,6 +35,12 @@ function lib_activerecord() {
         for (var key in data) this.set(key, data[key], true);
         this._errors = [];
         var fields = this.constructor.fields;
+        if (!('created' in fields)) {
+          fields.created = __now;
+        }
+        if (!('updated' in fields)) {
+          fields.updated = __now;
+        }
         for (var key in fields) {
           var field = fields[key];
           if (!field.primaryKey) {
@@ -45,7 +56,8 @@ function lib_activerecord() {
       model.tableName = options.tableName;
       model.primaryKeyName = "id";
       ActiveSupport.extend(model.prototype, ActiveRecord.InstanceMethods);
-      if (typeof methods == "undefined") for (var method_name in fields) {
+      if (typeof methods == "undefined")
+      for (var method_name in fields) {
         if (typeof fields[method_name] == "function") {
           methods = fields;
           fields = null
@@ -77,7 +89,14 @@ function lib_activerecord() {
       }
       model.get = model["findBy" + ActiveSupport.camelize(model.primaryKeyName, true)];
       model.relationships = [];
-      if (ActiveRecord.autoMigrate) Migrations.Schema.createTable(options.tableName, ActiveSupport.clone(model.fields));
+      //MODIFIED
+      ActiveRecord.ModelsByTableName[options.tableName] = model;
+      model.createTable = function() {
+        Migrations.Schema.createTable(options.tableName, ActiveSupport.clone(model.fields), model.foreign_keys);
+      };
+      if (callback) {
+        callback.call(model, model);
+      }
       return model
     }
   };
@@ -160,10 +179,10 @@ function lib_activerecord() {
       if (!this.isValid()) return false;
       for (var key in this.constructor.fields) if (!this.constructor.fields[key].primaryKey) this.set(key, ActiveRecord.connection.fieldIn(this.constructor.fields[key], this.get(key)), true);
       if (this.notify("beforeSave") === false) return false;
-      if ("updated" in this._object) this.set("updated", ActiveSupport.dateFormat("yyyy-mm-dd HH:MM:ss"));
+      if ("updated" in this._object) this.set("updated", __now);
       if (force_created_mode || this._id === undefined) {
         if (this.notify("beforeCreate") === false) return false;
-        if ("created" in this._object) this.set("created", ActiveSupport.dateFormat("yyyy-mm-dd HH:MM:ss"));
+        if ("created" in this._object) this.set("created", __now);
         ActiveRecord.connection.insertEntity(this.tableName, this.constructor.primaryKeyName, this.toObject());
         if (!this.get(this.constructor.primaryKeyName)) this.set(this.constructor.primaryKeyName, ActiveRecord.connection.getLastInsertedRowId());
         Synchronization.triggerSynchronizationNotifications(this, "afterCreate");
@@ -210,7 +229,7 @@ function lib_activerecord() {
         result = null;
         if (typeof params === "string" && !params.match(/^\d+$/)) result = ActiveRecord.connection.findEntities.apply(ActiveRecord.connection, arguments);
         else if (params && (typeof params == "object" && "length" in params && "slice" in params || (typeof params == "number" || typeof params == "string") && arguments.length > 1)) {
-          var ids = (typeof params == "number" || typeof params == "string") && arguments.length > 1 ? ActiveSupport.arrayFrom(arguments) : params;
+          var ids = (typeof params == "number" || typeof params == "string") && arguments.length > 1 ? toArray(arguments) : params;
           result = ActiveRecord.connection.findEntitiesById(this.tableName, this.primaryKeyName, ids)
         } else result = ActiveRecord.connection.findEntities(this.tableName, params);
         var response = [];
@@ -230,7 +249,7 @@ function lib_activerecord() {
         var responses = [];
         for (var i = 0; i < instances.length; ++i) responses.push(instances[i].destroy());
         return responses
-      } else if (ActiveSupport.isArray(id)) {
+      } else if (vartype(id, 'array')) {
         var responses = [];
         for (var i = 0; i < id.length; ++i) {
           var instance = this.get(id[i]);
@@ -245,7 +264,7 @@ function lib_activerecord() {
       }
     },
     build: function(data) {
-      if (ActiveSupport.isArray(data)) {
+      if (vartype(data, 'array')) {
         var records = [];
         for (var i = 0; i < data.length; ++i) {
           ++ActiveRecord.internalCounter;
@@ -262,7 +281,7 @@ function lib_activerecord() {
       }
     },
     create: function(data) {
-      if (ActiveSupport.isArray(data)) {
+      if (vartype(data, 'array')) {
         var records = [];
         for (var i = 0; i < data.length; ++i) {
           var record = this.build(data[i]);
@@ -277,8 +296,8 @@ function lib_activerecord() {
       }
     },
     update: function(id, attributes) {
-      if (ActiveSupport.isArray(id)) {
-        var attributes_is_array = ActiveSupport.isArray(attributes);
+      if (vartype(id, 'array')) {
+        var attributes_is_array = vartype(attributes, 'array');
         var results = [];
         for (var i = 0; i < id.length; ++i) {
           var record = this.get(id[i]);
@@ -347,11 +366,11 @@ function lib_activerecord() {
   ActiveRecord.connection = null;
   ActiveRecord.connect = function(adapter) {
     if (!adapter) {
-      var connection = Adapters.Auto.connect.apply(Adapters.Auto, ActiveSupport.arrayFrom(arguments).slice(1));
+      var connection = Adapters.Auto.connect.apply(Adapters.Auto, toArray(arguments).slice(1));
       if (connection) ActiveRecord.connection = connection;
       ActiveRecord.adapters.push(ActiveRecord.connection.constructor)
     } else {
-      var connection = adapter.connect.apply(adapter, ActiveSupport.arrayFrom(arguments).slice(1));
+      var connection = adapter.connect.apply(adapter, toArray(arguments).slice(1));
       if (connection) ActiveRecord.connection = connection;
       ActiveRecord.adapters.push(adapter)
     }
@@ -405,6 +424,7 @@ function lib_activerecord() {
       if (typeof value === "string") return "VARCHAR(255)";
       if (typeof value === "number") return "INT";
       if (typeof value == "boolean") return "TINYINT(1)";
+      if (value instanceof Date) return "DATETIME";
       return "TEXT"
     },
     getDefaultValueFromFieldDefinition: function(field) {
@@ -415,15 +435,16 @@ function lib_activerecord() {
     },
     log: function() {
       if (!ActiveRecord.logging) return;
-      if (arguments[0]) arguments[0] = "ActiveRecord: " + arguments[0];
-      return ActiveSupport.log.apply(ActiveSupport, arguments || {})
+      var args = toArray(arguments);
+      args.push('activerecord');
+      sys.log.apply(sys, args);
     }
   };
   ActiveRecord.Adapters = Adapters;
   Adapters.SQL = {
     schemaLess: false,
     insertEntity: function(table, primary_key_name, data) {
-      var keys = ActiveSupport.keys(data).sort();
+      var keys = Object.keys(data).sort();
       var values = [];
       var args = [];
       var quoted_keys = [];
@@ -444,7 +465,7 @@ function lib_activerecord() {
       var args = [];
       if (typeof updates !== "string") {
         var values = [];
-        var keys = ActiveSupport.keys(updates).sort();
+        var keys = Object.keys(updates).sort();
         for (var i = 0; i < keys.length; ++i) {
           args.push(updates[keys[i]]);
           values.push(this.quoteIdentifier(keys[i]) + " = ?")
@@ -455,7 +476,7 @@ function lib_activerecord() {
       return this.executeSQL.apply(this, args)
     },
     updateEntity: function(table, primary_key_name, id, data) {
-      var keys = ActiveSupport.keys(data).sort();
+      var keys = Object.keys(data).sort();
       var args = [];
       var values = [];
       for (var i = 0; i < keys.length; ++i) {
@@ -527,12 +548,12 @@ function lib_activerecord() {
     },
     buildWhereSQLFragment: function(fragment, args) {
       var where, keys, i;
-      if (fragment && ActiveSupport.isArray(fragment)) {
+      if (fragment && vartype(fragment, 'array')) {
         for (i = 1; i < fragment.length; ++i) args.push(fragment[i]);
         return " WHERE " + fragment[0]
       } else if (fragment && typeof fragment !== "string") {
         where = "";
-        keys = ActiveSupport.keys(fragment);
+        keys = Object.keys(fragment);
         for (i = 0; i < keys.length; ++i) {
           where += this.quoteIdentifier(keys[i]) + " = ? AND ";
           var value;
@@ -558,17 +579,19 @@ function lib_activerecord() {
       return this.executeSQL("ALTER TABLE " + table_name + " ADD COLUMN " + this.getColumnDefinitionFragmentFromKeyAndColumns(key, columns))
     },
     fieldIn: function(field, value) {
-      if (value && value instanceof Date) return ActiveSupport.dateFormat(value, "yyyy-mm-dd HH:MM:ss");
+      if (value && value instanceof Date) return Date.format(value, '{yyyy}-{mm}-{dd} {HH}:{nn}:{ss}', true);
       if (Migrations.objectIsFieldDefinition(field)) field = this.getDefaultValueFromFieldDefinition(field);
       value = this.setValueFromFieldIfValueIsNull(field, value);
       if (typeof field === "string") return String(value);
       if (typeof field === "number") return String(value);
       if (typeof field === "boolean") return String(parseInt(Number(value), 10));
-      if (typeof value === "object" && !Migrations.objectIsFieldDefinition(field)) return ActiveSupport.JSON.stringify(value)
+      //TODO: date
+      if (typeof value === "object" && !Migrations.objectIsFieldDefinition(field)) return JSON.stringify(value)
     },
     fieldOut: function(field, value) {
       if (Migrations.objectIsFieldDefinition(field)) {
-        if (typeof value == "string" && /date/.test(field.type.toLowerCase())) return ActiveSupport.dateFromDateTime(value);
+        //Date as String
+        if (typeof value == "string" && /date/.test(field.type.toLowerCase())) return Date.fromString(value);
         field = this.getDefaultValueFromFieldDefinition(field)
       }
       value = this.setValueFromFieldIfValueIsNull(field, value);
@@ -579,11 +602,19 @@ function lib_activerecord() {
       }
       if (typeof field === "number") {
         if (typeof value === "number") return value;
-        var t = ActiveSupport.trim(String(value));
+        var t = String(value).trim();
         return t.length > 0 && !/[^0-9.]/.test(t) && /\.\d/.test(t) ? parseFloat(Number(value)) : parseInt(Number(value), 10)
       }
-      if ((typeof value === "string" || typeof value === "object") && typeof field === "object" && (typeof field.length !== "undefined" || typeof field.type === "undefined")) if (typeof value === "string") return ActiveSupport.JSON.parse(value);
-      else return value
+      //MODIFIED
+      if (field instanceof Date || (field instanceof Object && field.type == 'date')) {
+        if (typeof value == 'string') return Date.fromString(value);
+        return value;
+      }
+
+      if ((typeof value === "string" || typeof value === "object") && typeof field === "object" && (typeof field.length !== "undefined" || typeof field.type === "undefined")) {
+        if (typeof value === "string") return JSON.parse(value);
+      }
+      return value;
     },
     transaction: function(proceed) {
       try {
@@ -1161,6 +1192,10 @@ function lib_activerecord() {
     related_model_name = Relationships.normalizeModelName(related_model_name);
     var relationship_name = options.name ? Relationships.normalizeModelName(options.name) : related_model_name;
     var foreign_key = Relationships.normalizeForeignKey(options.foreignKey, related_model_name);
+    //MODIFIED
+    this.foreign_keys = this.foreign_keys || [];
+    this.foreign_keys.push(foreign_key);
+    
     var class_methods = {};
     var instance_methods = {};
     instance_methods["get" + relationship_name] = ActiveSupport.curry(function(related_model_name, foreign_key) {
@@ -1201,6 +1236,7 @@ function lib_activerecord() {
   };
   var Migrations = {
     fieldTypesWithDefaultValues: {
+      "bit": 0,
       "tinyint": 0,
       "smallint": 0,
       "mediumint": 0,
@@ -1224,6 +1260,7 @@ function lib_activerecord() {
       "tinytext": "",
       "blob": "",
       "text": "",
+      "memo": "",
       "mediumtext": "",
       "mediumblob": "",
       "longblob": "",
@@ -1308,11 +1345,11 @@ function lib_activerecord() {
       return migrations
     },
     objectIsFieldDefinition: function(object) {
-      return typeof object === "object" && ActiveSupport.keys(object).length === 2 && "type" in object && "value" in object
+      return typeof object === "object" && Object.keys(object).length === 2 && "type" in object && "value" in object
     },
     Schema: {
-      createTable: function(table_name, columns) {
-        return ActiveRecord.connection.createTable(table_name, columns)
+      createTable: function(table_name, columns, foreign_keys) {
+        return ActiveRecord.connection.createTable(table_name, columns, foreign_keys)
       },
       dropTable: function(table_name) {
         return ActiveRecord.connection.dropTable(table_name)
@@ -1509,8 +1546,8 @@ function lib_activerecord() {
    *
    */
   Adapters.SQLite = ActiveSupport.extend(ActiveSupport.clone(Adapters.SQL), {
-    createTable: function(table_name, columns) {
-      var keys = ActiveSupport.keys(columns);
+    createTable: function(table_name, columns, foreign_keys) {
+      var keys = Object.keys(columns);
       var fragments = [];
       for (var i = 0; i < keys.length; ++i) {
         var key = keys[i];
@@ -1548,15 +1585,24 @@ function lib_activerecord() {
       quoteIdentifier: function(field) {
         return '[' + field + ']';
       },
-      executeSQL: function(sql) {
-        var params = ActiveSupport.arrayFrom(arguments).slice(1);
-        //var i = 0;
-        //sql = sql.replace(/\?/g, function() {
-        //  return '$' + (++i);
-        //});
+      executeSQL: function(sql, errback) {
+        var params = toArray(arguments).slice(1);
         ActiveRecord.connection.log("Adapters.Access.executeSQL: " + sql + " [" + params.join(',') + "]");
         var query = ActiveRecord.Adapters.Access.db.query(sql, params);
-        return query.getAll();
+        try {
+          return query.getAll();
+        } catch(e) {
+          if (e.message.match(/(cannot|could not) find( the)? (input|output) table/i)) {
+            var m;
+            if ((m = sql.match(/^INSERT INTO (\S+)/i)) && ActiveRecord.autoMigrate) {
+              var model = ActiveRecord.ModelsByTableName[m[1]];
+              model.createTable();
+              return query.getAll();
+            }
+          } else {
+            throw new Error('ActiveRecord could not execute SQL statement' + e.message.replace(/[^.;]+/, ''));
+          }
+        }
       },
       getLastInsertedRowId: function() {
         var rec = ActiveRecord.Adapters.Access.db.query('SELECT @@IDENTITY AS [val]').getOne();
@@ -1566,27 +1612,27 @@ function lib_activerecord() {
         if (typeof value === "string") return "TEXT(255)";
         if (typeof value === "number") return "INT";
         if (typeof value == "boolean") return "BIT";
+        if (value instanceof Date) return "DATETIME";
         return "MEMO"
       },
-      createTable: function(table_name, columns) {
-        var keys = ActiveSupport.keys(columns);
+      createTable: function(table_name, columns, foreign_keys) {
+        var keys = Object.keys(columns);
         var fragments = [];
         for (var i = 0; i < keys.length; ++i) {
           var key = keys[i];
           if (columns[key].primaryKey) {
             var type = columns[key].type || "INTEGER IDENTITY(123,1) NOT NULL";
-            fragments.unshift("[" + key + "] " + type + " CONSTRAINT [pk_" + key + "] PRIMARY KEY")
+            fragments.unshift("[" + key + "] " + type + " CONSTRAINT [pk_" + key + "] PRIMARY KEY");
           } else {
-            fragments.push(this.getColumnDefinitionFragmentFromKeyAndColumns(key, columns))
+            fragments.push(this.getColumnDefinitionFragmentFromKeyAndColumns(key, columns));
           }
         }
-        try {
-          var result = this.executeSQL("CREATE TABLE [" + table_name + "] (" + fragments.join(", ") + ")");
-        } catch (e) {
-          if (!e.message || !e.message.match(/already exists/)) {
-            throw e;
+        if (foreign_keys) {
+          for (var i = 0; i < foreign_keys.length; ++i) {
+            fragments.push("[" + foreign_keys[i] + "] INT");
           }
         }
+        var result = this.executeSQL("CREATE TABLE [" + table_name + "] (" + fragments.join(", ") + ")");
         return result;
       },
       iterableFromResultSet: function(result) {

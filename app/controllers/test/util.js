@@ -1,5 +1,10 @@
 bind('ready', function() {
 
+  //date parsing
+  app('/test/date/:date', function(p) {
+    res.die(Date.fromString(p('date')));
+  });
+
   //email sending
   app('/test/email', function() {
     var net = lib('net');

@@ -1,9 +1,15 @@
+/*!
+ * Data Modeling
+ *
+ * requires lib_activerecord
+ *
+ */
 if (!this.lib_model) this.lib_model = lib_model;
 function lib_model() {
   var ActiveRecord = lib('activerecord');
+  var Models = app.Models = ActiveRecord.Models;
 
-  var Models = {};
-  setGlobal('Models', Models);
+  setGlobal({Models: Models, ActiveRecord: ActiveRecord});
 
   var connected = false;
   function connect() {
@@ -32,7 +38,7 @@ function lib_model() {
 
   model.create = function(name, def) {
     if (!connected) connect();
-    Models[name] = ActiveRecord.create(def.table, def.properties, def.methods);
+    ActiveRecord.create({tableName: def.table, modelName: name}, def.properties, def.methods, def.callback);
   };
 
   return model;

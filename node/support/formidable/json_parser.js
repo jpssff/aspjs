@@ -20,8 +20,15 @@ JSONParser.prototype.end = function() {
     } catch(e) {}
     if (obj) {
       Object.keys(obj).forEach(function(n) {
-        self.onField(n, obj[n]);
-        //self.onField(n, JSON.stringify(obj[n]));
+        var val = obj[n], type = typeof val;
+        if (val === null || type == 'undefined') {
+          self.onField(n, '');
+        } else
+        if (type == 'string' || type == 'number' || type == 'boolean') {
+          self.onField(n, String(val));
+        } else {
+          self.onField(n, JSON.stringify(val));
+        }
       });
     }
   }

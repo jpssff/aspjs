@@ -1,18 +1,28 @@
 ﻿/*!
- * Declare global variables
+ * Core Application Functionality
+ *
+ * This file should be included before any application code is executed.
+ *
  */
-var __approot, __date, __now;
+
+var __approot = '/app/', __date = new Date();
+
+/*!
+ * Declare global variables
+ * NOTE: Comment out for compatibility with CommonJS (becomes implied globals)
+ */
 var global, server, app, sys, req, res;
 
 /**
  * Dispatch Request
- * This is a dispatch function similar to app_init but has fewer dependencies, contains code to build
- * the controller stubs and doesn't use the event model.
  *
- * @param {Object} map matches URL patterns to controllers
+ * This function is called from dispatch.asp and executes a controller stub based on requested
+ * URL. In cases where the controller file does not exist, it will call a function to rebuild
+ * the required file(s).
+ *
+ * @param map {Object} Maps one or more URL prefix to controller
  */
 function dispatch(map) {
-  __approot = '/app/';
   global = lib('globals');
   server = lib('server');
   req = server.req;
@@ -45,103 +55,25 @@ function dispatch(map) {
   res.end();
 }
 
-
 /**
- * Build Controller Stubs
- * Creates one or more files inside app/build that dispatch can execute as a controller stub.
+ * Initialize Application Environment and Route Request
  *
- * @param map
- */
-function buildControllerStubs(map) {
-  var sys = lib('system'), stubs = [], cfg = {};
-  forEach(map, function(_, controller) {
-    var name = controller.controller || String(controller);
-    if (!cfg[name]) cfg[name] = {};
-    Object.append(cfg[name], controller);
-  });
-  var stat = sys.fs.stat('~/build');
-  forEach(stat._files, function(i, file) {
-    if (!file.name.startsWith('_')) {
-      file._delete();
-    }
-  });
-  var stat = sys.fs.stat('~/controllers', true);
-  forEach(stat._folders, function(i, folder) {
-    var list = [], name = folder.name;
-    forEach(folder.files, function(i, filename) {
-      if (!filename.startsWith('_')) {
-        list.push(folder.name + '/' + filename);
-      }
-    });
-    buildControllerStub(name, list, cfg);
-    stubs.push(name);
-  });
-  forEach(stat.files, function(i, filename) {
-    var name = filename.replace(/\.(.*?)$/, '');
-    if (!stubs.exists(name)) {
-      buildControllerStub(name, [filename], cfg);
-      stubs.push(name);
-    }
-  });
-  return stubs;
-}
-
-/**
- * Build Controller Stub
+ * Initializes globals required by the application environment and dispatches request using the
+ * event model. This requires most of the core libraries.
  *
- * Helper function for buildControllerStubs to create a stub from template located at app/stub.asp
- *
- * @param name
- * @param scripts
- */
-function buildControllerStub(name, scripts, cfg) {
-  var sys = lib('system'), self = buildControllerStub;
-  var templ = self.templ || (self.templ = sys.readTextFile('stub.asp'));
-  var stub = String(templ), deps = [];
-  if (cfg && cfg[name] && cfg[name].inc) {
-    deps = deps.concat(cfg[name].inc.w());
-  }
-  stub = stub.replace(/<script.*?(controller\.js).*?><\/script>/i, function(tag, path) {
-    var tags = [];
-    forEach(deps, function(i, script) {
-      tags.push(tag.replace(/[^"]+\.js/, __approot + 'system/lib/' + script));
-    });
-    forEach(scripts, function(i, script) {
-      tags.push(tag.replace(path, script));
-    });
-    return tags.join('\r\n');
-  });
-  stub = stub.replaceAll(__approot, '../');
-  sys.writeTextToFile('build/' + name + '.asp', stub);
-}
-
-
-/**
- * Initialize Application Environment and Trigger Request Routing
- *
- * Sets global variables required by the application environment and dispatches request using the
- * event model. This requires most of the core & library files to be included within the script
- * calling this function.
- *
- * After the application environment has been loaded, the 'ready' event is triggered and then request
- * routing begins via the 'route' event. All business logic should have been bound to one of these two
- * events by the time this code runs.
+ * Once the application environment has been initialized, the 'ready' event is triggered and request
+ * routing begins. All application logic should have been bound to events by the time this function
+ * is executed.
  *
  */
 function app_init() {
-  __approot = '/app/';
-  __date = new Date();
-  __now = __date.valueOf();
-
   global = lib('globals');
   server = lib('server');
   app = lib('application');
   sys = app.sys = lib('system');
   req = app.req = lib('request');
   res = app.res = lib('response');
-  if (req) {
-    req.router = lib('router');
-  }
+  req.router = lib('router');
   app.model = lib('model');
   app.util = lib('util');
   res.clear();
@@ -152,45 +84,47 @@ function app_init() {
 
 
 /**
- * Load a library. Libraries exist as special loader functions (prefixed with "lib_") that are
- * executed to return the library's "module" which can be any non-primitive data type. A loader
- * function is not executed before the first call to lib() and it is never executed twice. If the
- * library has been loaded before then a saved copy of the module is returned.
+ * Load a library
  *
- * @param {String} name
- * @returns {Object}
+ * Libraries exist as special loader modules (functions prefixed with "lib_") that are executed to
+ * create the library's instance (which can be of any data type). A library's loader function is
+ * not executed until the first call to lib() and it is never executed twice. If an instance has
+ * been previously created then a cached copy is returned (similar to require() in CommonJS).
+ *
+ * @param name {String}
  */
 function lib(name) {
-  var cache = lib.cache || (lib.cache = {});
-  var module = cache[name];
-  if (module) {
-    return module;
+  var cache = lib.cache || (lib.cache = {}), instance = cache[name];
+  if (instance) {
+    return instance;
   }
-  module = this['lib_' + name];
+  var module = this['lib_' + name];
   if (module) {
     var exports = {};
     var r = module.call(exports, exports) || exports;
-    return cache[name] = r;
+    instance = cache[name] = r;
   }
+  return instance;
 }
 
 
 /**
  * Bind an Application Event Handler
- * Accepts a function which is added to the list of functions to be executed any time the event is
- * triggered. Prepend ":" to the event name to append the function to _top_ of the list.
+ *
+ * Accepts a function which is added to the list of functions to be executed when the event is
+ * triggered. Prepend "!" to the event name to add the function to the *top* of the list.
  *
  * NOTE: This is the only function that is called before app_init or dispatch. Therefore it does not
- * have access to shorthand functions, extended object methods or global variables.
+ * have access to functions/extensions that are created inside lib_global.
  *
- * @param {String} name Event Name
- * @param {Function} func Function to be executed when Event fires
+ * @param name {String} Event Name
+ * @param func {Function} Function to be bound to event
  */
 function bind(name, func) {
   var events = bind.events || (bind.events = {});
-  var rex = /^:(\w+)/, top = false;
-  if (name.match(rex)) {
-    name = name.replace(rex,'$1');
+  var priority = /^!/, top = false;
+  if (priority.test(name)) {
+    name = name.replace(priority, '');
     top = true;
   }
   if (events[name]) {
@@ -206,31 +140,57 @@ function bind(name, func) {
 
 /**
  * Trigger an event by name
- * Accepts a data parameter which will be bound to the context of each handler function (accessible
- * as "this") and an array of arguments to be passed to each handler.
  *
- * @param {String} name Event Name
- * @param {Object} data Context Data
- * @param {Array} args Arguments
+ * Accepts an object which will become the "this" context of each handler
+ * and an array of arguments to be passed to each handler.
+ *
+ * @param name {String} Event Name
+ * @param [data] {Object} Context Object
+ * @param [args] {Array} Arguments
  */
-function trigger(name, data, args){
-  var events = bind.events || {};
+function trigger(name, data, args) {
+  var stack = trigger.stack || (trigger.stack = [])
+    , events = bind.events || {};
+  if (stack.exists(name)) {
+    //Already within this event
+    return data;
+  }
   data = data || {};
-  if (Object.exists(events, name)) {
-    events[name].each(function(i, event){
+  if (events[name]) {
+    stack.push(name);
+    events[name].each(function(i, event) {
       event.apply(data, args || [])
     });
+    stack.pop();
   }
   return data;
 }
 
+/**
+ * Function to output a stack trace
+ *
+ */
+function stackTrace(fn) {
+  if (!fn) fn = arguments.caller.callee;
+  var list = [];
+  while (fn && list.length < 10) {
+    list.push(fn);
+    fn = fn.caller;
+  }
+  list = list.map(function(fn) {
+    return '' + fn;
+  });
+  res.die(list.join('\r\n\r\n'));
+}
+
 /*!
- * Compatibility for v8cgi
+ * Compatibility with CommonJS
  */
 if (typeof exports != 'undefined') {
-  exports.app_init = app_init;
   exports.dispatch = dispatch;
+  exports.app_init = app_init;
   exports.lib = lib;
   exports.bind = bind;
   exports.trigger = trigger;
+  exports.stackTrace = stackTrace;
 }

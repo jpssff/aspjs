@@ -166,10 +166,10 @@ function lib_session() {
         }
         //Update Last-Accessed (whether we saved any data or not)
         if (!session.lastAccessUpdated) {
-          var sql = "UPDATE [session] SET [last_access] = NOW_UTC() WHERE [guid] = CAST_GUID($1)";
+          var sql = "UPDATE [session] SET [last_access] = NOW() WHERE [guid] = CAST_GUID($1)";
           var num = db.exec(sql, [session.token], true);
           if (!num) {
-            sql = "INSERT INTO [session] ([guid], [ip_addr], [http_ua], [created], [last_access]) VALUES (CAST_GUID($1), $2, $3, NOW_UTC(), NOW_UTC())";
+            sql = "INSERT INTO [session] ([guid], [ip_addr], [http_ua], [created], [last_access]) VALUES (CAST_GUID($1), $2, $3, NOW(), NOW())";
             db.exec(sql, [session.token, server.vars('ipaddr'), req.headers('user-agent')]);
           }
           session.lastAccess = Date.now();

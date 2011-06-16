@@ -1,17 +1,14 @@
 /**
  * Application Specific Configuration.
  *
- * This function should return an set of key/value pairs specific to this application or deployment.
+ * This function should return a set of key/value pairs specific to this application or deployment.
  *
  */
 if (!this.lib_appcfg) this.lib_appcfg = lib_appcfg;
 function lib_appcfg() {
   return {
-    
-    //Application Title
-    app_title: "Web Application",
-    
-    //Defaults
+
+    //Application Defaults
     defaults: {
       //Timezone Offset
       timezone: {
@@ -24,19 +21,7 @@ function lib_appcfg() {
       default_datastore: 'database'
     },
 
-    //Email Notifications
-    notify: {
-      //default from address
-      'from': 'Simon Sturmer <simon.sturmer@gmail.com>',
-      //webmaster receives error reports
-      'webmaster': 'simon.sturmer@gmail.com',
-      //admin receives member, signup and other notifications
-      'admin': 'simon.sturmer@gmail.com',
-      //default receives all other notifications
-      'default': 'simon.sturmer@gmail.com'
-    },
-    
-    //Email Relay
+    //Outgoing Email Server
     smtp: {
       host: 'localhost',
       port: '25',
@@ -46,15 +31,11 @@ function lib_appcfg() {
     
     //Templating Engine
     template: {
+      engine: 'nitro',
       defaults: {
         date_format: '{d} {c} {yyyy} {h}:{nn}{p}'
       }
-    },
-    
-    //301 Redirects (Processed before any routes)
-    redir: {
-      '/admin/': '/admin'
     }
-    
+
   };
 }

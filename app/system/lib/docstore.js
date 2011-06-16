@@ -160,7 +160,7 @@ function lib_docstore() {
         existing = this.get(source._id);
       }
       if (!existing) {
-        var q = "INSERT INTO [doc] ([col],[guid],[created]) VALUES ($1,CAST_GUID($2),NOW_UTC())";
+        var q = "INSERT INTO [doc] ([col],[guid],[created]) VALUES ($1,CAST_GUID($2),NOW())";
         var dbid = db.exec(q,[col_id,util.getGUID()],true);
         db.exec("UPDATE [doc] SET [doc_num] = $1 WHERE [doc_id] = $2",[dbid + 121392,dbid])
         existing = this._get({dbid:dbid});

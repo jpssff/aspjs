@@ -1,16 +1,15 @@
 bind('ready', function() {
 
-  var session = lib('session').init('shortterm namespace:auth');
-
   app('/admin/login', function() {
     var un = req.post('username') || req.params('username')
       , pw = req.post('password') || req.params('password')
       , result;
-    if (String(un).toLowerCase() == 'admin' && String(pw) == 'password') {
-      session('user', 'admin');
-      result = {success: true, user: un};
+    if (!un && !pw) {
+      un = this.session('user');
+      result = (un) ? {success: true, user: un} : {success: false};
     } else
-    if ((un = session('user'))) {
+    if (un && un.toLowerCase() == 'admin' && pw == 'password') {
+      this.session('user', 'admin');
       result = {success: true, user: un};
     } else {
       result = {success: false, error: 'Invalid Login Credentials'};
@@ -18,18 +17,8 @@ bind('ready', function() {
     res.die('application/json', result);
   });
 
-  app('/admin/check-auth', function() {
-    var un = session('user'), result;
-    if (un) {
-      result = {logged_in: true, user: un}
-    } else {
-      result = {logged_in: false}
-    }
-    res.die('application/json', result);
-  });
-
   app('/admin/logout', function() {
-    session('user', null);
+    this.session('user', null);
     res.die('application/json', {success: true});
   });
 

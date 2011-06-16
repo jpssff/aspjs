@@ -24,33 +24,31 @@ function lib_router() {
    * @param {Array} keys
    * @returns {RegExp}
    */
-  function parseRoute(route,fn) {
-    var keys = [],
-    str = route
-    .concat('/?')
-    .replace(/\/\(/g, '(?:/')
-    .replace(/(\/)?(\.)?:([\w]+)(\?)?/g, function(_,slash,format,key,optional){
+  function parseRoute(route, fn) {
+    var keys = [], str = route.concat('/?').replace(/\/\(/g, '(?:/');
+    str = str.replace(/(\/)?(\.)?:([\w]+)(\?)?/g, function(_, slash, format, key, optional) {
       keys.push(key);
       slash = slash || '';
       return '' + (optional ? '' : slash) + '(?:' + (optional ? slash : '') + (format || '') + '([^/]+))' + (optional || '');
-    })
-    .replace(/([\/.-])/g, '\\$1')
-    .replace(/\*/g, '(.+)');
-    var rex = new RegExp('^' + str + '$','i');
-    return [rex, function(matches){
+    });
+    str = str.replace(/([\/.-])/g, '\\$1').replace(/\*/g, '(.+)');
+    var rex = new RegExp('^' + str + '$', 'i');
+    return [rex, function(matches) {
       var params = new Collection();
-      Object.each(keys,function(i,str){ params(str,urlDec(matches[i])); });
-      return fn.call(this,params);
+      Object.each(keys, function(i, str) {
+        params(str, urlDec(matches[i]));
+      });
+      return fn.call(this, params);
     }];
   }
-  
+
   var router = {
     data: {},
-    addRoute: function(verb,a,b){
+    addRoute: function(verb, a, b) {
       var type = vartype(a);
       verb = String.parse(verb).toUpperCase();
       if (type == 'string' && a.match(/[:*]/)) {
-        routes.push([verb].concat(parseRoute(a,b)));
+        routes.push([verb].concat(parseRoute(a, b)));
       } else
       if (type == 'string' || type == 'regexp') {
         routes.push([verb,a,b]);
@@ -66,7 +64,7 @@ function lib_router() {
       data.stop = function() {
         stop = true;
       };
-      trigger('preroute', data);
+      trigger('pre-route', data);
       routes.each(function(i, arr) {
         if (arr[0] && arr[0] != verb) {
           return true; //Continue
@@ -87,10 +85,10 @@ function lib_router() {
       if (!stop) {
         trigger('no-route', data);
       }
-      trigger('404', data = {});
-      var resData = data.response || app.cfg('res_404');
-      res.clear(resData.type, '404');
-      res.write(resData.body);
+      trigger('404', data);
+      var response = data.response || app.cfg('res_404');
+      res.clear(response.type, '404');
+      res.write(response.body);
       res.end();
     }
   };
@@ -99,7 +97,7 @@ function lib_router() {
    * Setup route event (triggered from controller stub).
    *
    */
-  bind('route',function(){
+  bind('route', function() {
     router.process();
   });
   
