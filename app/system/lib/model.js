@@ -1,7 +1,9 @@
 /*!
  * Data Modeling
  *
- * requires lib_activerecord
+ * Creates an model that may have validation and relationships to other models. Instances of a model
+ * represent records that can be read or saved to a flat structure (database record) using an
+ * ORM (object relational mapper), in this case ActiveRecord.
  *
  */
 if (!this.lib_model) this.lib_model = lib_model;

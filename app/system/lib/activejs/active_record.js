@@ -1,14 +1,14 @@
 /*!
  * ActiveRecord
  *
- * ActiveRecord is an object relational mapper that shares a similar vocabulary to the Ruby
- * ActiveRecord implementation, but uses JavaScript.
+ * Object relational mapper similar to Ruby's ActiveRecord implementation.
+ *
  */
 if (!this.lib_activerecord) this.lib_activerecord = lib_activerecord;
 function lib_activerecord() {
-  var JSON = lib('json')
-    , ActiveSupport = lib("activesupport")
-    , ActiveEvent = lib("activeevent")
+  var json = lib('json')
+    , lang = lib('lang')
+    , ActiveEvent = lib('activeevent')
     , ActiveRecord;
   var __now = new Date();
 
@@ -47,7 +47,7 @@ function lib_activerecord() {
       };
       var model = null;
       if (!options.modelName) {
-        var model_name = ActiveSupport.camelize(ActiveSupport.Inflector.singularize(options.tableName) || options.tableName);
+        var model_name = lang.camelize(lang.inflector.singularize(options.tableName) || options.tableName);
         options.modelName = model_name.charAt(0).toUpperCase() + model_name.substring(1)
       }
       model = ActiveRecord.Models[options.modelName] = function(data) {
@@ -107,7 +107,7 @@ function lib_activerecord() {
         Finders.generateFindByField(model, key);
         Finders.generateFindAllByField(model, key)
       }
-      model.get = model["findBy" + ActiveSupport.camelize(model.primaryKeyName, true)];
+      model.get = model["findBy" + lang.camelize(model.primaryKeyName, true)];
       model.relationships = [];
       //MODIFIED
       ActiveRecord.ModelsByTableName[options.tableName] = model;
@@ -608,7 +608,7 @@ function lib_activerecord() {
       if (typeof field === "number") return String(value);
       if (typeof field === "boolean") return String(parseInt(Number(value), 10));
       //TODO: date
-      if (typeof value === "object" && !Migrations.objectIsFieldDefinition(field)) return JSON.stringify(value)
+      if (typeof value === "object" && !Migrations.objectIsFieldDefinition(field)) return json.stringify(value)
     },
     fieldOut: function(field, value) {
       if (Migrations.objectIsFieldDefinition(field)) {
@@ -634,7 +634,7 @@ function lib_activerecord() {
       }
 
       if ((typeof value === "string" || typeof value === "object") && typeof field === "object" && (typeof field.length !== "undefined" || typeof field.type === "undefined")) {
-        if (typeof value === "string") return JSON.parse(value);
+        if (typeof value === "string") return json.parse(value);
       }
       return value;
     },
@@ -1006,14 +1006,14 @@ function lib_activerecord() {
       return options
     },
     generateFindByField: function(klass, field_name) {
-      klass["findBy" + ActiveSupport.camelize(field_name, true)] = curry(function(klass, field_name, value, options) {
+      klass["findBy" + lang.camelize(field_name, true)] = curry(function(klass, field_name, value, options) {
         return klass.find(Object.append(Finders.mergeOptions(field_name, value, options), {
           first: true
         }))
       }, klass, field_name)
     },
     generateFindAllByField: function(klass, field_name) {
-      klass["findAllBy" + ActiveSupport.camelize(field_name, true)] = curry(function(klass, field_name, value, options) {
+      klass["findAllBy" + lang.camelize(field_name, true)] = curry(function(klass, field_name, value, options) {
         return klass.find(Object.append(Finders.mergeOptions(field_name, value, options), {
           all: true
         }))
@@ -1095,13 +1095,13 @@ function lib_activerecord() {
   };
   var Relationships = {
     normalizeModelName: function (related_model_name) {
-      var plural = ActiveSupport.camelize(related_model_name, true);
-      var singular = ActiveSupport.camelize(ActiveSupport.Inflector.singularize(plural) || plural, true);
+      var plural = lang.camelize(related_model_name, true);
+      var singular = lang.camelize(lang.inflector.singularize(plural) || plural, true);
       return singular || plural
     },
     normalizeForeignKey: function (foreign_key, related_model_name) {
-      var plural = ActiveSupport.underscore(related_model_name).toLowerCase();
-      var singular = ActiveSupport.Inflector.singularize(plural) || plural;
+      var plural = lang.underscore(related_model_name).toLowerCase();
+      var singular = lang.inflector.singularize(plural) || plural;
       if (!foreign_key || typeof foreign_key === "undefined") return (singular || plural) + "_id";
       else return foreign_key
     }

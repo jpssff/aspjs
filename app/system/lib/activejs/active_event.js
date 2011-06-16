@@ -2,12 +2,19 @@
  * ActiveEvent
  *
  * After calling ActiveEvent.extend(object), the given object will inherit the methods in this
- * namespace. If the given object has a prototype (is a class constructor),
- * the object's prototype will inherit these methods as well.
+ * namespace. If the given object has a prototype (is a constructor), the object's prototype
+ * will inherit these methods as well.
+ *
  */
 if (!this.lib_activeevent) this.lib_activeevent = lib_activeevent;
 function lib_activeevent() {
   var ActiveEvent = {};
+
+  function wrap(func, wrapper) {
+    return function() {
+      return wrapper.apply(this, [func.bind(this)].concat(toArray(arguments)))
+    }
+  }
 
   function without(arr) {
     var values = toArray(arguments).slice(1);
@@ -16,12 +23,6 @@ function lib_activeevent() {
       if (values.indexOf(arr[i]) < 0) response.push(arr[i]);
     }
     return response
-  }
-
-  function wrap(func, wrapper) {
-    return function() {
-      return wrapper.apply(this, [func.bind(this)].concat(toArray(arguments)))
-    }
   }
 
   ActiveEvent.extend = function(object) {
