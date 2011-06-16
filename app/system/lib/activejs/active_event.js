@@ -7,13 +7,28 @@
  */
 if (!this.lib_activeevent) this.lib_activeevent = lib_activeevent;
 function lib_activeevent() {
-  var ActiveSupport = lib("activesupport"),  ActiveEvent = {};
+  var ActiveEvent = {};
+
+  function without(arr) {
+    var values = toArray(arguments).slice(1);
+    var response = [];
+    for (var i = 0; i < arr.length; i++) {
+      if (values.indexOf(arr[i]) < 0) response.push(arr[i]);
+    }
+    return response
+  }
+
+  function wrap(func, wrapper) {
+    return function() {
+      return wrapper.apply(this, [func.bind(this)].concat(toArray(arguments)))
+    }
+  }
 
   ActiveEvent.extend = function(object) {
     object.makeObservable = function(method_name) {
       if (this[method_name]) {
         this._objectEventSetup(method_name);
-        this[method_name] = ActiveSupport.wrap(this[method_name], function(proceed) {
+        this[method_name] = wrap(this[method_name], function(proceed) {
           var args = toArray(arguments).slice(1);
           var response = proceed.apply(this, args);
           args.unshift(method_name);
@@ -41,12 +56,12 @@ function lib_activeevent() {
     };
     object.stopObserving = function(event_name, observer) {
       this._objectEventSetup(event_name);
-      if (event_name && observer) this._observers[event_name] = ActiveSupport.without(this._observers[event_name], observer);
+      if (event_name && observer) this._observers[event_name] = without(this._observers[event_name], observer);
       else if (event_name) this._observers[event_name] = [];
       else this._observers = {}
     };
     object.observeOnce = function(event_name, outer_observer) {
-      var inner_observer = ActiveSupport.bind(function() {
+      var inner_observer = Function.prototype.bind.call(function() {
         outer_observer.apply(this, arguments);
         this.stopObserving(event_name, inner_observer)
       }, this);
@@ -109,7 +124,7 @@ function lib_activeevent() {
     this.originals = [];
     for (var i = 0; i < this.methods.length; ++i) {
       this.originals.push(this.methods[i][0][this.methods[i][1]]);
-      this.methods[i][0][this.methods[i][1]] = ActiveSupport.wrap(this.methods[i][0][this.methods[i][1]], function (proceed) {
+      this.methods[i][0][this.methods[i][1]] = wrap(this.methods[i][0][this.methods[i][1]], function(proceed) {
         var args = toArray(arguments).slice(1);
         observer.apply(this, args);
         return proceed.apply(this, args)

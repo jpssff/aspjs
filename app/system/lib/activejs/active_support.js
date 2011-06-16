@@ -9,46 +9,6 @@ function lib_activesupport() {
   var ActiveSupport;
 
   ActiveSupport = {
-    createError: function(message) {
-      return {
-        getErrorString: function() {
-          var output = String(message);
-          for (var i = 0; i < arguments.length; ++i) output = output.replace(/\%/, arguments[i].toString ? arguments[i].toString() : String(arguments[i]));
-          return output
-        }
-      }
-    },
-    without: function(arr) {
-      var values = toArray(arguments).slice(1);
-      var response = [];
-      for (var i = 0; i < arr.length; i++) if (!(values.indexOf(arr[i]) > -1)) response.push(arr[i]);
-      return response
-    },
-    map: function(array, iterator, context) {
-      var length = array.length;
-      context = context || window;
-      var response = new Array(length);
-      for (var i = 0; i < length; ++i) if (array[i]) response[i] = iterator.call(context, array[i], i, array);
-      return response
-    },
-    bind: function(func, object) {
-      if (typeof object == "undefined") return func;
-      return function() {
-        return func.apply(object, arguments)
-      };
-    },
-    curry: function(func) {
-      if (arguments.length == 1) return func;
-      var args = toArray(arguments).slice(1);
-      return function() {
-        return func.apply(this, args.concat(toArray(arguments)))
-      }
-    },
-    wrap: function(func, wrapper) {
-      return function() {
-        return wrapper.apply(this, [ActiveSupport.bind(func, this)].concat(toArray(arguments)))
-      }
-    },
     underscore: function(str) {
       return str.replace(/::/g, "/").replace(/([A-Z]+)([A-Z][a-z])/g, function (match) {
         match = match.split("");
@@ -59,8 +19,7 @@ function lib_activesupport() {
       }).replace(/-/g, "_").toLowerCase()
     },
     camelize: function(str, capitalize) {
-      var camelized, parts = str.replace(/\_/g, "-").split("-"),
-          len = parts.length;
+      var camelized, parts = str.replace(/\_/g, "-").split("-"), len = parts.length;
       if (len === 1) if (capitalize) return parts[0].charAt(0).toUpperCase() + parts[0].substring(1);
       else return parts[0];
       if (str.charAt(0) === "-") camelized = parts[0].charAt(0).toUpperCase() + parts[0].substring(1);
@@ -68,13 +27,6 @@ function lib_activesupport() {
       for (var i = 1; i < len; i++) camelized += parts[i].charAt(0).toUpperCase() + parts[i].substring(1);
       if (capitalize) return camelized.charAt(0).toUpperCase() + camelized.substring(1);
       else return camelized
-    },
-    extend: function(destination, source) {
-      for (var property in source) destination[property] = source[property];
-      return destination
-    },
-    clone: function(object) {
-      return ActiveSupport.extend({}, object)
     }
   };
 
