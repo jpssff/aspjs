@@ -19,37 +19,33 @@ bind('ready', function() {
     templates['content'].save();
 
     //Create Pages
-    pages['home'] = Models.Page.create({
-      name: 'Home',
-      page_template_id: templates['home'].id
-    });
-    pages['home'].save();
+    //pages['home'] = Models.Page.create({
+    pages['home'] = templates['home'].createPage({
+      name: 'Home'
+    }).save();
 
-    pages['about-us'] = Models.Page.create({
-      name: 'About Us',
-      page_template_id: templates['content'].id
-    });
-    pages['about-us'].save();
+    pages['about-us'] = templates['content'].createPage({
+      name: 'About Us'
+    }).save();
 
-    pages['services'] = Models.Page.create({
+    pages['services'] = templates['content'].createPage({
       name: 'Services',
-      page_template_id: templates['content'].id,
       page_id: pages['about-us'].id
-    });
-    pages['services'].save();
+    }).save();
 
-    pages['location'] = Models.Page.create({
+    pages['location'] = templates['content'].createPage({
       name: 'Location',
-      page_template_id: templates['content'].id,
       page_id: pages['about-us'].id
-    });
-    pages['location'].save();
+    }).save();
 
-    pages['contact-us'] = Models.Page.create({
-      name: 'Contact Us',
-      page_template_id: templates['content'].id
-    });
-    pages['contact-us'].save();
+    pages['contact-us'] = templates['content'].createPage({
+      name: 'Contact Us'
+    }).save();
+
+//    var html = lib('net').httpRequest('http://www.zdnet.com/');
+//    pages['about-us'].set('markup', html);
+//    var result = pages['about-us'].save();
+//    res.die(result);
 
     //res.die(templates['content'].getPageList());
     res.die(pages['about-us'].getChildList());

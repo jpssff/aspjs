@@ -475,7 +475,7 @@ function lib_activerecord() {
         values.push("?");
         quoted_keys.push(this.quoteIdentifier(keys[i]))
       }
-      args.unshift("INSERT INTO " + table + " (" + quoted_keys.join(",") + ") VALUES (" + values.join(",") + ")");
+      args.unshift("INSERT INTO " + this.quoteIdentifier(table) + " (" + quoted_keys.join(",") + ") VALUES (" + values.join(",") + ")");
       var response = this.executeSQL.apply(this, args);
       var id = data[primary_key_name] || this.getLastInsertedRowId();
       var data_with_id = Object.append({}, data);
@@ -494,7 +494,7 @@ function lib_activerecord() {
         }
         updates = values.join(",")
       }
-      args.unshift("UPDATE " + table + " SET " + updates + this.buildWhereSQLFragment(conditions, args));
+      args.unshift("UPDATE " + this.quoteIdentifier(table) + " SET " + updates + this.buildWhereSQLFragment(conditions, args));
       return this.executeSQL.apply(this, args)
     },
     updateEntity: function(table, primary_key_name, id, data) {
@@ -507,7 +507,7 @@ function lib_activerecord() {
         values.push(this.quoteIdentifier(keys[i]) + " = ?")
       }
       args.push(id);
-      args.unshift("UPDATE " + table + " SET " + values.join(",") + " WHERE " + this.quoteIdentifier(primary_key_name) + " = ?");
+      args.unshift("UPDATE " + this.quoteIdentifier(table) + " SET " + values.join(",") + " WHERE " + this.quoteIdentifier(primary_key_name) + " = ?");
       var response = this.executeSQL.apply(this, args);
       this.notify("updated", table, id, data);
       return response
@@ -523,9 +523,9 @@ function lib_activerecord() {
     deleteEntity: function(table, primary_key_name, id) {
       var args, response;
       if (id === "all") {
-        args = ["DELETE FROM " + table];
+        args = ["DELETE FROM " + this.quoteIdentifier(table)];
         var ids = [];
-        var ids_result_set = this.executeSQL("SELECT " + this.quoteIdentifier(primary_key_name) + " FROM " + table);
+        var ids_result_set = this.executeSQL("SELECT " + this.quoteIdentifier(primary_key_name) + " FROM " + this.quoteIdentifier(table));
         if (!ids_result_set) return null;
         this.iterableFromResultSet(ids_result_set).iterate(function(row) {
           ids.push(row[primary_key_name])
@@ -534,14 +534,14 @@ function lib_activerecord() {
         for (var i = 0; i < ids.length; ++i) this.notify("destroyed", table, ids[i]);
         return response
       } else {
-        args = ["DELETE FROM " + table + " WHERE " + this.quoteIdentifier(primary_key_name) + " = ?", id];
+        args = ["DELETE FROM " + this.quoteIdentifier(table) + " WHERE " + this.quoteIdentifier(primary_key_name) + " = ?", id];
         response = this.executeSQL.apply(this, args);
         this.notify("destroyed", table, id);
         return response
       }
     },
     findEntitiesById: function(table, primary_key_name, ids) {
-      var response = this.executeSQL.apply(this, ["SELECT * FROM " + table + " WHERE " + this.quoteIdentifier(primary_key_name) + " IN (" + ids.join(",") + ")"]);
+      var response = this.executeSQL.apply(this, ["SELECT * FROM " + this.quoteIdentifier(table) + " WHERE " + this.quoteIdentifier(primary_key_name) + " IN (" + ids.join(",") + ")"]);
       if (!response) return false;
       else return ActiveRecord.connection.iterableFromResultSet(response)
     },
@@ -564,7 +564,7 @@ function lib_activerecord() {
     },
     buildSQLArguments: function(table, params, calculation) {
       var args = [];
-      var sql = "SELECT " + (calculation ? calculation + " AS calculation" : params.select ? params.select.join(",") : "*") + " FROM " + table + this.buildWhereSQLFragment(params.where, args) + (params.joins ? " " + params.joins : "") + (params.group ? " GROUP BY " + params.group : "") + (params.order ? " ORDER BY " + params.order : "") + (params.offset && params.limit ? " LIMIT " + params.offset + "," + params.limit : "") + (!params.offset && params.limit ? " LIMIT " + params.limit : "");
+      var sql = "SELECT " + (calculation ? calculation + " AS calculation" : params.select ? params.select.join(",") : "*") + " FROM " + this.quoteIdentifier(table) + this.buildWhereSQLFragment(params.where, args) + (params.joins ? " " + params.joins : "") + (params.group ? " GROUP BY " + params.group : "") + (params.order ? " ORDER BY " + params.order : "") + (params.offset && params.limit ? " LIMIT " + params.offset + "," + params.limit : "") + (!params.offset && params.limit ? " LIMIT " + params.limit : "");
       args.unshift(sql);
       return args
     },
@@ -590,15 +590,15 @@ function lib_activerecord() {
       return where
     },
     dropTable: function(table_name) {
-      return this.executeSQL("DROP TABLE IF EXISTS " + table_name)
+      return this.executeSQL("DROP TABLE IF EXISTS " + this.quoteIdentifier(table_name))
     },
     addIndex: function(table_name, column_names, options) {},
     renameTable: function(old_table_name, new_table_name) {
-      this.executeSQL("ALTER TABLE " + old_table_name + " RENAME TO " + new_table_name)
+      this.executeSQL("ALTER TABLE " + this.quoteIdentifier(old_table_name) + " RENAME TO " + this.quoteIdentifier(new_table_name))
     },
     removeIndex: function(table_name, index_name) {},
     addColumn: function(table_name, column_name, data_type) {
-      return this.executeSQL("ALTER TABLE " + table_name + " ADD COLUMN " + this.getColumnDefinitionFragmentFromKeyAndColumns(key, columns))
+      return this.executeSQL("ALTER TABLE " + this.quoteIdentifier(table_name) + " ADD COLUMN " + this.getColumnDefinitionFragmentFromKeyAndColumns(key, columns))
     },
     fieldIn: function(field, value) {
       if (value && value instanceof Date) return Date.format(value, '{yyyy}-{mm}-{dd} {HH}:{nn}:{ss}', true);
@@ -1152,7 +1152,9 @@ function lib_activerecord() {
         var related_list = this["get" + through_model_name + "List"]();
         var ids = [];
         var response = [];
-        for (var i = 0; i < related_list.length; ++i) response.push(related_list[i]["get" + related_model_name]());
+        for (var i = 0; i < related_list.length; ++i) {
+          response.push(related_list[i]["get" + related_model_name]());
+        }
         return response
       }, through_model_name, related_model_name, foreign_key);
       instance_methods["get" + relationship_name + "Count"] = curry(function(through_model_name, related_model_name, foreign_key, params) {
@@ -1204,7 +1206,9 @@ function lib_activerecord() {
     if (options.dependent) this.observe("afterDestroy", function(record) {
       var list = record["get" + relationship_name + "List"]();
       ActiveRecord.connection.log("Relationships.hasMany destroy " + list.length + " dependent " + related_model_name + " children of " + record.modelName);
-      for (var i = 0; i < list.length; ++i) list[i].destroy()
+      for (var i = 0; i < list.length; ++i) {
+        list[i].destroy()
+      }
     })
   };
   ActiveRecord.ClassMethods.belongsTo = function(related_model_name, options) {
@@ -1617,7 +1621,8 @@ function lib_activerecord() {
           if (e.message.match(/(cannot|could not) find( the)? (input|output) table/i)) {
             var m;
             if ((m = sql.match(/^INSERT INTO (\S+)/i)) && ActiveRecord.autoMigrate) {
-              var model = ActiveRecord.ModelsByTableName[m[1]];
+              var tableName = m[1].replace(/(^\[|\]$)/g, '');
+              var model = ActiveRecord.ModelsByTableName[tableName];
               model.createTable();
               return query.getAll();
             }
