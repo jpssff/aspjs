@@ -16,9 +16,9 @@ var global, server, app, sys, req, res;
 /**
  * Dispatch Request
  *
- * This function is called from dispatch.asp and executes a controller stub based on requested
- * URL. In cases where the controller file does not exist, it will call a function to rebuild
- * the required file(s).
+ * This function is called by the web server as soon as a request is received. It executes a
+ * controller stub based on requested URL and the controller routes passed in. In cases where
+ * the controller file does not exist, it will call a function to rebuild the required file(s).
  *
  * @param map {Object} Maps one or more URL prefix to controller
  */
@@ -37,7 +37,7 @@ function dispatch(map) {
       re = new RegExp('^' + RegExp.escape(key) + '(/|$)', 'i');
     }
     if (path.match(re)) {
-      var script = __approot + 'build/' + name + '.asp';
+      var script = __approot + 'build/' + name + server.scriptExt;
       try {
         server.exec(script);
       } catch(e) {
@@ -56,9 +56,9 @@ function dispatch(map) {
 }
 
 /**
- * Initialize Application Environment and Route Request
+ * Initializes Application Environment and Routes the Request
  *
- * Initializes globals required by the application environment and dispatches request using the
+ * Initializes globals required by the application environment and routes the request using the
  * event model. This requires most of the core libraries.
  *
  * Once the application environment has been initialized, the 'ready' event is triggered and request

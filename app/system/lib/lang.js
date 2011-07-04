@@ -147,7 +147,7 @@ function lib_lang() {
     }
   };
 
-  //Stemming Stuff
+  //Stemming Algorithm
   var step2list = {"ational": "ate", "tional": "tion", "enci": "ence", "anci": "ance", "izer": "ize",
       "bli": "ble", "alli": "al", "entli": "ent", "eli": "e", "ousli": "ous", "ization": "ize",
       "ation": "ate", "ator": "ate", "alism": "al", "iveness": "ive", "fulness": "ful",

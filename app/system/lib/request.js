@@ -64,7 +64,7 @@ function lib_request() {
       if (n) {
         return params.exists(n) ? params(n) : '';
       } else {
-        return params;
+        return params.toObject();
       }
     },
     uploads: function(n) {
@@ -81,7 +81,7 @@ function lib_request() {
       if (n) {
         return postdata.fields.exists(n) ? postdata.fields(n) : '';
       } else {
-        return postdata.fields;
+        return postdata.fields.toObject();
       }
     }
   };

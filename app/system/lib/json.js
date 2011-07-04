@@ -16,6 +16,9 @@ function lib_json() {
   /* JSON FUNCTIONS */
   
   function fn_Stringify(o, strict) {
+    if (arguments.length == 1 && typeof app != 'undefined') {
+      strict = !!app.cfg('defaults/strict_json');
+    }
     if (o instanceof Object && o.toJSON instanceof Function) {
       o =  o.toJSON();
     }

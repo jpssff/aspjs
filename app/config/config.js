@@ -10,9 +10,19 @@ function lib_appcfg() {
 
     //Application Defaults
     defaults: {
+      //Standards Compliant JSON encoding
+      strict_json: true,
       //Timezone Offset
       timezone: {
         offset: 10 * 60
+      },
+      //Model Defaults
+      model: {
+        default_database: 'main'
+      },
+      //Database Defaults
+      database: {
+        ext: '.mdb'
       }
     },
 

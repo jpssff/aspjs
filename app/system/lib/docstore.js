@@ -256,7 +256,7 @@ function lib_docstore() {
       data = {type:'date',val:String(new Date(val).valueOf())};
     } else
     if (type == 'object' || type == 'array') {
-      data = {type:type,val:json.stringify(val)};
+      data = {type:type,val:json.stringify(val, false)};
     } else {
       data = {type:'null',val:'null'};
     }

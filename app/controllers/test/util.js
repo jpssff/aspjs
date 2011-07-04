@@ -1,5 +1,13 @@
 bind('ready', function() {
 
+  //base64 and binary response
+  app('/test/base64', function(p) {
+    var img = new Binary('R0lGODlhAQABAJAAAP///wAAACH5BAUQAAAALAAAAAABAAEAAAICBAEAOw==', 'base64');
+    res.die('image/gif', img);
+    //res.die(img.length());
+    //res.die(img.toString('hex'));
+  });
+
   //date parsing
   app('/test/date/:date', function(p) {
     res.die(Date.fromString(p('date')));

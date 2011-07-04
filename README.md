@@ -107,4 +107,3 @@ code) is found in /app/system/.
 Static assets (images, css files, etc.) to be served directly to the public go in the _/assets/_
 directory.
 
-

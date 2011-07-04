@@ -39,7 +39,8 @@ function lib_application() {
    * overridden by Database config, etc.
    *
    */
-  app.cfg = function(n){
+  app.cfg = function(n) {
+    var util = lib('util');
     if (!app.cfg.data) {
       var cfg = {}
         , syscfg = lib('syscfg')
@@ -53,7 +54,7 @@ function lib_application() {
       app.cfg.data = cfg;
     }
     if (!app.cfg.get) {
-      app.cfg.get = app.util.xpath(app.cfg.data);
+      app.cfg.get = util.xpath(app.cfg.data);
     }
     if (n) {
       return app.cfg.get(n);

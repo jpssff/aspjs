@@ -14,8 +14,9 @@ if (!this.lib_msaccess) this.lib_msaccess = lib_msaccess;
 function lib_msaccess() {
 
   var util = lib('util');
+  var dbExt = app.cfg('database/ext') || '.mdb';
   var msaccess, fs = sys.fs, connections = {};
-  
+
   function Connection(name, db_file) {
     this._file = db_file;
     this._cstr = 'Provider=Microsoft.Jet.OLEDB.4.0;Data Source="' + sys.mappath(db_file) + '"';
@@ -60,6 +61,7 @@ function lib_msaccess() {
         return sql;
       };
       query.each = function(func) {
+        if (app.debug) sys.log(sql, 'msaccess');
         try {
           rs = conn.execute(sql);
         } catch (e) {
@@ -103,6 +105,7 @@ function lib_msaccess() {
     },
     exec: function(str, params, b) {
       var i, conn = this._conn, sql = fn_BuildSQL(str, params), rs;
+      if (app.debug) sys.log(sql, 'msaccess');
       try {
         if (b) {
           i = executeSqlAndReturnNumRowsAffected(conn, sql);
@@ -206,7 +209,7 @@ function lib_msaccess() {
   }
 
   function fn_open(name, fn_init) {
-    var file = '~/data/db/' + fs.escape(name) + '.mdb';
+    var file = '~/data/db/' + fs.escape(name) + dbExt;
     var conn = new Connection(name, file);
     if (conn.isNew && fn_init) {
       fn_init(conn);

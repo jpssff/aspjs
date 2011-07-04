@@ -30,6 +30,9 @@ function lib_response() {
     write: function(data) {
       if (isPrimitive(data)) {
         _super.write(String(data));
+      } else
+      if (data instanceof Binary) {
+        _super.writebin(data);
       } else {
         var json = lib('json');
         _super.write((json) ? json.stringify(data) : String(data));

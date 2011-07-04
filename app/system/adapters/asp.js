@@ -3,8 +3,7 @@
  *
  * This library is a wrapper for the classes and methods that interact with ASP / IIS.
  *
- * Requires: core, lib_globals, Collection
- * Optional: lib_json, Binary
+ * Requires: core, lib_globals, lib_json, Collection, Binary
  *
  */
 if (!this.lib_server) this.lib_server = lib_server;
@@ -77,6 +76,7 @@ function lib_server() {
   }
 
   return {
+    scriptExt: '.asp',
     req: {
       getURL: function() {
         var m = iis.req.querystring.item().match(REG_URL);
@@ -296,7 +296,7 @@ function lib_server() {
     if (isPrimitive(val) || !json) {
       return val;
     } else {
-      return toSafeArray([json.stringify(val)]);
+      return toSafeArray([json.stringify(val, false)]);
     }
   }
 
@@ -517,7 +517,7 @@ function buildControllerStub(name, scripts, cfg) {
   stub = stub.replace(/<script.*?(controller\.js).*?><\/script>/i, function(tag, path) {
     var tags = [];
     forEach(deps, function(i, script) {
-      tags.push(tag.replace(/[^"]+\.js/, __approot + 'system/lib/' + script));
+      tags.push(tag.replace(/[^"]+\.js/, sys.path(script)));
     });
     forEach(scripts, function(i, script) {
       tags.push(tag.replace(path, script));

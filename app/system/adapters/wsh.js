@@ -71,7 +71,7 @@ function lib_server() {
 
   function mapPath(s) {
     var p = wsh.scriptFullName;
-    p = p.replace(/\\node\\.*$/, '\\');
+    p = p.replace(/\\devserver\\.*$/, '\\');
     p = p + String(s).replace(/\//g, '\\');
     p = p.replace(/[\\]+/g, '\\');
     p = p.replace(/\\$/g, '');

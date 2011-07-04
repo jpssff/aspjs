@@ -197,7 +197,7 @@ function lib_globals() {
     return Object.vartype(obj, 'boolean null number string undefined');
   };
   Object.isSet = function(obj) {
-    return !(obj === null || obj === undefined);
+    return !(obj === null || typeof obj == 'undefined');
   };
   Object.keys = function(o) {
     var a = [];
@@ -310,11 +310,13 @@ function lib_globals() {
   
   Number.parse = function(s, /**Number=0*/ d) {
     var i = parseFloat(s);
-    return isFinite(i) ? i : d || 0;
+    d = (arguments.length > 1) ? d : 0;
+    return isFinite(i) ? i : d;
   };
   Number.parseInt = function(s, /**Number=0*/ d) {
     var i = parseInt(s, 10);
-    return isFinite(i) ? i : d || 0;
+    d = (arguments.lengt > 1) ? d : 0;
+    return isFinite(i) ? i : d;
   };
   Number.random = function(lower, upper) {
     return Math.floor(Math.random() * (upper - lower + 1)) + lower;
@@ -405,8 +407,9 @@ function lib_globals() {
     return String.prototype.split.call(this, /[,\s]+/);
   };
 
-  String.parse = function(s) {
-    return Object.isSet(s) ? String(s) : '';
+  String.parse = function(s, /**String=''*/ d) {
+    d = (arguments.length > 1) ? d : '';
+    return Object.isSet(s) ? String(s) : d;
   };
   String.repeat = function(s, n) {
     var a = new Array(n + 1);
@@ -498,7 +501,7 @@ function lib_globals() {
     if (isFinite(i)) {
       return new Date(i);
     }
-    if (def) {
+    if (arguments.length > 1) {
       return def;
     }
   };

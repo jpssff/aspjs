@@ -155,7 +155,7 @@ function lib_session() {
         var db = self.db || (self.db = lib('msaccess').open(app.cfg('session/database') || 'session', dbInit));
         //Save data if collection has been modified
         if (collection && collection.isDirty()) {
-          var stringified = json.stringify(collection.toObject());
+          var stringified = json.stringify(collection.toObject(), false);
           var sql = "UPDATE [session_data] SET [data] = $3 WHERE [guid] = CAST_GUID($1) AND [namespace] = $2";
           var num = db.exec(sql, [session.token, namespace, stringified], true);
           if (!num) {

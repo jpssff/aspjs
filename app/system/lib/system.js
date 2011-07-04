@@ -1,6 +1,7 @@
 /**
- * System Library: Presents functions for interacting with the
- * filesystem, logging and path manipulation.
+ * System Library
+ *
+ * Presents functions for interacting with the filesystem, logging and path manipulation.
  *
  */
 if (!this.lib_system) this.lib_system = lib_system;
@@ -97,7 +98,7 @@ function lib_system(sys) {
       , p = path('~/data/logs/' + logfile.replaceTail('.log','') + '.log');
     var json = lib('json');
     forEach(data, function(i, line){
-      data[i] = (isPrimitive(line)) ? String(line) : json.stringify(line);
+      data[i] = (isPrimitive(line)) ? String(line) : json.stringify(line, false);
     });
     data.push('');
     try {
