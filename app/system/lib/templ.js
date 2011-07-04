@@ -73,7 +73,7 @@ function lib_templ(exports) {
   /**
    * Code specific to server-side processing
    */
-  var baseDir = '/views/'
+  var baseDir = 'views/'
     , defExt = '.' + app.cfg('template/defaults/ext')
     , defFlt = app.cfg('template/defaults/filter')
     , fso, cache = {};
@@ -88,7 +88,7 @@ function lib_templ(exports) {
       return cache[p];
     }
     try {
-      src = sys.readTextFile(baseDir + p);
+      src = sys.fs.readTextFile(baseDir + p);
     } catch(e) {
       throw new Error('Error Reading Template File: ' + path);
     }

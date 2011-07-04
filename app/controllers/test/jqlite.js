@@ -15,7 +15,7 @@ bind('ready', function() {
   }
 
   function reset() {
-    if (!html) html = sys.fs.readTextFile('/assets/test/jqlite.html');
+    if (!html) html = sys.fs.readTextFile('/assets/sample/jqlite.html');
     jQuery = $ = jq.create(html);
     document = jQuery._doc;
     document.body = document.getElementsByTagName('body')[0];

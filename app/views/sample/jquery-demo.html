@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>{=title}</title>
+<link rel="stylesheet" type="text/css" href="/assets/css/main.css" />
+</head>
+<body>
+<h1>{=title}</h1>
+<div class="news-list">
+  <ul>
+    {:r articles}
+    <li><a href="http://www.zdnet.com{=link}">{=title}</a></li>
+    {:e}
+    <li>No Articles to Display.</li>
+    {/:r}
+  </ul>
+</div>
+</body>
+</html>
