@@ -34,17 +34,15 @@ Javascript frameworks such as [v8cgi] (http://code.google.com/p/v8cgi/), [Jaxer]
 # Introduction
 Applications consist primarily of request handler functions which are defined inside controllers.
 Request handlers are attached to the application (request router) once the "ready" event fires
-(indicating the framework has loaded).
-
-An event handler is defined as follows:
+(indicating the framework has loaded) as follows:
 
 ```javascript
 bind('ready', function() {
-  //YOUR CONTROLLER CODE HERE
+  //YOUR CODE HERE
 });
 ```
 
-Within the event handler, request routes are defined as follows:
+Within the "ready" event handler, request routes are defined as follows:
 
 ```javascript
 app('/', function() {
@@ -52,7 +50,15 @@ app('/', function() {
 });
 ```
 
-Which is just shorthand for:
+Here, "res" is the response object and res.die() is shorthand for:
+
+```javascript
+res.clear('text/html');
+res.write('<p>Hello World</p>');
+res.end();
+```
+
+Similarly, app('/', function() {...}) presents a shortcut for adding routes, rather than:
 
 ```javascript
 req.router.addRoute('GET', '/', function() {
@@ -76,7 +82,7 @@ Global shorthand functions include: `vartype`, `isPrimitive`, `isSet`, `toArray`
 Other important global functions are: `bind` and `lib`. As you saw in the first example,
 `bind` attaches an event handler and as you will see shortly, `lib` loads a module (library) similar
 to `require` in other common javascript frameworks (the `lib` syntax was chosen over `require` to
-avoid conflicts when porting this framework to other platforms).
+avoid conflicts when adapting this framework to other platforms).
 
 Also, the global objects `app`, `req`, `res` and `util` are available for for convenience so you
 don't have to explicitly load them like:

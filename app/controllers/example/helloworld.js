@@ -1,5 +1,6 @@
 bind('ready', function() {
 
+
   app('/example/hello', function() {
     res.die('text/html', '<p>Hello World</p>');
   });
