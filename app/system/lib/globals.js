@@ -244,8 +244,9 @@ function lib_globals() {
   };
   if (!Array.prototype.forEach)
   Array.prototype.forEach = function (fn, context) {
-    var arr = this, len = context.length;
+    var arr = this, len;
     context = context || arr;
+    len = context.length;
     for (var i = 0; i < len; i++) {
       if (i in arr) fn.call(context, arr[i], i, arr);
     }
